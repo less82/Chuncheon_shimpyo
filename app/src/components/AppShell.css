@@ -1,0 +1,13 @@
+.app-shell {
+  position: relative;
+  align-self: center; /* #root 는 flex column → 가로 중앙 정렬 */
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+@media (min-width: 520px) {
+  .app-shell {
+    box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(28, 25, 23, 0.18);
+  }
+}

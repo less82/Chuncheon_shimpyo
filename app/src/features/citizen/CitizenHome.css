@@ -134,15 +134,3 @@
   color: var(--ink-body);
 }
 
-@media (min-width: 640px) {
-  .home__sheet {
-    left: auto;
-    right: var(--sp-5);
-    bottom: var(--sp-5);
-    width: 420px;
-    max-height: calc(100dvh - 120px);
-  }
-  .home__sheet .stopcard {
-    border-radius: var(--radius-lg);
-  }
-}
