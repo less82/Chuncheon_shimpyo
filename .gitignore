@@ -24,3 +24,4 @@ Thumbs.db
 *.log
 
 # NOTE: data/ (원본 CSV)와 app/public/data/*.json 은 데모 재현을 위해 커밋한다.
+.gstack/
