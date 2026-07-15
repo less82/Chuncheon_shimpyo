@@ -82,6 +82,28 @@
   gap: var(--sp-3);
 }
 
+/* 대안 정류장 안내 — 은은한 보조. 있을 때만, 낮은 채도로 한 줄. */
+.stopcard__alt {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  background: var(--surface-muted, var(--brand-soft));
+  color: var(--text-muted, var(--brand-ink));
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.stopcard__alt svg {
+  flex: none;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+.stopcard__alt b {
+  font-weight: 800;
+}
+
 /* 하단 액션 */
 .stopcard__actions {
   display: flex;

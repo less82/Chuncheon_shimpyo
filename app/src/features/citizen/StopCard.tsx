@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import FacilityBadge from "../../components/FacilityBadge";
 import FavoriteStar from "../../components/FavoriteStar";
+import AltStopHint from "./AltStopHint";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { buildShareUrl } from "../share/shareLink";
 import { useFavorites } from "../../store/useFavorites";
@@ -79,6 +80,8 @@ export default function StopCard({ stop }: Props) {
         <FacilityBadge kind="light" info={stop.facilities.light} />
         <FacilityBadge kind="sign" info={stop.facilities.sign} />
       </div>
+
+      <AltStopHint stop={stop} arrival={arrival} />
 
       <div className="stopcard__actions">
         <button type="button" className="stopcard__share" onClick={share}>
