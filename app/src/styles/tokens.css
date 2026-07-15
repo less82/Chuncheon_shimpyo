@@ -1,0 +1,76 @@
+/* 쉼표 정류장 — 전역 디자인 토큰 (단일 진실)
+ * 사용자: 폭염·한파에 취약한 고령자.
+ * 원칙: 기본 폰트 ≥18px, 터치타깃 ≥48px, 대비 WCAG AA, 아이콘+한글 병기.
+ * 시각 언어: 따뜻한 종이 배경 + 그늘(쉼)을 상징하는 깊은 포레스트 그린. */
+
+:root {
+  /* ---- 브랜드 (그늘·쉼) ---- */
+  --brand: #2f6b3a;        /* 깊은 포레스트 그린 */
+  --brand-strong: #1f4d29;
+  --brand-soft: #e7f0e6;   /* 브랜드 배경 틴트 */
+  --brand-ink: #10331a;
+
+  /* ---- 따뜻한 강조 (온기·주행동) ---- */
+  --warm: #c2410c;         /* 테라코타 — 폭염/온기 상징, CTA 강조 */
+  --warm-strong: #9a3412;
+  --warm-soft: #fdece3;
+
+  /* ---- 표면 / 배경 ---- */
+  --bg: #faf6ef;           /* 따뜻한 종이색 */
+  --surface: #ffffff;
+  --surface-2: #f4efe6;    /* 살짝 가라앉은 카드 내부 */
+  --overlay: rgba(28, 25, 23, 0.55);
+
+  /* ---- 글자 ---- */
+  --ink: #1c1917;          /* 제목 (stone-900) */
+  --ink-body: #3d3833;     /* 본문 */
+  --ink-muted: #6b635a;    /* 보조 (AA 충족) */
+  --on-brand: #ffffff;
+  --on-warm: #ffffff;
+
+  /* ---- 3상태 (색만으로 구분 금지 — 항상 아이콘+한글 병기) ---- */
+  --yes: #15803d;          /* 있음 = 초록 (green-700, AA on white) */
+  --yes-bg: #e6f4ea;
+  --no: #c1121f;           /* 없음 = 빨강 (red-700, AA) */
+  --no-bg: #fdeaea;
+  --unknown: #57534e;      /* 미확인 = 회색 (stone-600, AA) */
+  --unknown-bg: #eeeae4;
+
+  /* ---- 선/구분 ---- */
+  --border: #e2d9cc;
+  --border-strong: #cfc3b2;
+
+  /* ---- 간격 (4pt 기반) ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* ---- 타이포 (고령자 하한 ≥18px) ---- */
+  --fs-sm: 16px;   /* 보조 정보 최소치 */
+  --fs-base: 19px; /* 본문 기본 */
+  --fs-md: 22px;
+  --fs-lg: 27px;
+  --fs-xl: 34px;
+  --fs-2xl: 44px;  /* 초대형 카드 정류장명 */
+
+  --font-sans: "Pretendard", system-ui, "Malgun Gothic", "Apple SD Gothic Neo",
+    "Segoe UI", Roboto, sans-serif;
+
+  /* ---- 모서리 / 그림자 (부드럽고 신뢰감) ---- */
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+  --shadow-card: 0 2px 4px rgba(28, 25, 23, 0.06),
+    0 8px 24px rgba(28, 25, 23, 0.08);
+  --shadow-float: 0 6px 16px rgba(28, 25, 23, 0.14),
+    0 16px 40px rgba(28, 25, 23, 0.12);
+
+  /* ---- 터치타깃 하한 ---- */
+  --touch: 48px;
+  --touch-lg: 60px;
+}

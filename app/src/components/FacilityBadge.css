@@ -1,0 +1,59 @@
+/* 시설 3상태 배지. data-color 로 있음/없음/미확인 테마. */
+
+.fbadge {
+  --c: var(--unknown);
+  --c-bg: var(--unknown-bg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-3);
+  min-height: var(--touch);
+  border-radius: var(--radius-sm);
+  background: var(--c-bg);
+  border: 1.5px solid color-mix(in srgb, var(--c) 30%, transparent);
+}
+
+.fbadge[data-color="green"] {
+  --c: var(--yes);
+  --c-bg: var(--yes-bg);
+}
+.fbadge[data-color="red"] {
+  --c: var(--no);
+  --c-bg: var(--no-bg);
+}
+.fbadge[data-color="gray"] {
+  --c: var(--unknown);
+  --c-bg: var(--unknown-bg);
+}
+
+.fbadge__kind {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-body);
+}
+
+.fbadge__kind-label {
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+
+.fbadge__status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--c);
+}
+
+.fbadge__status-label {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.fbadge__source {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  font-weight: 600;
+  line-height: 1.3;
+}
