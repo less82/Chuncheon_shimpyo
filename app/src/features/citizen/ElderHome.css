@@ -109,7 +109,7 @@
 }
 .elderhome__item-sum {
   grid-column: 1 / -1;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   color: var(--ink-body);
 }
 .elderhome__mapbtn {

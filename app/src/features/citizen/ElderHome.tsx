@@ -26,11 +26,17 @@ export default function ElderHome() {
   // 현위치(거부/미지원이면 시청 좌표 유지 — 무한대기 없음).
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    let alive = true;
     navigator.geolocation.getCurrentPosition(
-      (p) => setPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => {
+        if (alive) setPos({ lat: p.coords.latitude, lng: p.coords.longitude });
+      },
       () => {},
       { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 },
     );
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const primary = useMemo<Stop | null>(() => {
@@ -111,7 +117,11 @@ export default function ElderHome() {
           </button>
           {showMap && (
             <div className="elderhome__map">
-              <MapView onSelect={(s) => setOverride(s.id)} selectedId={primary.id} />
+              <MapView
+                onSelect={(s) => setOverride(s.id)}
+                selectedId={primary.id}
+                autoSelect={false}
+              />
             </div>
           )}
         </>

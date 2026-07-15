@@ -29,6 +29,7 @@ L.Icon.Default.mergeOptions({
 interface Props {
   onSelect: (stop: Stop) => void;
   selectedId?: string;
+  autoSelect?: boolean;
 }
 
 const baseStyle = (
@@ -52,7 +53,7 @@ const selectedStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
   opacity: 1,
 });
 
-export default function MapView({ onSelect, selectedId }: Props) {
+export default function MapView({ onSelect, selectedId, autoSelect = true }: Props) {
   const stops = useStops((s) => s.stops);
   const loaded = useStops((s) => s.loaded);
 
@@ -65,6 +66,8 @@ export default function MapView({ onSelect, selectedId }: Props) {
   const walkLayerRef = useRef<WalkLayer | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const autoSelectRef = useRef(autoSelect);
+  autoSelectRef.current = autoSelect;
 
   // 시설 필터 상태 — 켜진 시설이 "있음"인 정류장만 강조(미확인·없음 제외).
   const [active, setActive] = useState<FacilityFilterState>({
@@ -111,8 +114,8 @@ export default function MapView({ onSelect, selectedId }: Props) {
           zIndexOffset: 1000,
         }).addTo(map);
       }
-      // 참조 위치의 최근접 정류장 자동선택(1회).
-      if (!autoSelectedRef.current) {
+      // 참조 위치의 최근접 정류장 자동선택(1회, autoSelect=false 면 건너뜀).
+      if (autoSelectRef.current && !autoSelectedRef.current) {
         const near = useStops.getState().nearest({ lat, lng });
         if (near) {
           autoSelectedRef.current = true;
@@ -157,8 +160,8 @@ export default function MapView({ onSelect, selectedId }: Props) {
     }
 
     // 스토어는 loaded 됐지만 자동선택이 아직이면(위치 콜백보다 데이터가 늦은 경우)
-    // 지도 중심 기준 최근접을 선택한다.
-    if (!autoSelectedRef.current && loaded) {
+    // 지도 중심 기준 최근접을 선택한다(autoSelect=false 면 건너뜀).
+    if (autoSelectRef.current && !autoSelectedRef.current && loaded) {
       const c = map.getCenter();
       const near = useStops.getState().nearest({ lat: c.lat, lng: c.lng });
       if (near) {
