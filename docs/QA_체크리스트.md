@@ -32,10 +32,57 @@
 
 ## 전체 자동 테스트
 
-- 프론트 vitest: **79 passed (17 files)**
-- 파이프라인 pytest: **30 passed**
-- `npm run build`: 성공 (tsc + vite + PWA)
-- `npm audit`: 0 vulnerabilities
+- 프론트 vitest: **103 passed (22 files)** (v2 확장분 포함)
+- 파이프라인 pytest: **39 passed** (routes·tago_map 포함)
+- `npm run build`: 성공 (tsc + vite + PWA, precache 10 entries)
+- `npm audit`: 0 vulnerabilities (qrcode 추가분 포함)
+
+---
+
+# v2 확장 QA (2026-07-15) — 신규 흐름 4종 + 오프라인 폴백
+
+> `npm run build && npm run preview`(정적 빌드) 재현 기준. preview 서빙 확인: `/`·`/go`·`/favorites`·`/data/routes.json`·`/data/stops.json`·`/sw.js` 전부 200. routes.json = 223 노선, 평균 72.5 정류장(min 9).
+
+## v2 신규 흐름 (계획 Phase 11.2 시나리오 7~10)
+
+| # | 시나리오 | 결과 | 근거 |
+|---|---|---|---|
+| 7 | 시설 필터 칩 토글 → "있음" 정류장만 강조 → 탭 시 도보 경로선+시간 | ✅ 통과 | `filterStopsByFacility`는 켜진 시설이 전부 status==="yes"인 id만 AND 집합화(unknown·no 제외), 아무것도 안 켜면 전체. facilityFilter.test.ts 통과. StopCard: `getWalkRoute` real=true→"도보 약 N분", 폴백→"직선거리 약 N분"(StopCard.test.tsx 통과). WalkLayer가 실경로=파란 실선/직선폴백=회색 점선 구분 |
+| 8 | "가족에게 공유" → 네이티브 공유 또는 로컬 QR → 링크(`?fav=`) 열면 즐겨찾기 자동등록 | ✅ 통과 | ShareSheet: `navigator.share` 있으면 네이티브, 없거나 취소 시 `toQrDataUrl`(qrcode 라이브러리, `data:image/` — 네트워크 불필요) + "링크 복사". qr.test.ts 통과. ImportOnLoad가 로드 시 `?fav=` 화이트리스트 검증 후 addMany→`/favorites` 이동(타이핑 0) |
+| 9 | `/go` "버스로 가기" → 즐겨찾기(목적지) 탭 → 직행/환승 카드(도보+버스 도착) | ✅ 통과 | `/go` 200. planTrip: 같은 노선 board<dest→directBus, 없으면 환승역 공유로 legs 2개(transferStopId), 미도달이면 []. planTrip.test.ts 통과. 즐겨찾기 없으면 "먼저 자주 가는 곳을 별표로 저장하세요", 미도달이면 "직접 가는 버스를 찾지 못했습니다" 정직 안내 |
+| 10 | 실시간/폴백 도착 — 키 없는 현 상태에서 즉시 폴백 표시(무한 스피너 없음) | ✅ 통과 | `getArrival`: `VITE_TAGO_KEY`·`tagoNodeId` 둘 다 없으면 fetch 미호출·즉시 `배차간격 약 N분`(live:false). 키 있어도 2.5s AbortController 타임아웃·파싱실패면 폴백. arrivals.test.ts 통과. "실시간" 배지는 `arrival.live` true일 때만 렌더(StopCard.tsx:123) — 거짓 실시간 없음 |
+
+## 오프라인 폴백 (하드 제약, SW precache·폴백 경로 근거 판정)
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| 도보시간/경로 | ✅ | `getWalkRoute` OSRM 실패/타임아웃/오프라인 → `straightWalk`(haversine÷80, 직선 polyline, real:false). "직선거리 약 N분" 표기 |
+| 버스 도착 | ✅ | `getArrival` 키/네트워크 없으면 즉시 `headwayFallback`("배차간격 약 N분", live:false). 무한 대기 없음 |
+| 경로탐색(routes.json) | ✅ (수정 후) | `/data/routes.json` **precache 추가**(vite.config.ts). planTrip은 로컬 routes.json만으로 동작(순수 함수, 네트워크 무관) |
+| QR 생성 | ✅ | qrcode 라이브러리 로컬 data URL. 네트워크·키 불필요 |
+| 시설 필터/강조 | ✅ | `filterStopsByFacility` 순수 함수(stops 메모리 내). 네트워크 무관 |
+| 정류장 데이터 | ✅ | stops.json 런타임 StaleWhileRevalidate, 오프라인이면 precache된 stops.sample.json 폴백 |
+| 지도 타일 | ✅ | OSM 타일 CacheFirst(osm-tiles) 런타임 캐시 |
+
+**판정:** 오프라인에서 도보=직선폴백·도착=배차폴백·경로탐색=로컬 routes.json·QR=로컬·필터=로컬 전부 네트워크 없이 성립.
+**한계 명시:** 헤드리스 브라우저·실제 SW 등록 오프라인 재현은 이 환경에서 미실행 — SW precache 매니페스트(sw.js: routes.json·stops.sample.json 포함 확인)와 각 함수의 폴백 경로(위 근거)로 판정. 실기기에서 1회 로드 후 비행기모드 재접속 리허설 권장.
+
+## v2 표현 규칙 재검
+
+| 검사 | 결과 |
+|---|---|
+| "현장 확인" 문자열 | ✅ 0건 (`grep -rn "현장 확인" app/src`) |
+| 거짓 "실시간" 표기 | ✅ 없음 — `arrival.live` true일 때만 실시간 배지 |
+| 거짓 "실경로" 표기 | ✅ 없음 — real=false는 "직선거리"/회색 점선으로 구분 |
+| 폴백 정직 표기 | ✅ "배차간격 약 N분", "직선거리 약 N분" |
+| 합성 점수 | ✅ 없음 |
+| 미확인→"없음" 오표기 | ✅ 없음 — 필터는 unknown·no 모두 강조 제외("있음"만) |
+
+## v2 발견 버그
+
+| # | 심각도 | 영역 | 현상/재현 | 조치 |
+|---|---|---|---|---|
+| B1 | 중 | 인프라(SW 설정) | `routes.json`이 SW precache에도 runtimeCaching에도 없음(globPatterns가 json 제외, 런타임 패턴은 `stops.*.json`만 매칭). **재현:** 온라인 1회 로드 후 오프라인 재접속 → `/go`에서 `loadRoutes()` fetch 실패 → 모든 목적지가 "직접 가는 버스를 찾지 못했습니다" 표기. 오프라인 하드 제약(경로탐색=로컬 routes.json) 위반 | **수정 완료** — `app/vite.config.ts` `additionalManifestEntries`에 `/data/routes.json` precache 추가. 재빌드 후 sw.js에 routes.json 포함(precache 9→10) 확인. routes.json은 파이프라인 산출 정적 파일로 항상 존재 → precache 안전 |
 
 ## 발표 전 육안 확인 권장 (헤드리스로 대체 불가한 항목)
 

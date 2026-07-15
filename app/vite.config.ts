@@ -38,8 +38,11 @@ export default defineConfig({
         // 샘플 데이터만 precache(항상 존재). 실데이터 stops.json 은 빌드시 없을
         // 수도 있어 런타임 캐시(StaleWhileRevalidate)로 처리 → 오프라인이면
         // loadStops() 가 precache된 sample 로 폴백한다.
+        // routes.json 은 빌드 산출물로 항상 존재하는 정적 노선그래프 →
+        // precache 해야 오프라인에서 목적지 길찾기(planTrip)가 동작한다.
         additionalManifestEntries: [
           { url: '/data/stops.sample.json', revision: null },
+          { url: '/data/routes.json', revision: null },
         ],
         navigateFallback: '/index.html',
         runtimeCaching: [
