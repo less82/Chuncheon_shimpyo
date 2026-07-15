@@ -1,0 +1,129 @@
+.elderhome {
+  min-height: 100dvh;
+  padding: var(--sp-3) var(--sp-3) var(--sp-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.elderhome__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-1);
+}
+.elderhome__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.elderhome__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 0.6;
+  padding-bottom: 12px;
+}
+.elderhome__title {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--ink);
+}
+.elderhome__label {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--brand-strong);
+  padding: 0 var(--sp-2);
+}
+.elderhome__msg {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  text-align: center;
+  padding: var(--sp-6) var(--sp-4);
+}
+/* "버스 타러 가기" — 어른용 주행동 큰 버튼 */
+.elderhome__go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-lg);
+  border-radius: var(--radius-lg);
+  background: var(--warm);
+  color: var(--on-warm);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--shadow-card);
+}
+.elderhome__go:active {
+  background: var(--warm-strong);
+}
+.elderhome__nearby-title {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--ink);
+  padding: var(--sp-2) var(--sp-2) 0;
+}
+.elderhome__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.elderhome__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1) var(--sp-3);
+  width: 100%;
+  min-height: var(--touch-lg);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.elderhome__item:active {
+  background: var(--surface-2);
+}
+.elderhome__item-name {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--ink);
+}
+.elderhome__item-dist {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--ink-muted);
+  align-self: center;
+}
+.elderhome__item-sum {
+  grid-column: 1 / -1;
+  font-size: var(--fs-sm);
+  color: var(--ink-body);
+}
+.elderhome__mapbtn {
+  min-height: var(--touch);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-body);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+}
+.elderhome__map {
+  height: 60dvh;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
