@@ -29,7 +29,7 @@ export default function FavoriteStar({ id, name }: Props) {
       <svg width="30" height="30" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18.8 6.2 21.9l1.1-6.5L2.6 9.8l6.5-.9z" />
       </svg>
-      <span className="favstar__label">{active ? "즐겨찾기" : "즐겨찾기"}</span>
+      <span className="favstar__label">{active ? "즐겨찾기 됨" : "즐겨찾기"}</span>
     </button>
   );
 }
