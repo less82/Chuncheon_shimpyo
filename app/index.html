@@ -6,7 +6,8 @@
       Content-Security-Policy (정적 웹앱 하드닝).
       - default-src 'self'        : 기본은 동일 출처만.
       - img-src ... data: OSM     : Leaflet 마커 data URI + OpenStreetMap 타일.
-      - connect-src ... OSM/TAGO  : 타일 런타임 캐시 fetch + TAGO 도착정보(apis.data.go.kr).
+      - connect-src ... OSM/TAGO/OSRM : 타일 런타임 캐시 fetch + TAGO 도착정보(apis.data.go.kr)
+                                    + OSRM 도보경로(router.project-osrm.org).
       - style-src 'unsafe-inline' : Leaflet/인라인 스타일(정적 CSS 문자열, 스크립트 아님).
       - script-src 'self'         : 외부 스크립트 전면 차단(번들·registerSW 모두 동일 출처).
       - worker-src 'self'         : PWA 서비스워커(sw.js).
@@ -14,7 +15,7 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://*.tile.openstreetmap.org http://apis.data.go.kr https://apis.data.go.kr; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'"
+      content="default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://*.tile.openstreetmap.org http://apis.data.go.kr https://apis.data.go.kr https://router.project-osrm.org; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
