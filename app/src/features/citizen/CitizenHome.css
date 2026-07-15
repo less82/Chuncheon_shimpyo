@@ -50,6 +50,31 @@
   color: var(--ink);
 }
 
+.home__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.home__share {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--brand);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.home__share:active {
+  background: var(--brand-soft);
+}
+
 .home__fav {
   display: inline-flex;
   align-items: center;
