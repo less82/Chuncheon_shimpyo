@@ -9,12 +9,15 @@ import type { RoutesFile } from "../../types/route";
 import type { LatLng } from "../../lib/geo";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
+import { useViewMode } from "../../store/useViewMode";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { planTrip } from "./planTrip";
 import TripCard from "./TripCard";
+import VersionToggle from "../../components/VersionToggle";
 import "./TripView.css";
 
 export default function TripView() {
+  const mode = useViewMode((s) => s.mode);
   const stops = useStops((s) => s.stops);
   const cityCenter = useStops((s) => s.cityCenter);
   const favIds = useFavorites((s) => s.ids);
@@ -65,7 +68,7 @@ export default function TripView() {
   }, [destStop, routes, fromPos, stops]);
 
   return (
-    <main className="tripview">
+    <main className="tripview" data-mode={mode}>
       <header className="tripview__bar">
         <Link className="tripview__back" to="/" aria-label="지도로 돌아가기">
           <svg
@@ -84,7 +87,7 @@ export default function TripView() {
           지도
         </Link>
         <h1 className="tripview__title">버스로 가기</h1>
-        <span className="tripview__spacer" aria-hidden="true" />
+        <VersionToggle />
       </header>
 
       {favStops.length === 0 ? (

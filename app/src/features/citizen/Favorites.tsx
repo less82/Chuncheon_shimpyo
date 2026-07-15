@@ -5,8 +5,10 @@ import { Link } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
+import { useViewMode } from "../../store/useViewMode";
 import { facilitySummary, statusColor } from "../../lib/facilityText";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import VersionToggle from "../../components/VersionToggle";
 import "./Favorites.css";
 
 function FavoriteBigCard({ stop }: { stop: Stop }) {
@@ -68,6 +70,7 @@ function FavoriteBigCard({ stop }: { stop: Stop }) {
 }
 
 export default function Favorites() {
+  const mode = useViewMode((s) => s.mode);
   const favIds = useFavorites((s) => s.ids);
   const stops = useStops((s) => s.stops);
   const favStops = favIds
@@ -75,7 +78,7 @@ export default function Favorites() {
     .filter((s): s is Stop => Boolean(s));
 
   return (
-    <main className="favpage">
+    <main className="favpage" data-mode={mode}>
       <header className="favpage__bar">
         <Link className="favpage__back" to="/" aria-label="지도로 돌아가기">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -84,7 +87,7 @@ export default function Favorites() {
           지도
         </Link>
         <h1 className="favpage__title">즐겨찾기</h1>
-        <span className="favpage__spacer" aria-hidden="true" />
+        <VersionToggle />
       </header>
 
       {favStops.length === 0 ? (
