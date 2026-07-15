@@ -1,0 +1,18 @@
+.vtoggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--brand);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.vtoggle:active {
+  background: var(--brand-soft);
+}
