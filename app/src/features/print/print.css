@@ -1,0 +1,167 @@
+.poster {
+  min-height: 100dvh;
+  background: var(--surface-2);
+  padding: var(--sp-4);
+}
+
+.poster--missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.poster__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 720px;
+  margin: 0 auto var(--sp-4);
+}
+.poster__back {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  border-radius: var(--radius);
+  color: var(--brand-strong);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-decoration: none;
+}
+.poster__printbtn {
+  min-height: var(--touch-lg);
+  padding: 0 var(--sp-6);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* A4 종이 */
+.poster__sheet {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #fff;
+  color: #111;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 40px 44px;
+}
+
+.poster__head {
+  border-bottom: 4px solid var(--brand);
+  padding-bottom: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.poster__brand {
+  display: inline-block;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--brand);
+  margin-bottom: 8px;
+}
+.poster__name {
+  font-size: 64px;
+  line-height: 1.1;
+  letter-spacing: -2px;
+  color: #111;
+}
+.poster__routes {
+  margin-top: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #333;
+}
+
+.poster__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.poster__row {
+  --c: #57534e;
+  --c-bg: #f2efe9;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "kind status" "source source";
+  align-items: center;
+  gap: 4px 16px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: var(--c-bg);
+  border-left: 12px solid var(--c);
+}
+.poster__row[data-color="green"] {
+  --c: #15803d;
+  --c-bg: #e6f4ea;
+}
+.poster__row[data-color="red"] {
+  --c: #c1121f;
+  --c-bg: #fdeaea;
+}
+.poster__row-kind {
+  grid-area: kind;
+  font-size: 38px;
+  font-weight: 800;
+  color: #111;
+}
+.poster__row-status {
+  grid-area: status;
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--c);
+}
+.poster__row-source {
+  grid-area: source;
+  font-size: 20px;
+  font-weight: 600;
+  color: #555;
+}
+
+.poster__foot {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 2px solid #ddd;
+  font-size: 20px;
+  color: #555;
+}
+.poster__legend b {
+  color: #111;
+}
+.poster__captured,
+.poster__made {
+  margin-top: 6px;
+}
+
+/* ---- 인쇄 (A4) ---- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+  .poster {
+    background: #fff;
+    padding: 0;
+  }
+  .poster__toolbar {
+    display: none;
+  }
+  .poster__sheet {
+    max-width: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+  }
+  .poster__row {
+    break-inside: avoid;
+  }
+}

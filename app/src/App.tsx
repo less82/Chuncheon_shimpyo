@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CitizenHome from "./features/citizen/CitizenHome";
+import Favorites from "./features/citizen/Favorites";
+import PrintPoster from "./features/print/PrintPoster";
 import Dashboard from "./features/admin/Dashboard";
 import { useStops } from "./store/useStops";
 
@@ -18,6 +20,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<CitizenHome />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/print/:id" element={<PrintPoster />} />
         <Route path="/admin" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
