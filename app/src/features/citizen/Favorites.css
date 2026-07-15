@@ -31,9 +31,6 @@
 .favpage__title {
   font-size: var(--fs-lg);
 }
-.favpage__spacer {
-  width: 64px;
-}
 
 .favpage__list {
   display: flex;
@@ -182,9 +179,6 @@
 }
 
 /* 어른용: 정류장 이름 확대 */
-.favpage[data-mode="elder"] .favcard__name {
-  font-size: var(--fs-xl);
-}
 .favpage[data-mode="elder"] .favpage__title {
   font-size: var(--fs-xl);
 }

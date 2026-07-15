@@ -36,9 +36,6 @@
   font-weight: 900;
   color: var(--ink);
 }
-.tripview__spacer {
-  width: var(--touch);
-}
 
 /* 목적지 고르기 */
 .tripview__dests {
@@ -205,12 +202,12 @@
 
 /* 어른용: 목적지 이름·안내 글씨 확대 */
 .tripview[data-mode="elder"] .tripview__title {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
 }
 .tripview[data-mode="elder"] .tripview__dests-label {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-xl);
 }
 .tripview[data-mode="elder"] .tripview__dest {
   min-height: var(--touch-lg);
-  font-size: var(--fs-md);
+  font-size: var(--fs-lg);
 }
