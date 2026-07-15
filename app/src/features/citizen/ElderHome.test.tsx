@@ -70,4 +70,13 @@ describe("ElderHome", () => {
       screen.getByRole("heading", { level: 2, name: /중간정류장/ }),
     ).toBeInTheDocument();
   });
+
+  it("근처 목록에서 직접 고른 정류장은 '선택한 정류장'으로 표시한다", () => {
+    renderHome();
+    expect(screen.getByText("가장 가까운 정류장")).toBeInTheDocument();
+    const list = screen.getByRole("region", { name: "근처 정류장" });
+    fireEvent.click(within(list).getByText("중간정류장"));
+    expect(screen.getByText("선택한 정류장")).toBeInTheDocument();
+    expect(screen.queryByText("가장 가까운 정류장")).not.toBeInTheDocument();
+  });
 });

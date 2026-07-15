@@ -63,7 +63,11 @@ export default function ElderHome() {
       ) : primary ? (
         <>
           <p className="elderhome__label">
-            {favIds.includes(primary.id) ? "⭐ 내 정류장" : "가장 가까운 정류장"}
+            {favIds.includes(primary.id)
+              ? "⭐ 내 정류장"
+              : override === primary.id
+                ? "선택한 정류장"
+                : "가장 가까운 정류장"}
           </p>
 
           <StopCard stop={primary} />
