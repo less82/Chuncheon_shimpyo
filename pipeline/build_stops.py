@@ -14,6 +14,7 @@ import os
 from attach_demand import attach_demand
 from attach_facilities import attach_lights, attach_seats, attach_shade
 from build_master import build_master
+from build_routes import build_routes
 from loaders import (
     load_bench,
     load_boarding,
@@ -26,6 +27,7 @@ from roadview import ROADVIEW_HEADER, apply_roadview, write_survey_template
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _OUT_DIR = os.path.abspath(os.path.join(_HERE, "..", "app", "public", "data"))
 _STOPS_JSON = os.path.join(_OUT_DIR, "stops.json")
+_ROUTES_JSON = os.path.join(_OUT_DIR, "routes.json")
 _SURVEY_CSV = os.path.join(_OUT_DIR, "roadview_survey_template.csv")
 _ROADVIEW_INPUT = os.path.join(_OUT_DIR, "roadview_survey_filled.csv")  # 있으면 반영
 
@@ -125,6 +127,25 @@ def _facility_distribution(stops):
 def main():
     os.makedirs(_OUT_DIR, exist_ok=True)
     data = build()
+
+    # --- routes.json (노선별 정류장 순서 그래프) ---
+    routes = build_routes()
+    with open(_ROUTES_JSON, "w", encoding="utf-8") as f:
+        json.dump(routes, f, ensure_ascii=False, separators=(",", ":"))
+    _n = len(routes["routes"])
+    _avg = sum(len(r["stops"]) for r in routes["routes"]) / _n if _n else 0
+    print(f"생성: {_ROUTES_JSON} (노선 {_n}개, 평균 정류장수 {_avg:.1f})")
+
+    # --- TAGO nodeid 병합(키 없으면 skip → stop에 tagoNodeId 미부여) ---
+    from tago_map import build_tago_mapping
+
+    mapping = build_tago_mapping(data["stops"])
+    for s in data["stops"]:
+        nid = mapping.get(s["id"])
+        if nid:
+            s["tagoNodeId"] = nid
+    if mapping:
+        print(f"TAGO nodeid 매핑: {len(mapping)}/{len(data['stops'])}")
 
     with open(_STOPS_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))

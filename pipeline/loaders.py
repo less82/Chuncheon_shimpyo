@@ -50,7 +50,7 @@ def load_locations() -> pd.DataFrame:
 def load_routes() -> pd.DataFrame:
     """노선정보. 관리번호(정류장 컬럼)로 위치정보와 조인.
 
-    반환 컬럼: 노선번호, 관리번호, 순서, 정류장명
+    반환 컬럼: 노선번호, 노선(id), 관리번호, 순서, 정류장명
     """
     from route_number_fix import fix_route_number
 
@@ -58,6 +58,7 @@ def load_routes() -> pd.DataFrame:
     out = pd.DataFrame(
         {
             "노선번호": df["노선번호"].map(fix_route_number),
+            "노선": df["노선"].astype(str).str.strip(),
             "관리번호": df["정류장"].astype(str).str.strip(),
             "순서": pd.to_numeric(df["정류장순서"], errors="coerce"),
             "정류장명": df["정류장명"].astype(str).str.strip(),
