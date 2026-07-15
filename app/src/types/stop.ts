@@ -39,6 +39,7 @@ export interface Stop {
   };
   demand?: Demand; // 없으면 = 수요 미확인
   headwayMin?: number; // 배차간격(분) 캐시 — TAGO 도착정보 폴백용
+  tagoNodeId?: string; // TAGO 정류소 노드ID — 있으면 실시간 도착정보 조회
 }
 
 export interface StopsFile {
