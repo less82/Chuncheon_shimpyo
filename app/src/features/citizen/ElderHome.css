@@ -48,6 +48,25 @@
   text-align: center;
   padding: var(--sp-6) var(--sp-4);
 }
+/* 근처 정류장을 골랐을 때 "내 정류장"으로 되돌아가는 버튼 */
+.elderhome__reset {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  margin: 0 var(--sp-2);
+  padding: 0 var(--sp-4);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+}
+.elderhome__reset:active {
+  background: var(--surface-2);
+}
 /* "버스 타러 가기" — 어른용 주행동 큰 버튼 */
 .elderhome__go {
   display: flex;

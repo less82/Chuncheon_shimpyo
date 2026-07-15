@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import MapView from "../map/MapView";
 import StopCard from "./StopCard";
-import ImportOnLoad from "../share/ImportOnLoad";
 import ShareSheet from "../share/ShareSheet";
 import VersionToggle from "../../components/VersionToggle";
 import { useStops } from "../../store/useStops";
@@ -22,8 +21,6 @@ export default function CitizenHome() {
 
   return (
     <main className="home">
-      <ImportOnLoad />
-
       <header className="home__bar">
         <div className="home__brand">
           <span className="home__logo" aria-hidden="true">
