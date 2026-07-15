@@ -1,0 +1,35 @@
+/* 시설 필터 칩 — 지도 위 오버레이. 큰 터치타깃(≥48px), 아이콘+한글. */
+.facfilter {
+  position: absolute;
+  left: var(--sp-3);
+  top: var(--sp-4);
+  z-index: 500;
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.facfilter__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-body);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.facfilter__chip[aria-pressed="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+.facfilter__chip:active {
+  transform: scale(0.97);
+}

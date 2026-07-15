@@ -13,3 +13,6 @@ export const MARKER_HEX: Record<"green" | "gray", string> = {
   green: "#15803d",
   gray: "#8a8178",
 };
+
+/** 시설 필터 비매칭 정류장을 흐리게 표시할 때의 채우기 불투명도. */
+export const DIM_OPACITY = 0.25;
