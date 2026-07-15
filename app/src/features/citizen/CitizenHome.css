@@ -75,6 +75,24 @@
   background: var(--brand-soft);
 }
 
+.home__go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--shadow-card);
+}
+.home__go:active {
+  background: var(--brand-strong);
+}
+
 .home__fav {
   display: inline-flex;
   align-items: center;
