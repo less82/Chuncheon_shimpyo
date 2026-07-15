@@ -1,0 +1,126 @@
+/* 하단 정류장 카드 — 시트 형태, 큰 글씨 */
+.stopcard {
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-float);
+  padding: var(--sp-3) var(--sp-5) var(--sp-5);
+  border-top: 1px solid var(--border);
+}
+
+.stopcard__grip {
+  width: 46px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  margin: 0 auto var(--sp-3);
+}
+
+.stopcard__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.stopcard__name {
+  font-size: var(--fs-xl);
+  letter-spacing: -0.6px;
+}
+
+.stopcard__routes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.stopcard__route {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+}
+
+/* 도착정보 배너 */
+.stopcard__arrival {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+}
+.stopcard__arrival[data-live="true"] {
+  background: var(--warm-soft);
+  color: var(--warm-strong);
+}
+.stopcard__livedot {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--warm);
+  color: var(--on-warm);
+}
+
+/* 4시설 배지 2x2 */
+.stopcard__facilities {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+/* 하단 액션 */
+.stopcard__actions {
+  display: flex;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.stopcard__share,
+.stopcard__print {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--touch-lg);
+  border-radius: var(--radius);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.stopcard__share {
+  border: none;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.stopcard__print {
+  border: 2px solid var(--brand);
+  background: var(--surface);
+  color: var(--brand-strong);
+}
+.stopcard__share:active,
+.stopcard__print:active {
+  transform: scale(0.98);
+}
+
+@media (min-width: 640px) {
+  .stopcard__name {
+    font-size: var(--fs-2xl);
+  }
+}

@@ -1,0 +1,31 @@
+.favstar {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.favstar[data-active="true"] {
+  color: var(--warm);
+  border-color: var(--warm);
+  background: var(--warm-soft);
+}
+
+.favstar__label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.favstar:active {
+  transform: scale(0.96);
+}
