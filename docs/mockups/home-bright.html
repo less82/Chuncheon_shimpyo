@@ -1,0 +1,313 @@
+<style>
+  /* 밝은(야외용) 단일 라이트 테마 — 폭염에 밖에서 쓰는 고령자 기준.
+     햇빛 아래 가독성을 위해 흰 배경 + 강한 대비 + 또렷한 강조. 다크 테마 없음(의도적 고정). */
+  :root{
+    --brand:#2e7d40; --brand-strong:#1e5e2c; --brand-soft:#e3f4e7; --on-brand:#fff;
+    --warm:#d1490c; --warm-strong:#a83809; --warm-soft:#ffe9dc; --on-warm:#fff;
+    --page:#e7ece8; --app:#ffffff; --surface:#ffffff; --surface-2:#f2f5f2;
+    --ink:#14100d; --ink-body:#332f2a; --ink-muted:#5c554d;
+    --yes:#157a37; --yes-bg:#e3f6e8; --unknown:#4a453f; --unknown-bg:#eceef0;
+    --no:#c1121f; --no-bg:#fdeaea;
+    --border:#e3e7e2; --border-strong:#c9d0c8;
+    --shadow:0 1px 4px rgba(20,16,13,.06),0 12px 30px rgba(20,16,13,.10);
+    --shadow-soft:0 1px 3px rgba(20,16,13,.05),0 5px 14px rgba(20,16,13,.06);
+    --font:"Pretendard","Pretendard Variable",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--ink-body);
+    -webkit-font-smoothing:antialiased;line-height:1.5;}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px;}
+  .lede{text-align:center;margin-bottom:18px;}
+  .lede h1{font-size:26px;font-weight:800;color:var(--ink);margin:0 0 6px;letter-spacing:-.4px;text-wrap:balance;}
+  .lede p{font-size:15px;color:var(--ink-muted);margin:0 auto;max-width:64ch;}
+  .lede .why{margin-top:10px;font-size:13px;color:var(--ink-muted);}
+  .lede .why b{color:var(--brand-strong);}
+
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 8px;}
+  .tab{appearance:none;border:1.5px solid var(--border-strong);background:var(--surface);
+    color:var(--ink-body);font-family:inherit;font-size:14.5px;font-weight:700;
+    padding:11px 16px;border-radius:999px;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
+  .tab b{color:var(--ink);}
+  .tab:hover{background:var(--surface-2);}
+  .tab:focus-visible{outline:3px solid var(--warm);outline-offset:2px;}
+  .tab[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
+  .tab[aria-selected="true"] b{color:var(--on-brand);}
+
+  .caption{max-width:60ch;margin:14px auto 22px;text-align:center;font-size:14.5px;color:var(--ink-muted);}
+  .caption strong{color:var(--ink);font-weight:700;}
+  .caption .tag{display:inline-block;font-size:12px;font-weight:700;color:var(--brand-strong);
+    background:var(--brand-soft);border-radius:6px;padding:2px 8px;margin-bottom:8px;}
+  .caption .fit{display:block;margin-top:6px;color:var(--warm-strong);font-weight:700;}
+
+  .stage{display:flex;justify-content:center;}
+  .phone{width:392px;max-width:100%;border-radius:44px;background:var(--app);
+    box-shadow:var(--shadow);border:10px solid #cfd6ce;overflow:hidden;position:relative;}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:26px;
+    background:#cfd6ce;border-radius:0 0 16px 16px;z-index:5;}
+  .screen{min-height:734px;padding:46px 18px 26px;display:flex;flex-direction:column;gap:15px;}
+  .panel[hidden]{display:none;}
+
+  .loc{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-muted);font-weight:700;}
+  .loc svg{width:16px;height:16px;flex:none;}
+  .routes{display:flex;flex-wrap:wrap;gap:6px;}
+  .route{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand-strong);
+    background:var(--brand-soft);border-radius:8px;padding:4px 9px;}
+  .cta{display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;border-radius:16px;
+    background:var(--warm);color:var(--on-warm);font-size:18px;font-weight:800;text-decoration:none;
+    box-shadow:var(--shadow-soft);margin-top:auto;}
+  .arr{display:flex;align-items:center;gap:9px;background:var(--brand-soft);color:var(--brand-strong);
+    border-radius:14px;padding:13px 15px;font-size:17px;font-weight:800;}
+  .arr svg{width:22px;height:22px;flex:none;}
+
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border-radius:12px;font-size:16px;font-weight:800;}
+  .chip svg{width:21px;height:21px;flex:none;}
+  .chip .st{margin-left:auto;}
+  .chip[data-s="yes"]{background:var(--yes-bg);color:var(--yes);}
+  .chip[data-s="unknown"]{background:var(--unknown-bg);color:var(--unknown);}
+  .chip[data-s="no"]{background:var(--no-bg);color:var(--no);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+  .verdict{display:flex;align-items:center;gap:14px;border-radius:18px;padding:18px;box-shadow:var(--shadow-soft);}
+  .verdict svg{width:42px;height:42px;flex:none;}
+  .verdict .vt{font-size:25px;font-weight:900;letter-spacing:-.3px;}
+  .verdict .vs{font-size:15px;font-weight:700;opacity:.92;margin-top:2px;}
+  .verdict[data-v="good"]{background:var(--yes-bg);color:var(--yes);}
+  .verdict[data-v="partial"]{background:var(--warm-soft);color:var(--warm-strong);}
+  .verdict[data-v="unknown"]{background:var(--unknown-bg);color:var(--unknown);}
+
+  .near{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow-soft);}
+  .near .nh{font-size:12.5px;font-weight:800;color:var(--ink-muted);letter-spacing:.08em;margin-bottom:6px;}
+  .near .nr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);}
+  .near .nr:first-of-type{border-top:none;}
+  .near .nn{font-size:16px;font-weight:800;color:var(--ink);}
+  .near .nno{font-size:12.5px;font-weight:800;color:var(--ink-muted);font-variant-numeric:tabular-nums;background:var(--surface-2);border-radius:6px;padding:2px 7px;}
+  .near .nd{margin-left:auto;font-size:13px;font-weight:700;color:var(--ink-muted);}
+
+  .hn{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .hn .no{font-size:15px;font-weight:900;color:var(--on-warm);background:var(--warm);border-radius:8px;padding:3px 10px;font-variant-numeric:tabular-nums;}
+  .hn .nm{font-size:34px;font-weight:900;color:var(--ink);line-height:1.05;letter-spacing:-.6px;text-wrap:balance;}
+
+  .v1-name{font-size:40px;font-weight:900;color:var(--ink);line-height:1.06;letter-spacing:-.7px;text-align:center;text-wrap:balance;}
+  .v1-no{align-self:center;font-size:15px;font-weight:900;color:var(--on-warm);background:var(--warm);border-radius:999px;padding:5px 16px;font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+
+  .v2-badge{background:var(--warm);color:var(--on-warm);border-radius:22px;padding:14px 18px 16px;text-align:center;box-shadow:var(--shadow-soft);}
+  .v2-badge .lbl{font-size:13px;font-weight:800;letter-spacing:.16em;opacity:.95;}
+  .v2-badge .no{font-size:60px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1px;}
+  .v2-name{font-size:34px;font-weight:900;color:var(--ink);text-align:center;letter-spacing:-.5px;line-height:1.1;text-wrap:balance;}
+  .v2-lead{font-size:12.5px;font-weight:800;color:var(--ink-muted);letter-spacing:.06em;text-align:center;}
+  .bigfac{border-radius:16px;padding:15px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-soft);}
+  .bigfac svg{width:30px;height:30px;}
+  .bigfac .bn{font-size:17px;font-weight:800;}
+  .bigfac .bs{font-size:21px;font-weight:900;}
+  .bigfac[data-s="yes"]{background:var(--yes-bg);color:var(--yes);}
+  .bigfac[data-s="unknown"]{background:var(--unknown-bg);color:var(--unknown);}
+
+  .sign{background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border);}
+  .sign .cap{background:var(--brand);color:var(--on-brand);display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:15px;font-weight:800;}
+  .sign .cap svg{width:24px;height:24px;}
+  .sign .body{padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .nobox{border:2.5px solid var(--ink);border-radius:12px;padding:7px 12px;display:flex;align-items:baseline;gap:10px;align-self:flex-start;}
+  .nobox .k{font-size:13px;font-weight:800;color:var(--ink-muted);}
+  .nobox .v{font-size:32px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;}
+  .sign .nm{font-size:33px;font-weight:900;color:var(--ink);line-height:1.05;letter-spacing:-.5px;}
+  .strip{background:var(--surface-2);border-radius:10px;padding:10px 12px;}
+  .strip .k{font-size:12px;font-weight:800;color:var(--ink-muted);letter-spacing:.08em;margin-bottom:6px;}
+  .foot{display:flex;gap:8px;border-top:1px dashed var(--border-strong);padding-top:14px;}
+  .fi{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;font-size:12.5px;font-weight:800;color:var(--ink-body);text-align:center;}
+  .fi .ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .fi .ic svg{width:23px;height:23px;}
+  .fi .ic[data-s="yes"]{background:var(--yes-bg);color:var(--yes);}
+  .fi .ic[data-s="unknown"]{background:var(--unknown-bg);color:var(--unknown);}
+  .fi[data-s="yes"] .stt{color:var(--yes);} .fi[data-s="unknown"] .stt{color:var(--unknown);}
+
+  .v4{padding-inline:22px;gap:16px;}
+  .ey{font-size:12.5px;font-weight:800;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;}
+  .v4-no{font-size:15px;font-weight:900;color:var(--on-warm);background:var(--warm);border-radius:8px;padding:3px 10px;font-variant-numeric:tabular-nums;}
+  .v4-name{font-size:50px;font-weight:900;color:var(--ink);line-height:.98;letter-spacing:-1.4px;margin:2px 0 0;text-wrap:balance;}
+  .rule{height:2px;background:var(--ink);opacity:.12;border:0;margin:2px 0;}
+  .v4-fr{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--border);}
+  .v4-fr svg{width:23px;height:23px;color:var(--ink-muted);flex:none;}
+  .v4-fr .nm{font-size:19px;font-weight:800;color:var(--ink);}
+  .v4-fr .stt{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:17px;font-weight:900;}
+  .v4-fr .dot{width:11px;height:11px;border-radius:50%;}
+  .v4-fr[data-s="yes"] .stt{color:var(--yes);} .v4-fr[data-s="yes"] .dot{background:var(--yes);}
+  .v4-fr[data-s="unknown"] .stt{color:var(--unknown);} .v4-fr[data-s="unknown"] .dot{background:var(--unknown);}
+
+  .d-hero{background:var(--brand);color:var(--on-brand);border-radius:20px;padding:18px 20px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow-soft);}
+  .d-hero .big{font-size:52px;font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;}
+  .d-hero .big small{font-size:22px;font-weight:800;}
+  .d-hero .rt{display:flex;flex-direction:column;gap:4px;}
+  .d-hero .rt .t{font-size:14px;font-weight:700;opacity:.95;}
+  .d-hero .live{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;background:rgba(255,255,255,.24);border-radius:999px;padding:3px 9px;}
+  .d-hero .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;}
+  .restline{display:flex;align-items:center;gap:10px;background:var(--yes-bg);color:var(--yes);border-radius:14px;padding:12px 14px;font-size:16px;font-weight:800;}
+  .restline svg{width:22px;height:22px;flex:none;}
+  .facrow{display:flex;gap:8px;}
+  .facrow .chip{flex:1;min-width:0;justify-content:center;flex-direction:column;gap:5px;text-align:center;padding:11px 4px;font-size:13.5px;}
+  .facrow .chip .st{margin:0;}
+
+  @media (max-width:440px){
+    .phone{border-radius:34px;border-width:8px;}
+    .screen{padding-inline:14px;}
+    .v4-name{font-size:40px;}
+    .v2-badge .no{font-size:50px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-shade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M4.5 12a7.5 7.5 0 0 1 15 0z M12 12v7a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-seat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5 M6 10h12 M18 10V5a1 1 0 0 0-1-1h-1 M5 10l1 6M18 10l-1 6M6 16h11M7 16v3M17 16v3"/></symbol>
+  <symbol id="i-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4 M12 3a6 6 0 0 1 4 10.5c-.6.6-1 1.3-1 2.1H9c0-.8-.4-1.5-1-2.1A6 6 0 0 1 12 3z"/></symbol>
+  <symbol id="i-sign" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 20h10M8 8h8M8 12h5"/></symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10M4 16h16M4 16v2M20 16v2M4 11h16M8 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2M16 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-rest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M4.5 12a7.5 7.5 0 0 1 15 0zM6 16h12l-1 5H7z"/></symbol>
+</svg>
+
+<div class="wrap">
+  <div class="lede">
+    <h1>홈 화면 시안 5종 — 밝은(야외용) 버전</h1>
+    <p>폭염에 밖에서 쓰는 고령자 기준으로 <b>흰 배경 + 강한 대비 + 또렷한 강조</b>로 밝게. 다크 테마 없이 항상 밝게 고정. 정류장 번호·이름을 앞세우고 "쉼표 정류장" 문구는 뺐습니다. 예시: 춘천여고앞·번호 2645.</p>
+    <p class="why">기준: <b>야외 가독성</b>(고휘도·고대비) · Accessible &amp; Ethical(큰 글씨·SVG 아이콘·48px 터치) · 3상태(있음/미확인) 정직 표기</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="홈 화면 시안">
+    <button class="tab" role="tab" aria-selected="true"  aria-controls="p1" id="t1" onclick="pick('1')"><b>1</b> · 쉼터 신호등</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p2" id="t2" onclick="pick('2')"><b>2</b> · 번호표+쉼터</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p3" id="t3" onclick="pick('3')"><b>3</b> · 표지판</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p4" id="t4" onclick="pick('4')"><b>4</b> · 대형 타이포</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p5" id="t5" onclick="pick('5')"><b>5</b> · 도착 강조</button>
+  </div>
+
+  <div class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+    <p class="caption"><span class="tag">시안 1 · 쉼터 신호등</span><br><strong>"여기서 쉴 수 있나"를 신호등처럼.</strong> 번호·이름 아래 그늘·의자로 판정한 큰 쉼터 카드를 먼저 보여줌.<span class="fit">서비스 핵심 질문에 즉답 — 폭염 쉼터 앱다움이 가장 강함.</span></p>
+    <div class="stage"><div class="phone"><div class="notch"></div>
+      <div class="screen">
+        <div class="loc"><svg><use href="#i-pin"/></svg> 가장 가까운 정류장 · 120m · 오늘 낮 최고 34°C</div>
+        <span class="v1-no">정류장 번호 2645</span>
+        <div class="v1-name">춘천여고앞</div>
+        <div class="verdict" data-v="good"><svg><use href="#i-rest"/></svg><div><div class="vt">지금 쉬기 좋아요</div><div class="vs">그늘 있음 · 의자 있음</div></div></div>
+        <div class="grid2">
+          <span class="chip" data-s="yes"><svg><use href="#i-shade"/></svg>그늘<span class="st">있음</span></span>
+          <span class="chip" data-s="yes"><svg><use href="#i-seat"/></svg>의자<span class="st">있음</span></span>
+          <span class="chip" data-s="yes"><svg><use href="#i-light"/></svg>조명<span class="st">있음</span></span>
+          <span class="chip" data-s="unknown"><svg><use href="#i-sign"/></svg>도착안내기<span class="st">미확인</span></span>
+        </div>
+        <div class="arr"><svg><use href="#i-bus"/></svg> 버스 약 12분 간격</div>
+        <a class="cta" href="#" onclick="return false">버스 타러 가기 →</a>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <p class="caption"><span class="tag">시안 2 · 번호표 + 쉼터 강조</span><br><strong>번호표 히어로 + 쉼 필수(그늘·의자) 큰 카드.</strong> 현장 표지판 번호와 대조하고, 폭염에 중요한 그늘·의자를 큰 카드로.<span class="fit">번호 직관성 + 쉼터 우선 정보를 동시에.</span></p>
+    <div class="stage"><div class="phone"><div class="notch"></div>
+      <div class="screen">
+        <div class="loc"><svg><use href="#i-pin"/></svg> 가장 가까운 정류장 · 120m</div>
+        <div class="v2-badge"><div class="lbl">정류장 번호</div><div class="no">2645</div></div>
+        <div class="v2-name">춘천여고앞</div>
+        <div class="routes" style="justify-content:center"><span class="route">11</span><span class="route">18</span><span class="route">200-1</span><span class="route">300</span><span class="route">신북1</span></div>
+        <div class="v2-lead">☀ 폭염 쉼 정보</div>
+        <div class="grid2">
+          <div class="bigfac" data-s="yes"><svg><use href="#i-shade"/></svg><span class="bn">그늘</span><span class="bs">있음</span></div>
+          <div class="bigfac" data-s="yes"><svg><use href="#i-seat"/></svg><span class="bn">의자</span><span class="bs">있음</span></div>
+        </div>
+        <div class="grid2">
+          <span class="chip" data-s="yes"><svg><use href="#i-light"/></svg>조명<span class="st">있음</span></span>
+          <span class="chip" data-s="unknown"><svg><use href="#i-sign"/></svg>도착안내기<span class="st">미확인</span></span>
+        </div>
+        <div class="arr"><svg><use href="#i-bus"/></svg> 버스 약 12분 간격</div>
+        <a class="cta" href="#" onclick="return false">버스 타러 가기 →</a>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+    <p class="caption"><span class="tag">시안 3 · 표지판 스타일</span><br><strong>실제 버스 표지판을 화면에 그대로.</strong> 머리판·번호 박스·큰 이름·노선 띠·하단 시설.<span class="fit">현장에서 "이 표지판 맞나" 확인이 가장 빠름.</span></p>
+    <div class="stage"><div class="phone"><div class="notch"></div>
+      <div class="screen">
+        <div class="loc"><svg><use href="#i-pin"/></svg> 가장 가까운 정류장 · 120m</div>
+        <div class="sign">
+          <div class="cap"><svg><use href="#i-bus"/></svg> 시내버스 정류장</div>
+          <div class="body">
+            <div class="nobox"><span class="k">No.</span><span class="v">2645</span></div>
+            <div class="nm">춘천여고앞</div>
+            <div class="strip"><div class="k">경유 노선</div><div class="routes"><span class="route">11</span><span class="route">18</span><span class="route">200-1</span><span class="route">300</span><span class="route">신북1</span></div></div>
+            <div class="foot">
+              <div class="fi" data-s="yes"><span class="ic" data-s="yes"><svg><use href="#i-shade"/></svg></span>그늘<span class="stt">있음</span></div>
+              <div class="fi" data-s="yes"><span class="ic" data-s="yes"><svg><use href="#i-seat"/></svg></span>의자<span class="stt">있음</span></div>
+              <div class="fi" data-s="yes"><span class="ic" data-s="yes"><svg><use href="#i-light"/></svg></span>조명<span class="stt">있음</span></div>
+              <div class="fi" data-s="unknown"><span class="ic" data-s="unknown"><svg><use href="#i-sign"/></svg></span>안내기<span class="stt">미확인</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="arr"><svg><use href="#i-bus"/></svg> 버스 약 12분 간격</div>
+        <a class="cta" href="#" onclick="return false">버스 타러 가기 →</a>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="panel" id="p4" role="tabpanel" aria-labelledby="t4" hidden>
+    <p class="caption"><span class="tag">시안 4 · 대형 타이포</span><br><strong>이름을 화면에서 가장 크게, 여백 넉넉.</strong> 번호는 이름 위 라벨, 시설은 또렷한 리스트.<span class="fit">고령자 가독성 최우선 — 정보 하나씩 위→아래.</span></p>
+    <div class="stage"><div class="phone"><div class="notch"></div>
+      <div class="screen v4">
+        <div style="display:flex;align-items:center;gap:10px"><span class="ey">가장 가까운 정류장</span><span class="v4-no">번호 2645</span></div>
+        <h2 class="v4-name">춘천여고앞</h2>
+        <hr class="rule">
+        <div style="font-size:15px;font-weight:700;color:var(--ink-body)"><span class="ey" style="display:block;margin-bottom:2px">경유 노선</span>11 · 18 · 200-1 · 300 · 신북1</div>
+        <div>
+          <div class="v4-fr" data-s="yes"><svg><use href="#i-shade"/></svg><span class="nm">그늘</span><span class="stt"><span class="dot"></span>있음</span></div>
+          <div class="v4-fr" data-s="yes"><svg><use href="#i-seat"/></svg><span class="nm">의자</span><span class="stt"><span class="dot"></span>있음</span></div>
+          <div class="v4-fr" data-s="yes"><svg><use href="#i-light"/></svg><span class="nm">조명</span><span class="stt"><span class="dot"></span>있음</span></div>
+          <div class="v4-fr" data-s="unknown"><svg><use href="#i-sign"/></svg><span class="nm">도착안내기</span><span class="stt"><span class="dot"></span>미확인</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:var(--brand-strong)"><svg width="20" height="20"><use href="#i-bus"/></svg> 버스 약 12분 간격</div>
+        <a class="cta" href="#" onclick="return false">버스 타러 가기 →</a>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="panel" id="p5" role="tabpanel" aria-labelledby="t5" hidden>
+    <p class="caption"><span class="tag">시안 5 · 도착 강조</span><br><strong>"버스 언제 오나"를 큰 숫자로 + 쉼터 한 줄 요약.</strong> 이름·번호 헤더, 도착 히어로, 쉼 요약, 시설 한 줄, 근처 목록.<span class="fit">서두르는 사람에게 도착+쉼을 빠르게 스캔.</span></p>
+    <div class="stage"><div class="phone"><div class="notch"></div>
+      <div class="screen">
+        <div class="loc"><svg><use href="#i-pin"/></svg> 가장 가까운 정류장 · 120m</div>
+        <div class="hn"><span class="no">2645</span><span class="nm">춘천여고앞</span></div>
+        <div class="d-hero"><div class="big">12<small>분</small></div><div class="rt"><span class="live">실시간</span><span class="t">다음 버스 간격</span><span class="t" style="opacity:.8">11 · 18 · 200-1 · 300</span></div></div>
+        <div class="restline"><svg><use href="#i-rest"/></svg> 그늘·의자 있음 — 쉬며 기다릴 수 있어요</div>
+        <div class="facrow">
+          <span class="chip" data-s="yes"><svg><use href="#i-shade"/></svg>그늘<span class="st">있음</span></span>
+          <span class="chip" data-s="yes"><svg><use href="#i-seat"/></svg>의자<span class="st">있음</span></span>
+          <span class="chip" data-s="yes"><svg><use href="#i-light"/></svg>조명<span class="st">있음</span></span>
+          <span class="chip" data-s="unknown"><svg><use href="#i-sign"/></svg>안내기<span class="st">미확인</span></span>
+        </div>
+        <div class="near">
+          <div class="nh">근처 다른 정류장</div>
+          <div class="nr"><span class="nn">소양강댐주차장</span><span class="nno">1007</span><span class="nd">250m</span></div>
+          <div class="nr"><span class="nn">후평3동우체국</span><span class="nno">1012</span><span class="nd">400m</span></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<script>
+  function pick(k){
+    ['1','2','3','4','5'].forEach(function(x){
+      document.getElementById('p'+x).hidden = (x!==k);
+      document.getElementById('t'+x).setAttribute('aria-selected', x===k?'true':'false');
+    });
+  }
+  var tabs=Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  tabs.forEach(function(t,i){
+    t.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+        e.preventDefault();
+        var n=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;
+        tabs[n].focus(); tabs[n].click();
+      }
+    });
+  });
+</script>
