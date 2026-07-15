@@ -8,17 +8,36 @@ import FacilityBadge from "../../components/FacilityBadge";
 import FavoriteStar from "../../components/FavoriteStar";
 import AltStopHint from "./AltStopHint";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
 import { buildShareUrl } from "../share/shareLink";
 import { useFavorites } from "../../store/useFavorites";
+import { CITY_CENTER } from "../../types/stop";
 import "./StopCard.css";
 
 interface Props {
   stop: Stop;
+  /** 부모가 도보 결과를 넘기면 그대로 표시(테스트·주입용). 없으면 스스로 계산. */
+  walkMin?: number;
+  walkReal?: boolean;
 }
 
-export default function StopCard({ stop }: Props) {
+interface Walk {
+  min: number;
+  real: boolean;
+}
+
+/** 도보 시간 문구 — 실경로면 "도보", 직선 폴백이면 "직선거리"로 정직 표기. */
+export function walkText(min: number, real: boolean): string {
+  return real ? `도보 약 ${min}분` : `직선거리 약 ${min}분`;
+}
+
+export default function StopCard({ stop, walkMin, walkReal }: Props) {
   // 폴백 문구로 즉시 초기화 → 무한 스피너 없음. 실시간이 오면 갱신.
   const [arrival, setArrival] = useState<Arrival>(() => headwayFallback(stop));
+  const injected = walkMin !== undefined;
+  const [walk, setWalk] = useState<Walk | null>(
+    injected ? { min: walkMin!, real: walkReal ?? false } : null,
+  );
   const favIds = useFavorites((s) => s.ids);
 
   useEffect(() => {
@@ -31,6 +50,36 @@ export default function StopCard({ stop }: Props) {
       alive = false;
     };
   }, [stop]);
+
+  // 도보 시간: 부모 주입값이 있으면 그대로. 없으면 현위치(거부 시 춘천시청)에서
+  // 직선거리 폴백을 즉시 표시(스피너 금지)하고 실경로가 오면 갱신.
+  useEffect(() => {
+    if (injected) {
+      setWalk({ min: walkMin!, real: walkReal ?? false });
+      return;
+    }
+    let alive = true;
+    const to: Point = { lat: stop.lat, lng: stop.lng };
+    const run = (from: Point) => {
+      const fb = straightWalk(from, to);
+      if (alive) setWalk({ min: fb.minutes, real: fb.real });
+      getWalkRoute(from, to).then((r) => {
+        if (alive) setWalk({ min: r.minutes, real: r.real });
+      });
+    };
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => run({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => run(CITY_CENTER),
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 },
+      );
+    } else {
+      run(CITY_CENTER);
+    }
+    return () => {
+      alive = false;
+    };
+  }, [stop, injected, walkMin, walkReal]);
 
   const share = async () => {
     const url = buildShareUrl(favIds.length ? favIds : [stop.id]);
@@ -73,6 +122,16 @@ export default function StopCard({ stop }: Props) {
         <span>{arrival.text}</span>
         {arrival.live && <span className="stopcard__livedot">실시간</span>}
       </div>
+
+      {walk && (
+        <div className="stopcard__walk" data-real={walk.real}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="13" cy="4" r="2" />
+            <path d="M13 6l-2 5 3 2 1 5M11 11l-3 2-1 4M14 13l3 1" />
+          </svg>
+          <span>{walkText(walk.min, walk.real)}</span>
+        </div>
+      )}
 
       <div className="stopcard__facilities">
         <FacilityBadge kind="shade" info={stop.facilities.shade} />

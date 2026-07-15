@@ -75,6 +75,24 @@
   color: var(--on-warm);
 }
 
+/* 도보 시간 — 현위치→정류장. 실경로/직선 폴백을 문구로 정직 구분. */
+.stopcard__walk {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink-body);
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+.stopcard__walk svg {
+  flex: none;
+  opacity: 0.8;
+}
+
 /* 4시설 배지 2x2 */
 .stopcard__facilities {
   display: grid;

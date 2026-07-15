@@ -57,4 +57,22 @@ describe("<StopCard>", () => {
     const link = getByRole("link", { name: /안내문 인쇄/ });
     expect(link.getAttribute("href")).toContain("/print/250001192");
   });
+
+  it("real=true면 '도보' 문구를 보여준다", () => {
+    const { getByText } = render(
+      <MemoryRouter>
+        <StopCard stop={sample} walkMin={6} walkReal={true} />
+      </MemoryRouter>,
+    );
+    expect(getByText(/도보 약 6분/)).toBeInTheDocument();
+  });
+
+  it("real=false면 '직선거리' 문구를 보여준다(거짓 실경로 금지)", () => {
+    const { getByText } = render(
+      <MemoryRouter>
+        <StopCard stop={sample} walkMin={4} walkReal={false} />
+      </MemoryRouter>,
+    );
+    expect(getByText(/직선거리 약 4분/)).toBeInTheDocument();
+  });
 });

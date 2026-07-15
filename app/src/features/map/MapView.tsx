@@ -2,14 +2,18 @@
 // 정류장 마커(그늘 확정=초록/그 외=회색), 위치권한 처리(거부 시 춘천시청),
 // 참조 위치의 최근접 정류장 자동선택.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapView.css";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import { CITY_CENTER } from "../../types/stop";
-import { markerColor, MARKER_HEX } from "./markerColor";
+import { markerColor, MARKER_HEX, DIM_OPACITY } from "./markerColor";
+import FacilityFilter from "./FacilityFilterBar";
+import { filterStopsByFacility, type FacilityFilterState } from "./facilityFilter";
+import { WalkLayer } from "./WalkLayer";
+import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
 
 // Leaflet 기본 마커 아이콘 경로 이슈 방어(번들러 환경). 우리는 circleMarker 를
 // 쓰지만 어떤 기본 마커가 생겨도 깨지지 않도록 URL 을 명시한다.
@@ -27,12 +31,16 @@ interface Props {
   selectedId?: string;
 }
 
-const baseStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
-  radius: 9,
+const baseStyle = (
+  color: "green" | "gray",
+  dimmed = false,
+): L.CircleMarkerOptions => ({
+  radius: dimmed ? 7 : 9,
   color: "#ffffff",
   weight: 2,
   fillColor: MARKER_HEX[color],
-  fillOpacity: 1,
+  fillOpacity: dimmed ? DIM_OPACITY : 1,
+  opacity: dimmed ? DIM_OPACITY : 1,
 });
 
 const selectedStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
@@ -41,6 +49,7 @@ const selectedStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
   weight: 4,
   fillColor: MARKER_HEX[color],
   fillOpacity: 1,
+  opacity: 1,
 });
 
 export default function MapView({ onSelect, selectedId }: Props) {
@@ -52,8 +61,22 @@ export default function MapView({ onSelect, selectedId }: Props) {
   const markersRef = useRef<Map<string, L.CircleMarker>>(new Map());
   const userMarkerRef = useRef<L.Marker | null>(null);
   const autoSelectedRef = useRef(false);
+  const userPosRef = useRef<Point | null>(null);
+  const walkLayerRef = useRef<WalkLayer | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+
+  // 시설 필터 상태 — 켜진 시설이 "있음"인 정류장만 강조(미확인·없음 제외).
+  const [active, setActive] = useState<FacilityFilterState>({
+    shade: false,
+    seat: false,
+    light: false,
+  });
+  const anyFilter = active.shade || active.seat || active.light;
+  const matchSet = useMemo(
+    () => filterStopsByFacility(stops, active),
+    [stops, active],
+  );
 
   // 지도 초기화 + 위치권한 처리 (1회).
   useEffect(() => {
@@ -64,6 +87,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
       zoomControl: true,
     });
     mapRef.current = map;
+    walkLayerRef.current = new WalkLayer(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -71,6 +95,8 @@ export default function MapView({ onSelect, selectedId }: Props) {
     }).addTo(map);
 
     const goTo = (lat: number, lng: number, isUser: boolean) => {
+      // 도보 경로 출발점(현위치, 거부 시 춘천시청 폴백).
+      userPosRef.current = { lat, lng };
       map.setView([lat, lng], isUser ? 16 : 15);
       if (isUser) {
         const userIcon = L.divIcon({
@@ -108,6 +134,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
     return () => {
       map.remove();
       mapRef.current = null;
+      walkLayerRef.current = null;
       markersRef.current.clear();
       userMarkerRef.current = null;
     };
@@ -141,19 +168,52 @@ export default function MapView({ onSelect, selectedId }: Props) {
     }
   }, [stops, loaded]);
 
-  // 선택 강조 + 이동.
+  // 선택 강조 + 시설 필터 흐리기 + 이동.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     markersRef.current.forEach((m, id) => {
       const stop = stops.find((s) => s.id === id);
       const color = stop ? markerColor(stop) : "gray";
-      m.setStyle(id === selectedId ? selectedStyle(color) : baseStyle(color));
+      const dimmed = anyFilter && !matchSet.has(id);
+      m.setStyle(
+        id === selectedId ? selectedStyle(color) : baseStyle(color, dimmed),
+      );
       if (id === selectedId) {
         m.bringToFront();
         map.panTo(m.getLatLng(), { animate: true });
       }
     });
+  }, [selectedId, stops, matchSet, anyFilter]);
+
+  // 선택 정류장에 대한 도보 경로선: 직선 폴백 즉시 → 실경로로 갱신(스피너 없음).
+  useEffect(() => {
+    const layer = walkLayerRef.current;
+    const from = userPosRef.current;
+    if (!layer) return;
+    if (!selectedId || !from) {
+      layer.clear();
+      return;
+    }
+    const stop = stops.find((s) => s.id === selectedId);
+    if (!stop) {
+      layer.clear();
+      return;
+    }
+    const to: Point = { lat: stop.lat, lng: stop.lng };
+    // 즉시 직선 폴백 표시.
+    const fb = straightWalk(from, to);
+    layer.draw(fb.polyline, fb.real);
+    // 실경로 시도(성공 시 갱신).
+    let alive = true;
+    getWalkRoute(from, to).then((r) => {
+      if (alive && walkLayerRef.current === layer) {
+        layer.draw(r.polyline, r.real);
+      }
+    });
+    return () => {
+      alive = false;
+    };
   }, [selectedId, stops]);
 
   const locateMe = () => {
@@ -161,6 +221,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
     if (!map || !("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude: lat, longitude: lng } = pos.coords;
+      userPosRef.current = { lat, lng };
       map.setView([lat, lng], 16);
       if (userMarkerRef.current) userMarkerRef.current.setLatLng([lat, lng]);
       const near = useStops.getState().nearest({ lat, lng });
@@ -171,6 +232,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
   return (
     <div className="mapview">
       <div ref={containerRef} className="mapview__canvas" aria-label="정류장 지도" />
+      <FacilityFilter active={active} onChange={setActive} />
       <button type="button" className="mapview__locate" onClick={locateMe}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3" />
