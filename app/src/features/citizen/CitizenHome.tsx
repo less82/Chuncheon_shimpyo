@@ -7,6 +7,7 @@ import MapView from "../map/MapView";
 import StopCard from "./StopCard";
 import ImportOnLoad from "../share/ImportOnLoad";
 import ShareSheet from "../share/ShareSheet";
+import VersionToggle from "../../components/VersionToggle";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
@@ -31,6 +32,7 @@ export default function CitizenHome() {
           <span className="home__title">쉼표 정류장</span>
         </div>
         <div className="home__actions">
+          <VersionToggle />
           <Link className="home__go" to="/go">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73V19a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1.27A2 2 0 0 1 4 16zm2-1h12V6H6v9zm1.5 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zm9 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" />
