@@ -1,0 +1,299 @@
+/* 행정 대시보드 — 신뢰감 있는 데이터 화면. 디자인 토큰 재사용. */
+
+.dash {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5) var(--sp-7);
+  font-family: var(--font-sans);
+  color: var(--ink-body);
+  font-size: var(--fs-base);
+}
+
+.dash-head {
+  margin-bottom: var(--sp-6);
+}
+.dash-title {
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 0 0 var(--sp-3);
+  letter-spacing: -0.01em;
+}
+.dash-sub {
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.55;
+}
+.dash-sub strong {
+  color: var(--brand-strong);
+}
+
+.dash-section {
+  margin-bottom: var(--sp-6);
+}
+.dash-h2 {
+  font-size: var(--fs-md);
+  color: var(--ink);
+  margin: 0 0 var(--sp-3);
+}
+
+/* ---- 계절 프리셋 ---- */
+.dash-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-3);
+}
+.dash-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  min-height: var(--touch-lg);
+  padding: var(--sp-4);
+  text-align: left;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    transform 0.06s ease;
+}
+.dash-preset:hover {
+  border-color: var(--brand);
+}
+.dash-preset:active {
+  transform: translateY(1px);
+}
+.dash-preset[aria-pressed="true"] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(47, 107, 58, 0.18);
+}
+.dash-preset__name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--brand-ink);
+}
+.dash-preset__desc {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+}
+
+/* ---- 조건 토글 ---- */
+.dash-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+.dash-percent {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.dash-toggle-label {
+  font-size: var(--fs-base);
+  color: var(--ink-body);
+  font-weight: 600;
+}
+.dash-pill {
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-base);
+  font-family: inherit;
+  color: var(--ink-body);
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.dash-pill:hover {
+  border-color: var(--brand);
+}
+.dash-pill[aria-pressed="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+  font-weight: 700;
+}
+
+/* ---- 결과 바 ---- */
+.dash-resultbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.dash-count {
+  font-size: var(--fs-md);
+  color: var(--ink);
+}
+.dash-count strong {
+  color: var(--brand-strong);
+}
+.dash-topn select {
+  font-family: inherit;
+  font-size: var(--fs-base);
+  min-height: var(--touch);
+  padding: 0 var(--sp-2);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.dash-csv {
+  min-height: var(--touch);
+  padding: 0 var(--sp-5);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--on-warm);
+  background: var(--warm);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: background 0.12s ease;
+}
+.dash-csv:hover {
+  background: var(--warm-strong);
+}
+.dash-csv:disabled {
+  background: var(--border-strong);
+  color: var(--surface);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ---- 표 ---- */
+.dash-tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-base);
+  min-width: 760px;
+}
+.dash-table thead th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: var(--sp-4);
+  background: var(--brand-strong);
+  color: var(--on-brand);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dash-table thead th sup {
+  color: #ffe6cf;
+}
+.dash-c-rank {
+  width: 64px;
+  text-align: center !important;
+}
+.dash-c-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dash-row {
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+.dash-row:nth-child(even) {
+  background: var(--surface-2);
+}
+.dash-row:hover {
+  background: var(--brand-soft);
+}
+.dash-row:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: -3px;
+}
+.dash-table td {
+  padding: var(--sp-4);
+  vertical-align: middle;
+}
+.dash-stopname {
+  display: block;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--ink);
+}
+.dash-stopid {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+}
+.dash-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.dash-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+.dash-chip[data-color="green"] {
+  color: var(--yes);
+  background: var(--yes-bg);
+  border-color: var(--yes);
+}
+.dash-chip[data-color="red"] {
+  color: var(--no);
+  background: var(--no-bg);
+  border-color: var(--no);
+}
+.dash-chip[data-color="gray"] {
+  color: var(--unknown);
+  background: var(--unknown-bg);
+  border-color: var(--border-strong);
+}
+.dash-c-ev {
+  color: var(--ink-body);
+  min-width: 190px;
+}
+.dash-c-num {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--ink);
+}
+.dash-empty {
+  padding: var(--sp-7) !important;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: var(--fs-md);
+}
+
+.dash-foot {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  line-height: 1.55;
+  max-width: 70ch;
+}
+.dash-foot strong {
+  color: var(--warm-strong);
+}
