@@ -1,0 +1,182 @@
+.favpage {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.favpage__bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.favpage__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--touch);
+  padding: 0 var(--sp-3);
+  border-radius: var(--radius);
+  color: var(--brand-strong);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-decoration: none;
+}
+.favpage__title {
+  font-size: var(--fs-lg);
+}
+.favpage__spacer {
+  width: 64px;
+}
+
+.favpage__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* 초대형 카드 */
+.favcard {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  padding: var(--sp-5);
+}
+
+.favcard__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.favcard__name {
+  font-size: var(--fs-2xl);
+  letter-spacing: -0.8px;
+}
+.favcard__remove {
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.favcard__summary {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--ink-body);
+  margin: 0 0 var(--sp-4);
+  line-height: 1.4;
+}
+
+.favcard__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+.favcard__chip {
+  --c: var(--unknown);
+  --c-bg: var(--unknown-bg);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--c-bg);
+  border: 1.5px solid color-mix(in srgb, var(--c) 30%, transparent);
+}
+.favcard__chip[data-color="green"] {
+  --c: var(--yes);
+  --c-bg: var(--yes-bg);
+}
+.favcard__chip[data-color="red"] {
+  --c: var(--no);
+  --c-bg: var(--no-bg);
+}
+.favcard__chip-name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--ink-body);
+}
+.favcard__chip-status {
+  font-size: var(--fs-lg);
+  font-weight: 900;
+  color: var(--c);
+}
+
+.favcard__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+  flex-wrap: wrap;
+}
+.favcard__arrival {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--brand-ink);
+}
+.favcard__print {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius);
+  color: var(--brand-strong);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* 빈 상태 */
+.favpage__empty {
+  max-width: 520px;
+  margin: 12dvh auto 0;
+  padding: var(--sp-6) var(--sp-5);
+  text-align: center;
+}
+.favpage__empty-title {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: var(--sp-3);
+}
+.favpage__empty-sub {
+  font-size: var(--fs-md);
+  color: var(--ink-body);
+  margin-bottom: var(--sp-5);
+}
+.favpage__cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-lg);
+  padding: 0 var(--sp-6);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  text-decoration: none;
+}

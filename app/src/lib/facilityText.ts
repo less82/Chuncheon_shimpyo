@@ -1,7 +1,7 @@
 // 시설 3상태 표시 문구 — 순수 함수 (전 화면 공통 계약).
 // 절대 규칙: 출처는 로드뷰(촬영시점) 또는 각 대장뿐. 금지 문구는 절대 만들지 않는다.
 
-import type { Facility, FacilityInfo } from "../types/stop";
+import type { Facility, FacilityInfo, Stop } from "../types/stop";
 
 export type FacilityKind = "shade" | "seat" | "light" | "sign";
 
@@ -59,4 +59,15 @@ export function sourceBadge(info: FacilityInfo): string {
   const registry = REGISTRY_LABEL[info.source];
   if (registry) return `${registry}대장 기준`;
   return "";
+}
+
+/** 한 줄 시설 요약 — 예: "그늘 있음, 의자 있음, 조명 미확인, 도착안내기 미확인". */
+export function facilitySummary(stop: Stop): string {
+  const f = stop.facilities;
+  return (
+    `${KIND_LABEL.shade} ${facilityLabel(f.shade)}, ` +
+    `${KIND_LABEL.seat} ${facilityLabel(f.seat)}, ` +
+    `${KIND_LABEL.light} ${facilityLabel(f.light)}, ` +
+    `${KIND_LABEL.sign} ${facilityLabel(f.sign)}`
+  );
 }
