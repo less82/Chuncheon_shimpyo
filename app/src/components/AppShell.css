@@ -8,6 +8,6 @@
 }
 @media (min-width: 520px) {
   .app-shell {
-    box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(28, 25, 23, 0.18);
+    box-shadow: 0 0 0 1px var(--border), var(--shadow-float);
   }
 }
