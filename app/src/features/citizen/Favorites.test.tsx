@@ -39,18 +39,19 @@ const renderFav = () =>
   );
 
 describe("<Favorites>", () => {
-  it("즐겨찾기 정류장들을 초대형 카드로 보여준다", () => {
+  it("저장한 정류장을 검색 없는 목적지 단추로 보여준다", () => {
     useFavorites.setState({ ids: ["A", "B"] });
-    const { getByText, getAllByText } = renderFav();
+    const { getByText, getAllByRole } = renderFav();
     expect(getByText("장학교차로")).toBeInTheDocument();
     expect(getByText("상공회의소")).toBeInTheDocument();
-    // 시설 요약("그늘 있음")이 각 카드에 나타난다
-    expect(getAllByText(/그늘 있음/).length).toBeGreaterThanOrEqual(2);
+    const links = getAllByRole("link", { name: /이곳으로 가기/ });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "/go?dest=A");
   });
 
   it("즐겨찾기가 없으면 안내 문구를 보여준다", () => {
     useFavorites.setState({ ids: [] });
     const { getByText } = renderFav();
-    expect(getByText(/즐겨찾기한 정류장이 없어요/)).toBeInTheDocument();
+    expect(getByText(/저장한 목적지가 없습니다/)).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import Favorites from "./features/citizen/Favorites";
 import TripView from "./features/trip/TripView";
 import PrintPoster from "./features/print/PrintPoster";
 import Dashboard from "./features/admin/Dashboard";
+import DesignPreview from "./features/design/DesignPreview";
 import { useStops } from "./store/useStops";
 
 export default function App() {
@@ -20,7 +21,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<CitizenHome />} />
+        <Route path="/" element={<DesignPreview />} />
+        <Route path="/app" element={<CitizenHome />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/go" element={<TripView />} />
         <Route path="/print/:id" element={<PrintPoster />} />

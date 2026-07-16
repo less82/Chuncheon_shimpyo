@@ -129,7 +129,7 @@ export default function Dashboard() {
     <main className="dash">
       <header className="dash-head">
         <div>
-          <h1 className="dash-title">쉼표 정류장 · 설치 후보 대시보드</h1>
+          <h1 className="dash-title">정류장 시설 설치 후보</h1>
           <p className="dash-sub">
             조건 필터로 그늘·의자 쉘터 설치 후보 정류장을 추립니다. 순위와 승차량은
             모두 <strong>실측치</strong>이며, 위험도·가중치 같은 합성 점수는

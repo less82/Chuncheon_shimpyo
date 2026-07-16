@@ -4,6 +4,7 @@
 // 주소 타이핑 불필요. 모든 동작은 탭·스캔만으로 완결된다.
 
 import { useEffect, useState } from "react";
+import { Copy, Share2 } from "lucide-react";
 import { buildShareUrl } from "./shareLink";
 import { toQrDataUrl } from "./qr";
 import "./ShareSheet.css";
@@ -39,7 +40,7 @@ export default function ShareSheet({ ids, onClose }: Props) {
     if (canNativeShare) {
       try {
         await navigator.share({
-          title: "쉼표 정류장",
+          title: "춘천 정류장 정보",
           text: "가족이 자주 가는 정류장을 별표로 저장해 두었어요.",
           url,
         });
@@ -66,9 +67,7 @@ export default function ShareSheet({ ids, onClose }: Props) {
       <button type="button" className="sharesheet__cta" onClick={onShare}>
         <span className="sharesheet__cta-icon" aria-hidden="true">
           {/* 공유 아이콘 */}
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18 16.08a2.9 2.9 0 0 0-1.95.77l-7.1-4.13c.05-.24.05-.49 0-.73l7.02-4.09A3 3 0 1 0 15 5.5c0 .24.02.47.07.7L8.05 10.3a3 3 0 1 0 0 3.4l7.09 4.14a3 3 0 1 0 2.86-2.76z" />
-          </svg>
+          <Share2 width={28} height={28} aria-hidden="true" />
         </span>
         <span className="sharesheet__cta-label">가족에게 공유</span>
       </button>
@@ -85,9 +84,7 @@ export default function ShareSheet({ ids, onClose }: Props) {
           )}
           <button type="button" className="sharesheet__copy" onClick={onCopy}>
             <span className="sharesheet__copy-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16 1H4a2 2 0 0 0-2 2v12h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z" />
-              </svg>
+              <Copy width={24} height={24} aria-hidden="true" />
             </span>
             <span>{copied ? "복사했어요" : "링크 복사"}</span>
           </button>

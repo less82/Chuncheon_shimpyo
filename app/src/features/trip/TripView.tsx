@@ -3,7 +3,8 @@
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { ChevronLeft, Star } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import type { LatLng } from "../../lib/geo";
@@ -15,6 +16,7 @@ import TripCard from "./TripCard";
 import "./TripView.css";
 
 export default function TripView() {
+  const [searchParams] = useSearchParams();
   const stops = useStops((s) => s.stops);
   const cityCenter = useStops((s) => s.cityCenter);
   const favIds = useFavorites((s) => s.ids);
@@ -27,7 +29,8 @@ export default function TripView() {
     [favIds, stops],
   );
 
-  const [destId, setDestId] = useState<string | null>(null);
+  const requestedDestId = searchParams.get("dest");
+  const [destId, setDestId] = useState<string | null>(requestedDestId);
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
 
@@ -54,7 +57,9 @@ export default function TripView() {
 
   // 첫 즐겨찾기를 기본 선택(탭 한 번 덜 하도록).
   useEffect(() => {
-    if (destId === null && favStops.length > 0) setDestId(favStops[0].id);
+    if (!favStops.some((stop) => stop.id === destId) && favStops.length > 0) {
+      setDestId(favStops[0].id);
+    }
   }, [destId, favStops]);
 
   const destStop = favStops.find((s) => s.id === destId) ?? null;
@@ -67,20 +72,8 @@ export default function TripView() {
   return (
     <main className="tripview">
       <header className="tripview__bar">
-        <Link className="tripview__back" to="/" aria-label="지도로 돌아가기">
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+        <Link className="tripview__back" to="/app" aria-label="지도로 돌아가기">
+          <ChevronLeft aria-hidden="true" />
           지도
         </Link>
         <h1 className="tripview__title">버스로 가기</h1>
@@ -96,7 +89,7 @@ export default function TripView() {
             저장한 곳이 여기 목적지 단추로 나와요. 누르기만 하면 가는 버스를
             찾아드려요.
           </p>
-          <Link className="tripview__cta" to="/">
+          <Link className="tripview__cta" to="/app">
             지도에서 목적지 별표하기
           </Link>
         </section>
@@ -113,9 +106,7 @@ export default function TripView() {
                   aria-pressed={s.id === destId}
                   onClick={() => setDestId(s.id)}
                 >
-                  <span className="tripview__dest-star" aria-hidden="true">
-                    ★
-                  </span>
+                  <Star className="tripview__dest-star" aria-hidden="true" />
                   {s.name}
                 </button>
               ))}

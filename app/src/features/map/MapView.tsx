@@ -3,6 +3,7 @@
 // 참조 위치의 최근접 정류장 자동선택.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LocateFixed } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapView.css";
@@ -45,7 +46,7 @@ const baseStyle = (
 
 const selectedStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
   radius: 15,
-  color: "#c2410c",
+  color: "#26344a",
   weight: 4,
   fillColor: MARKER_HEX[color],
   fillOpacity: 1,
@@ -84,7 +85,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
     const map = L.map(containerRef.current, {
       center: [CITY_CENTER.lat, CITY_CENTER.lng],
       zoom: 15,
-      zoomControl: true,
+      zoomControl: false,
     });
     mapRef.current = map;
     walkLayerRef.current = new WalkLayer(map);
@@ -96,7 +97,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
 
     const goTo = (lat: number, lng: number, isUser: boolean) => {
       // 도보 경로 출발점(현위치, 거부 시 춘천시청 폴백).
-      userPosRef.current = { lat, lng };
+      userPosRef.current = isUser ? { lat, lng } : null;
       map.setView([lat, lng], isUser ? 16 : 15);
       if (isUser) {
         const userIcon = L.divIcon({
@@ -234,10 +235,7 @@ export default function MapView({ onSelect, selectedId }: Props) {
       <div ref={containerRef} className="mapview__canvas" aria-label="정류장 지도" />
       <FacilityFilter active={active} onChange={setActive} />
       <button type="button" className="mapview__locate" onClick={locateMe}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-        </svg>
+        <LocateFixed aria-hidden="true" />
         <span>내 위치</span>
       </button>
     </div>

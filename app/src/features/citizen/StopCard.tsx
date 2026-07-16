@@ -2,6 +2,7 @@
 // 정류장명 + 4시설 3상태 배지 + 도착정보(폴백 즉시) + 즐겨찾기 별 + 안내문 인쇄.
 
 import { useEffect, useState } from "react";
+import { BusFront, Footprints, Navigation, Printer, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import FacilityBadge from "../../components/FacilityBadge";
@@ -11,7 +12,6 @@ import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
 import { buildShareUrl } from "../share/shareLink";
 import { useFavorites } from "../../store/useFavorites";
-import { CITY_CENTER } from "../../types/stop";
 import "./StopCard.css";
 
 interface Props {
@@ -38,6 +38,7 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
   const [walk, setWalk] = useState<Walk | null>(
     injected ? { min: walkMin!, real: walkReal ?? false } : null,
   );
+  const [locationUnavailable, setLocationUnavailable] = useState(false);
   const favIds = useFavorites((s) => s.ids);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
     let alive = true;
     const to: Point = { lat: stop.lat, lng: stop.lng };
     const run = (from: Point) => {
+      setLocationUnavailable(false);
       const fb = straightWalk(from, to);
       if (alive) setWalk({ min: fb.minutes, real: fb.real });
       getWalkRoute(from, to).then((r) => {
@@ -70,11 +72,12 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => run({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => run(CITY_CENTER),
+        () => { setWalk(null); setLocationUnavailable(true); },
         { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 },
       );
     } else {
-      run(CITY_CENTER);
+      setWalk(null);
+      setLocationUnavailable(true);
     }
     return () => {
       alive = false;
@@ -85,7 +88,7 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
     const url = buildShareUrl(favIds.length ? favIds : [stop.id]);
     try {
       if (navigator.share) {
-        await navigator.share({ title: "쉼표 정류장", url });
+        await navigator.share({ title: "춘천 정류장 정보", url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -103,7 +106,7 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
           <h2 className="stopcard__name">{stop.name}</h2>
           {stop.routes.length > 0 && (
             <p className="stopcard__routes">
-              <span className="sr-only">경유 노선 </span>
+              <b className="stopcard__routes-label">경유 노선</b>
               {stop.routes.slice(0, 6).map((r) => (
                 <span key={r} className="stopcard__route">
                   {r}
@@ -116,22 +119,26 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       </header>
 
       <div className="stopcard__arrival" data-live={arrival.live}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M8 6h9a3 3 0 0 1 3 3v6M4 6v9M2 15h18M6 18a2 2 0 1 0 0 .01M16 18a2 2 0 1 0 0 .01" />
-        </svg>
-        <span>{arrival.text}</span>
+        <BusFront aria-hidden="true" />
+        <span>{arrival.live ? arrival.text : "실시간 도착 정보 없음"}</span>
         {arrival.live && <span className="stopcard__livedot">실시간</span>}
       </div>
 
+      {arrival.live && arrival.byRoute && (
+        <div className="stopcard__route-arrivals" aria-label="노선별 실시간 도착">
+          {arrival.byRoute.slice(0, 4).map((item) => (
+            <div key={`${item.routeNo}-${item.min}`}><b>{item.routeNo}번</b><span>{item.min <= 0 ? "곧 도착" : `${item.min}분 후`}</span><small>{item.seq > 0 ? `${item.seq}정류장 전` : "도착 임박"}</small></div>
+          ))}
+        </div>
+      )}
+
       {walk && (
         <div className="stopcard__walk" data-real={walk.real}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="13" cy="4" r="2" />
-            <path d="M13 6l-2 5 3 2 1 5M11 11l-3 2-1 4M14 13l3 1" />
-          </svg>
+          <Footprints aria-hidden="true" />
           <span>{walkText(walk.min, walk.real)}</span>
         </div>
       )}
+      {locationUnavailable && <div className="stopcard__walk"><Footprints aria-hidden="true" /><span>위치 허용 시 도보 시간 안내</span></div>}
 
       <div className="stopcard__facilities">
         <FacilityBadge kind="shade" info={stop.facilities.shade} />
@@ -143,19 +150,15 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       <AltStopHint stop={stop} arrival={arrival} />
 
       <div className="stopcard__actions">
+        <Link className="stopcard__go" to="/go">
+          <Navigation aria-hidden="true" /> 버스로 가기
+        </Link>
         <button type="button" className="stopcard__share" onClick={share}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="18" cy="5" r="3" />
-            <circle cx="6" cy="12" r="3" />
-            <circle cx="18" cy="19" r="3" />
-            <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
-          </svg>
+          <Share2 aria-hidden="true" />
           가족에게 공유
         </button>
         <Link className="stopcard__print" to={`/print/${stop.id}`}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z" />
-          </svg>
+          <Printer aria-hidden="true" />
           안내문 인쇄
         </Link>
       </div>

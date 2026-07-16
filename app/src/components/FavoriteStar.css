@@ -16,9 +16,9 @@
 }
 
 .favstar[data-active="true"] {
-  color: var(--warm);
-  border-color: var(--warm);
-  background: var(--warm-soft);
+  color: var(--warning);
+  border-color: var(--warning);
+  background: var(--warning-bg);
 }
 
 .favstar__label {

@@ -2,6 +2,7 @@
 // 가족·복지사가 출력해 정류장/경로당에 붙일 수 있게.
 
 import { useParams, Link } from "react-router-dom";
+import { ChevronLeft, Printer } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import {
   facilityLabel,
@@ -35,7 +36,7 @@ export default function PrintPoster() {
     return (
       <main className="poster poster--missing">
         <p>정류장을 찾을 수 없어요.</p>
-        <Link className="poster__back" to="/">
+        <Link className="poster__back" to="/app">
           지도로 돌아가기
         </Link>
       </main>
@@ -47,21 +48,21 @@ export default function PrintPoster() {
   return (
     <main className="poster">
       <div className="poster__toolbar">
-        <Link className="poster__back" to="/">
-          ← 돌아가기
+        <Link className="poster__back" to="/app">
+          <ChevronLeft aria-hidden="true" /> 돌아가기
         </Link>
         <button
           type="button"
           className="poster__printbtn"
           onClick={() => window.print()}
         >
-          인쇄하기
+          <Printer aria-hidden="true" /> 인쇄하기
         </button>
       </div>
 
       <article className="poster__sheet">
         <header className="poster__head">
-          <span className="poster__brand">쉼표 정류장 안내문</span>
+          <span className="poster__brand">춘천 정류장 안내문</span>
           <h1 className="poster__name">{stop.name}</h1>
           {stop.routes.length > 0 && (
             <p className="poster__routes">경유 노선 {stop.routes.join(" · ")}</p>
@@ -79,7 +80,7 @@ export default function PrintPoster() {
             <b>있음</b> 확인됨 · <b>없음</b> 없음 · <b>미확인</b> 자료 없음
           </p>
           {captured && <p className="poster__captured">로드뷰 조사 {captured} 기준</p>}
-          <p className="poster__made">춘천시 · 쉼표 정류장 제공</p>
+          <p className="poster__made">춘천시 정류장 정보</p>
         </footer>
       </article>
     </main>

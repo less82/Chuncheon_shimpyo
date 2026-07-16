@@ -47,9 +47,9 @@ describe("<StopCard>", () => {
     expect(getByText("도착안내기")).toBeInTheDocument();
   });
 
-  it("도착정보 폴백 문구를 즉시 보여준다(무한 스피너 없음)", () => {
+  it("실시간 정보가 없으면 특정 노선의 배차처럼 오해시키지 않는다", () => {
     const { getByText } = renderCard(sample);
-    expect(getByText(/배차간격 약 12분/)).toBeInTheDocument();
+    expect(getByText(/실시간 도착 정보 없음/)).toBeInTheDocument();
   });
 
   it("안내문 인쇄 링크가 /print/:id 를 가리킨다", () => {

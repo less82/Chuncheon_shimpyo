@@ -1,7 +1,6 @@
 @import "./styles/tokens.css";
 
-/* 쉼표 정류장 — 전역 베이스.
- * 고령자용: 큰 글씨, 큰 터치타깃, 따뜻한 종이 배경. 모바일 우선 전체화면. */
+/* 고령자용 전역 베이스: 큰 글씨, 큰 터치타깃, 고대비, 모바일 우선. */
 
 *,
 *::before,
@@ -21,10 +20,45 @@ body {
   font-size: var(--fs-base);
   line-height: 1.5;
   color: var(--ink-body);
-  background: var(--bg);
+  background: #e6e9ed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* 모든 제품 화면은 같은 모바일 기기 영역을 사용한다. */
+body .home,
+body .tripview,
+body .favpage,
+body .poster,
+body .dash {
+  width: min(390px, 100vw);
+  max-width: 390px;
+  margin-inline: auto;
+  background: var(--surface);
+}
+
+body .home { height: min(844px, 100svh); }
+body .tripview,
+body .favpage,
+body .poster,
+body .dash {
+  height: min(844px, 100svh);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+@media (min-width: 601px) {
+  body .home,
+  body .tripview,
+  body .favpage,
+  body .poster,
+  body .dash {
+    border: 8px solid #222a36;
+    border-radius: 38px;
+    box-shadow: var(--shadow-float);
+    overflow-x: hidden;
+  }
 }
 
 #root {
@@ -55,7 +89,7 @@ button {
 
 /* 키보드 포커스는 항상 또렷하게 (접근성) */
 :focus-visible {
-  outline: 3px solid var(--warm);
+  outline: 4px solid var(--warning);
   outline-offset: 2px;
 }
 

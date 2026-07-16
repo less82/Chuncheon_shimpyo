@@ -3,11 +3,12 @@
 .dash {
   max-width: 1120px;
   margin: 0 auto;
-  padding: var(--sp-6) var(--sp-5) var(--sp-7);
+  padding: var(--sp-5) var(--sp-4) var(--sp-7);
   font-family: var(--font-sans);
   color: var(--ink-body);
   font-size: var(--fs-base);
 }
+.dash-presets { grid-template-columns: 1fr; }
 
 .dash-head {
   margin-bottom: var(--sp-6);

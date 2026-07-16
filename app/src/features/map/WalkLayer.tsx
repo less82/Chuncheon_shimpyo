@@ -17,7 +17,7 @@ export class WalkLayer {
     this.clear();
     if (polyline.length < 2) return;
     this.line = L.polyline(polyline, {
-      color: real ? "#1d4ed8" : "#6b635a",
+      color: real ? "#26344a" : "#565d66",
       weight: 5,
       opacity: 0.85,
       dashArray: real ? undefined : "6 10",

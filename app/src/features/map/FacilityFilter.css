@@ -2,11 +2,15 @@
 .facfilter {
   position: absolute;
   left: var(--sp-3);
-  top: var(--sp-4);
+  top: 76px;
   z-index: 500;
   display: flex;
   gap: var(--sp-2);
 }
+
+.facfilter { left: var(--sp-2); right: var(--sp-2); gap: var(--sp-1); }
+.facfilter__chip { flex: 1; justify-content: center; padding-inline: var(--sp-2); font-size: 16px; }
+.facfilter__chip svg { width: 20px; height: 20px; }
 
 .facfilter__chip {
   display: inline-flex;

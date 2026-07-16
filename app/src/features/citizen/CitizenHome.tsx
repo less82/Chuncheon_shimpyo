@@ -1,12 +1,12 @@
 // 시민 첫 화면 — 켜자마자 지도 + 내 주변 최근접 정류장 카드.
 // 화면당 주행동 1개: "가까운 정류장 정보 보기". 검색·메뉴·온보딩 없음.
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { House, Star } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import MapView from "../map/MapView";
 import StopCard from "./StopCard";
 import ImportOnLoad from "../share/ImportOnLoad";
-import ShareSheet from "../share/ShareSheet";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
@@ -14,43 +14,31 @@ import "./CitizenHome.css";
 
 export default function CitizenHome() {
   const [selected, setSelected] = useState<Stop | null>(null);
-  const [sharing, setSharing] = useState(false);
+  const [searchParams] = useSearchParams();
   const loaded = useStops((s) => s.loaded);
+  const stops = useStops((s) => s.stops);
   const favCount = useFavorites((s) => s.ids.length);
-  const favIds = useFavorites((s) => s.ids);
+
+  useEffect(() => {
+    const stopId = searchParams.get("stop");
+    if (!stopId) return;
+    const stop = stops.find((item) => item.id === stopId);
+    if (stop) setSelected(stop);
+  }, [searchParams, stops]);
 
   return (
     <main className="home">
       <ImportOnLoad />
 
       <header className="home__bar">
-        <div className="home__brand">
-          <span className="home__logo" aria-hidden="true">
-            ,
-          </span>
-          <span className="home__title">쉼표 정류장</span>
-        </div>
+        <Link className="home__brand" to="/">
+          <House aria-hidden="true" />
+          <span className="home__title">홈으로</span>
+        </Link>
+        <h1 className="home__screen-title">정류장 지도</h1>
         <div className="home__actions">
-          <Link className="home__go" to="/go">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73V19a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1.27A2 2 0 0 1 4 16zm2-1h12V6H6v9zm1.5 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zm9 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" />
-            </svg>
-            <span>버스로 가기</span>
-          </Link>
-          <button
-            type="button"
-            className="home__share"
-            onClick={() => setSharing(true)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M18 16.08a2.9 2.9 0 0 0-1.95.77l-7.1-4.13c.05-.24.05-.49 0-.73l7.02-4.09A3 3 0 1 0 15 5.5c0 .24.02.47.07.7L8.05 10.3a3 3 0 1 0 0 3.4l7.09 4.14a3 3 0 1 0 2.86-2.76z" />
-            </svg>
-            <span>공유</span>
-          </button>
           <Link className="home__fav" to="/favorites">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18.8 6.2 21.9l1.1-6.5L2.6 9.8l6.5-.9z" />
-            </svg>
+            <Star aria-hidden="true" />
             <span>즐겨찾기{favCount > 0 ? ` ${favCount}` : ""}</span>
           </Link>
         </div>
@@ -61,12 +49,7 @@ export default function CitizenHome() {
       </div>
 
       <div className="home__sheet">
-        {sharing ? (
-          <ShareSheet
-            ids={favIds.length ? favIds : selected ? [selected.id] : []}
-            onClose={() => setSharing(false)}
-          />
-        ) : selected ? (
+        {selected ? (
           <StopCard stop={selected} />
         ) : (
           <section className="home__hint">

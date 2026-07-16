@@ -3,6 +3,7 @@
 // 도보=getWalkRoute(폴백 직선), 도착=getArrival(폴백 배차간격). 무한 스피너 없음.
 
 import { useEffect, useState } from "react";
+import { BusFront, Footprints, MapPin, Repeat2 } from "lucide-react";
 import type { Stop } from "../../types/stop";
 import type { TripLeg, TripOption } from "../../types/trip";
 import type { LatLng } from "../../lib/geo";
@@ -68,9 +69,7 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
     >
       <ol className="tripcard__steps">
         <li className="tripcard__step tripcard__step--walk">
-          <span className="tripcard__icon" aria-hidden="true">
-            🚶
-          </span>
+          <span className="tripcard__icon" aria-hidden="true"><Footprints /></span>
           <span className="tripcard__text">
             <b className="tripcard__place">{boardName}</b>
             <span className="tripcard__walk">까지 걸어서 {walkMin}분</span>
@@ -78,9 +77,7 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
         </li>
 
         <li className="tripcard__step tripcard__step--bus">
-          <span className="tripcard__icon" aria-hidden="true">
-            🚌
-          </span>
+          <span className="tripcard__icon" aria-hidden="true"><BusFront /></span>
           <span className="tripcard__text">
             <b className="tripcard__route">{routeLabel(option.legs[0])}</b> 버스{" "}
             <span className="tripcard__arrival">({arrival.text})</span>
@@ -90,18 +87,14 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
         {!option.directBus && transferStop && option.legs[1] && (
           <>
             <li className="tripcard__step tripcard__step--transfer">
-              <span className="tripcard__icon" aria-hidden="true">
-                🔁
-              </span>
+              <span className="tripcard__icon" aria-hidden="true"><Repeat2 /></span>
               <span className="tripcard__text">
                 <b className="tripcard__place">{transferStop.name}</b>에서{" "}
                 <b>갈아타기</b>
               </span>
             </li>
             <li className="tripcard__step tripcard__step--bus">
-              <span className="tripcard__icon" aria-hidden="true">
-                🚌
-              </span>
+              <span className="tripcard__icon" aria-hidden="true"><BusFront /></span>
               <span className="tripcard__text">
                 <b className="tripcard__route">{routeLabel(option.legs[1])}</b>{" "}
                 버스
@@ -111,9 +104,7 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
         )}
 
         <li className="tripcard__step tripcard__step--dest">
-          <span className="tripcard__icon" aria-hidden="true">
-            📍
-          </span>
+          <span className="tripcard__icon" aria-hidden="true"><MapPin /></span>
           <span className="tripcard__text">
             <b className="tripcard__place">{destStop.name}</b> 도착
           </span>
