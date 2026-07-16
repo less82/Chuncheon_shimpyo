@@ -25,3 +25,8 @@ Thumbs.db
 
 # NOTE: data/ (원본 CSV)와 app/public/data/*.json 은 데모 재현을 위해 커밋한다.
 .gstack/
+
+# subagent-driven-development scratch
+.superpowers/
+# 로드뷰 캡처(미검수 원본) / POI 원본 — 커밋 금지
+data/roadview_captures/
