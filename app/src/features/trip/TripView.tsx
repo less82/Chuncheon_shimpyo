@@ -11,6 +11,7 @@ import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { planTrip } from "./planTrip";
+import { sortByComfort, type SortMode } from "./comfortSort";
 import TripCard from "./TripCard";
 import "./TripView.css";
 
@@ -30,6 +31,13 @@ export default function TripView() {
   const [destId, setDestId] = useState<string | null>(null);
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
+  const [sortMode, setSortMode] = useState<SortMode>("comfort");
+
+  const stopsById = useMemo(() => {
+    const m = new Map<string, Stop>();
+    for (const s of stops) m.set(s.id, s);
+    return m;
+  }, [stops]);
 
   // 노선 그래프 로드(로컬 routes.json — 오프라인 동작). 실패해도 화면은 살아있다.
   useEffect(() => {
@@ -61,8 +69,9 @@ export default function TripView() {
 
   const options = useMemo(() => {
     if (!destStop || !routes) return [];
-    return planTrip(fromPos, destStop, stops, routes.routes);
-  }, [destStop, routes, fromPos, stops]);
+    const planned = planTrip(fromPos, destStop, stops, routes.routes);
+    return sortByComfort(planned, stopsById, sortMode);
+  }, [destStop, routes, fromPos, stops, stopsById, sortMode]);
 
   return (
     <main className="tripview">
@@ -121,6 +130,35 @@ export default function TripView() {
               ))}
             </div>
           </section>
+
+          {destStop && (
+            <section
+              className="tripview__sort"
+              aria-label="정렬 기준 선택"
+            >
+              <p className="tripview__sort-sub">
+                확인된 시설이 있는 길을 우선 보여드려요
+              </p>
+              <div className="tripview__sort-toggle" role="group">
+                <button
+                  type="button"
+                  className="tripview__sort-btn"
+                  aria-pressed={sortMode === "comfort"}
+                  onClick={() => setSortMode("comfort")}
+                >
+                  시설 확인된 곳 우선
+                </button>
+                <button
+                  type="button"
+                  className="tripview__sort-btn"
+                  aria-pressed={sortMode === "nearest"}
+                  onClick={() => setSortMode("nearest")}
+                >
+                  가까운 순
+                </button>
+              </div>
+            </section>
+          )}
 
           <section className="tripview__results" aria-live="polite">
             {!routes ? (
