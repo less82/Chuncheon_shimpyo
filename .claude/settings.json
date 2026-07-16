@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/scripts/auto-push.sh\"",
+            "timeout": 30,
+            "statusMessage": "자기 브랜치에 자동 저장 중..."
+          }
+        ]
+      }
+    ]
+  }
+}
