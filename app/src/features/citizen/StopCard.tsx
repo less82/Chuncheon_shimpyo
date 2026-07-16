@@ -10,6 +10,7 @@ import AltStopHint from "./AltStopHint";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
 import { buildShareUrl } from "../share/shareLink";
+import { toQrDataUrl } from "../share/qr";
 import { useFavorites } from "../../store/useFavorites";
 import { CITY_CENTER } from "../../types/stop";
 import "./StopCard.css";
@@ -39,6 +40,8 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
     injected ? { min: walkMin!, real: walkReal ?? false } : null,
   );
   const favIds = useFavorites((s) => s.ids);
+  const [showStopQr, setShowStopQr] = useState(false);
+  const [stopQr, setStopQr] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -80,6 +83,18 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       alive = false;
     };
   }, [stop, injected, walkMin, walkReal]);
+
+  // 이 정류장 QR: 스캔하면 로그인 없이 바로 즐겨찾기에 등록된다(?fav=id → ImportOnLoad).
+  useEffect(() => {
+    if (!showStopQr) return;
+    let alive = true;
+    toQrDataUrl(buildShareUrl([stop.id]))
+      .then((d) => alive && setStopQr(d))
+      .catch(() => alive && setStopQr(null));
+    return () => {
+      alive = false;
+    };
+  }, [showStopQr, stop.id]);
 
   const share = async () => {
     const url = buildShareUrl(favIds.length ? favIds : [stop.id]);
@@ -141,6 +156,42 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       </div>
 
       <AltStopHint stop={stop} arrival={arrival} />
+
+      <div className="stopcard__actions">
+        <button
+          type="button"
+          className="stopcard__qrbtn"
+          aria-expanded={showStopQr}
+          onClick={() => setShowStopQr((v) => !v)}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <path d="M14 14h3v3M14 20h7M20 14v3M17 20v-3" />
+          </svg>
+          이 정류장 QR
+        </button>
+      </div>
+
+      {showStopQr && (
+        <div className="stopcard__qr" role="group" aria-label={`${stop.name} 정류장 QR 코드`}>
+          <p className="stopcard__qr-hint">
+            휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록돼요.
+          </p>
+          {stopQr ? (
+            <img
+              className="stopcard__qr-img"
+              src={stopQr}
+              alt={`${stop.name} 정류장 QR 코드`}
+              width={200}
+              height={200}
+            />
+          ) : (
+            <p className="stopcard__qr-hint">QR 을 만드는 중…</p>
+          )}
+        </div>
+      )}
 
       <div className="stopcard__actions">
         <button type="button" className="stopcard__share" onClick={share}>

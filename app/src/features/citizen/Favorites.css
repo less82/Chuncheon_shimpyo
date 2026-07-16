@@ -35,6 +35,35 @@
   width: 64px;
 }
 
+.favpage__banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin: var(--sp-4) var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--yes-bg, var(--brand-soft));
+  color: var(--yes, var(--brand-ink));
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.favpage__banner-close {
+  min-height: var(--touch);
+  min-width: 48px;
+  padding: 0 var(--sp-3);
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .favpage__list {
   display: flex;
   flex-direction: column;

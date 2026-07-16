@@ -1,9 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import PrintPoster from "./PrintPoster";
 import { useStops } from "../../store/useStops";
+
+vi.mock("../share/qr", () => ({
+  toQrDataUrl: vi.fn(async () => "data:image/png;base64,MOCKQR"),
+}));
 
 const stop: Stop = {
   id: "250026779",
@@ -56,5 +60,14 @@ describe("<PrintPoster>", () => {
   it("없는 id면 안내 문구를 보여준다", () => {
     const { getByText } = renderAt("NOPE");
     expect(getByText(/정류장을 찾을 수 없어요/)).toBeInTheDocument();
+  });
+
+  it("정류장 QR 과 등록 안내 문구를 렌더한다", async () => {
+    const { findByRole, getByText } = renderAt("250026779");
+    const img = await findByRole("img", { name: /QR/ });
+    expect(img.getAttribute("src")).toMatch(/^data:image\//);
+    expect(
+      getByText(/휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록됩니다/),
+    ).toBeInTheDocument();
   });
 });
