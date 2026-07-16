@@ -55,7 +55,6 @@ export default function InstallTab({ stops, loaded }: Props) {
               role="tab"
               className="dash-pill"
               aria-selected={facility === f}
-              aria-pressed={facility === f}
               onClick={() => setFacility(f)}
             >
               {KIND_LABEL[f]}

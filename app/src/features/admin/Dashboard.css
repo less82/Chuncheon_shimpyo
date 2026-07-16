@@ -118,7 +118,8 @@
 .dash-pill:hover {
   border-color: var(--brand);
 }
-.dash-pill[aria-pressed="true"] {
+.dash-pill[aria-pressed="true"],
+.dash-pill[aria-selected="true"] {
   background: var(--brand);
   border-color: var(--brand);
   color: var(--on-brand);

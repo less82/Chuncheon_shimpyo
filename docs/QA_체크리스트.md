@@ -98,3 +98,50 @@
 - 도착안내기: 전부 "미확인"(원본 없음) — 화면에 정직히 미확인 표시.
 - 그늘: 4곳만 확인(그늘막 대장 지오코딩) — 로드뷰 조사 150곳 완료 시 보강.
 - 도착정보: TAGO 키 없으면 "배차간격 약 N분" 폴백.
+
+---
+
+# 접근성 (A11) — 2026-07-16
+
+> 목표: "타이핑 없이 완결"(고령자) **그리고** "키보드만으로도 전 흐름 조작 가능"(WCAG 2.1.1) 둘 다 충족. `docs/사용자_흐름.md`·`docs/specs/2026-07-16-본선-design.md` §8 기준. 감사는 코드 정독 + 정적 대비 계산으로 수행(헤드리스 브라우저 자동 접근성 감사 도구는 이 환경에 미설치).
+
+## 항목별 결과
+
+| # | 항목 | 결과 | 근거 / 조치 |
+|---|---|---|---|
+| 1 | 키보드 조작 — A7 정렬 토글(TripView), A8 QR 버튼(StopCard), A9 3탭·시설 서브탭·계절 프리셋(Dashboard/InstallTab/FilterTab/PresetBar) | ✅ 통과(수정 없음) | 전부 네이티브 `<button type="button">` 또는 `role="tab"`인 `<button>`이며 `onClick`만 사용 — 브라우저 기본 동작으로 Tab 이동 + Enter/Space 활성화가 보장됨. 커스텀 `onKeyDown`(Enter/Space)이 필요한 비-버튼 요소는 InstallTab의 `<tr tabIndex={0}>` 행뿐이며 이미 처리돼 있음(`app/src/features/admin/InstallTab.tsx:106-113`) |
+| 2 | 포커스 표시 | ✅ 통과(기존 확인) | `app/src/index.css:57-60`에 전역 `:focus-visible { outline: 3px solid var(--warm); outline-offset: 2px; }`. `outline: none/0`으로 억제하는 CSS 없음(전체 검색 0건). `.dash-row`만 인셋 오프셋(-3px)으로 표 셀 안에 보이도록 재정의(`Dashboard.css:225-228`), 브랜드색 3px — 표 안에서도 시인성 유지 |
+| 3 | ARIA 정리 — **A9 InstallTab 시설 서브탭 `aria-selected`+`aria-pressed` 중복** | 🔧 수정 완료 | `role="tab"`인 요소는 선택 상태를 `aria-selected`로만 표현해야 함(탭 위젯에 `aria-pressed` 병기는 오용). `app/src/features/admin/InstallTab.tsx`에서 `aria-pressed={facility === f}` 제거, `aria-selected`만 유지. 시각 상태 CSS가 `[aria-pressed="true"]` 선택자에 의존하던 것도 `[aria-selected="true"]`를 병기하도록 `app/src/features/admin/Dashboard.css`에서 함께 수정(시각 회귀 없음). Dashboard 메인 탭(`role="tab"`, aria-selected만)·FilterTab/PresetBar 토글 버튼(`role` 없음, aria-pressed만)은 애초에 올바른 패턴이라 수정 불필요 |
+| 4 | 색 비의존 상태(3상태) | ✅ 통과(기존 확인) | `FacilityBadge`는 상태별로 아이콘(체크/엑스/물음표)+한글 라벨("있음"/"없음"/"미확인")을 항상 병기(`app/src/components/FacilityBadge.tsx`). `Favorites`의 `favcard__chip`도 텍스트 라벨 병기(`app/src/features/citizen/Favorites.tsx:52-56`). 색은 보조 신호일 뿐 |
+| 5 | 지도 없이 접근 | ✅ 통과(확인만, 브리핑 지시대로 수정 없음) | `CitizenHome`은 최초 진입 시 위치권한 결과와 무관하게 최근접 정류장을 자동 선택해 `StopCard`(텍스트: 정류장명·도착·도보·4시설 배지·QR·공유·인쇄)를 지도 조작 없이 바로 노출(`app/src/features/citizen/CitizenHome.tsx`, `app/src/features/map/MapView.tsx:114-121,161-168`). `Favorites`·`TripView`도 전부 텍스트/카드 목록. 다만 자동 선택된 정류장 **이외의 임의 정류장**을 고르려면 지도 마커(Leaflet `circleMarker`, DOM 포커스 미지원) 클릭이 필요 — 대안은 즐겨찾기 경유(별표 후 `/favorites`)뿐이라는 한계는 있으나, 브리핑 범위(핵심 정보 접근성)는 충족 |
+| 6 | `prefers-reduced-motion` | 🔧 수정 완료(1건) | 코드 전체에서 지속 애니메이션은 지도 내 위치 마커 pulse 하나(`app/src/features/map/MapView.css` `.user-dot__pulse { animation: user-pulse 1.8s ease-out infinite; }`). `@media (prefers-reduced-motion: reduce)`로 `animation: none` + 정적 반투명 링(`opacity: 0.35`)으로 대체. 그 외 `transition`(호버·포커스 배경/테두리색 전환 0.06~0.3s)은 반복 애니메이션이 아니라 상태 전환용 미세 효과라 축소 대상 아님(해당 없음) |
+| 7 | 명암비(WCAG AA) | ✅ 계산 결과 전부 AA 충족(토큰 조정 불필요) | 아래 "명암비 실측" 표 참조. 자동 대비 계산 스크립트(WCAG 상대휘도 공식)로 산출 |
+
+## 명암비 실측 (sRGB, WCAG 상대휘도 공식)
+
+| 조합 | 값 | 대비비 | 기준 | 판정 |
+|---|---|---|---|---|
+| 있음(초록) 글자 on 흰 배경 | `#15803d` on `#ffffff` | 5.02:1 | 4.5:1(본문) | ✅ |
+| 있음(초록) 글자 on 있음 배경 틴트 | `#15803d` on `#e6f4ea` | 4.42:1 | 3:1(FacilityBadge 상태라벨은 22px/800 = 큰 텍스트) | ✅ |
+| 없음(빨강) 글자 on 흰 배경 | `#c1121f` on `#ffffff` | 6.22:1 | 4.5:1 | ✅ |
+| 없음(빨강) 글자 on 없음 배경 틴트 | `#c1121f` on `#fdeaea` | 5.37:1 | 3:1(큰 텍스트) | ✅ |
+| 미확인(회색) 글자 on 흰 배경 | `#57534e` on `#ffffff` | 7.63:1 | 4.5:1 | ✅ |
+| 미확인(회색) 글자 on 미확인 배경 틴트 | `#57534e` on `#eeeae4` | 6.37:1 | 3:1(큰 텍스트) | ✅ |
+| 강조 버튼(테라코타) 배경 on 흰 바탕 / 흰 글자 on 테라코타 배경 | `#c2410c` ↔ `#ffffff` | 5.18:1 | 4.5:1(버튼 라벨) | ✅ |
+| 브랜드(포레스트그린) 배경 on 흰 바탕 / 흰 글자 on 브랜드 배경 | `#2f6b3a` ↔ `#ffffff` | 6.39:1 | 4.5:1(버튼 라벨) | ✅ |
+| 본문 글자 on 종이 배경 | `#3d3833` on `#faf6ef` | 10.76:1 | 4.5:1 | ✅ |
+| 보조 글자(muted) on 종이 배경 | `#6b635a` on `#faf6ef` | 5.48:1 | 4.5:1 | ✅ |
+| 제목 글자 on 종이 배경 | `#1c1917` on `#faf6ef` | 16.23:1 | 4.5:1 | ✅ |
+| 보조 글자(muted) on 흰 카드 배경 | `#6b635a` on `#ffffff` | 5.90:1 | 4.5:1 | ✅ |
+
+가장 낮은 값(있음 상태라벨 on 배지 배경, 4.42:1)도 `FacilityBadge__status-label`이 `--fs-md`(22px) + `font-weight: 800`으로 WCAG "큰 텍스트"(≥18.66px bold) 기준(3:1)에 해당해 여유 있게 통과. 토큰 조정 불필요.
+
+## 헤드리스로 검증 불가 — 실기기·스크린리더 수동 확인 필요
+
+이 환경에는 스크린리더·실제 브라우저 렌더링 접근성 감사 도구가 없어 아래는 코드 검토로 "구조상 문제 없음"까지만 확인했고, 최종 판정은 실기기 필요:
+
+1. **스크린리더 낭독 검증(NVDA/VoiceOver/TalkBack)** — `FacilityBadge`의 `aria-label`(예: "그늘 있음, 로드뷰 확인"), `role="tab"`/`aria-selected` 조합이 실제 스크린리더에서 자연스럽게 낭독되는지. 코드상 ARIA 속성은 올바르나 실기기 낭독 리허설 권장.
+2. **키보드만으로 전 흐름 실주행** — Tab/Shift+Tab/Enter/Space만으로 "지도 진입 → 정류장 확인 → 즐겨찾기 → 공유 QR → 버스로 가기 → 대시보드 3탭 전환"을 실제 키보드(마우스 없이)로 끝까지 수행. 코드상 전부 네이티브 버튼/링크라 이론상 가능하나 실기기 리허설로 최종 확인 권장.
+3. **`prefers-reduced-motion` 실제 OS 설정 반영** — OS 접근성 설정에서 "동작 줄이기" 켠 상태로 지도 화면 진입해 pulse 애니메이션이 실제로 정지하는지 육안 확인.
+4. **줌 200%/글자 확대 시 레이아웃 붕괴 여부** — 브라우저 확대 200% 또는 OS 폰트 확대 시 버튼 텍스트 잘림·터치타깃 겹침이 없는지(토큰상 `--touch: 48px` 하한은 지키고 있으나 실측 필요).
+5. **포커스 순서(탭 순서)의 논리적 흐름** — Dashboard 3탭 → 서브탭 → 표 행 → 상세 카드로 이어지는 실제 탭 이동 순서가 시각적 순서와 일치하는지 실기기 확인(DOM 순서상 일치하나 브라우저별 렌더링 차이 가능성).
