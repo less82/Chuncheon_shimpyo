@@ -63,24 +63,29 @@ export default function EvidenceCard({
           <span className="ev-id">정류장 ID {stop.id}</span>
         </header>
 
-        {/* 승차 순위 (실측) */}
-        <section className="ev-block">
-          <h3 className="ev-h3">한낮 승차 순위</h3>
-          {rank !== null && midday !== null ? (
-            <p className="ev-rank">
-              한낮(11~16시) 승차{" "}
-              <strong>{population.toLocaleString()}개</strong> 정류장 중{" "}
-              <strong className="ev-rank-num">{rank}위</strong>
-              <span className="ev-rank-count">
-                {midday.toLocaleString()}회 · 양방향 합산 기준
-              </span>
-            </p>
-          ) : (
-            <p className="ev-rank ev-muted">
-              승차 데이터 미확인 (양방향 합산 자료 없음)
-            </p>
-          )}
-        </section>
+        {/* 승차 순위 (실측) — 2단계 설치 검토(installRow)에서는 이 카드에 별도
+            "설치 검토 근거" 섹션이 실측 승차를 보여주므로, 여기서 "미확인"을
+            중복 표시하면 한 카드 안에서 미확인과 실측이 동시에 나타나
+            정직성 규칙에 위배된다. installRow가 있을 때는 이 섹션을 숨긴다. */}
+        {!installRow && (
+          <section className="ev-block">
+            <h3 className="ev-h3">한낮 승차 순위</h3>
+            {rank !== null && midday !== null ? (
+              <p className="ev-rank">
+                한낮(11~16시) 승차{" "}
+                <strong>{population.toLocaleString()}개</strong> 정류장 중{" "}
+                <strong className="ev-rank-num">{rank}위</strong>
+                <span className="ev-rank-count">
+                  {midday.toLocaleString()}회 · 양방향 합산 기준
+                </span>
+              </p>
+            ) : (
+              <p className="ev-rank ev-muted">
+                승차 데이터 미확인 (양방향 합산 자료 없음)
+              </p>
+            )}
+          </section>
+        )}
 
         {/* 시설 미비 내역 */}
         <section className="ev-block">

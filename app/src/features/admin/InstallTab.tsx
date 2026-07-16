@@ -47,6 +47,7 @@ export default function InstallTab({ stops, loaded }: Props) {
     <div>
       <section className="dash-section" aria-label="설치 검토 시설 선택">
         <h2 className="dash-h2">2단계 설치 검토 우선순위</h2>
+        <span className="dash-badge">2025.6 4일 표본, 양방향 합산</span>
         <div className="dash-toggles" role="tablist" aria-label="설치 검토 시설">
           {FACILITY_ORDER.map((f) => (
             <button

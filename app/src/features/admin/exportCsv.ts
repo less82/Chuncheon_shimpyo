@@ -4,7 +4,7 @@
 
 import type { InstallRow, SurveyRow } from "../../types/priority";
 import { INSTALL_STATUS_LABEL } from "../../types/priority";
-import { facilityLabel, sourceBadge, KIND_LABEL } from "../../lib/facilityText";
+import { sourceBadge, KIND_LABEL } from "../../lib/facilityText";
 
 export interface CsvRow {
   rank: number;
@@ -179,8 +179,7 @@ function installRowToLine(r: InstallRow): string {
     KIND_LABEL[r.facility],
     r.demandMidday !== null ? r.demandMidday : "",
     r.poi !== null ? r.poi.toFixed(4) : "",
-    sourceBadge(r.stop.facilities[r.facility]) ||
-      facilityLabel(r.stop.facilities[r.facility]),
+    sourceBadge(r.stop.facilities[r.facility]),
     INSTALL_STATUS_LABEL,
   ]
     .map(escapeField)

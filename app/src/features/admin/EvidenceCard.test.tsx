@@ -76,6 +76,62 @@ describe("<EvidenceCard>", () => {
   });
 });
 
+describe("<EvidenceCard> (설치 근거 카드) 미확인·실측 동시표시 금지", () => {
+  it("installRow만 전달되면 '한낮 승차 순위' 섹션(및 '승차 데이터 미확인' 문구)을 렌더하지 않는다", () => {
+    const installRow = {
+      stop,
+      rank: 1,
+      facility: "shade" as const,
+      demandMidday: 120,
+      poi: 0.3,
+      surveySource: "roadview" as const,
+    };
+    const { queryByText, getByText } = render(
+      <EvidenceCard
+        stop={stop}
+        criteria={{}}
+        rank={null}
+        population={0}
+        evidence="설치 검토 후보"
+        onClose={() => {}}
+        installRow={installRow}
+      />,
+    );
+    // 정직성: 같은 카드 안에서 "승차 데이터 미확인"과 "한낮 승차(실측)"이 동시 표시되면 안 됨.
+    expect(queryByText(/승차 데이터 미확인/)).not.toBeInTheDocument();
+    expect(queryByText("한낮 승차 순위")).not.toBeInTheDocument();
+    // 설치 근거 섹션의 실측값은 그대로 노출.
+    expect(getByText(/120건/)).toBeInTheDocument();
+  });
+
+  it("surveyRow 전달(1단계)이면서 rank가 null이어도 순위 섹션은 그대로 유지된다(기존 동작 보존)", () => {
+    const surveyRow = {
+      stop,
+      rank: 1,
+      score: 0.72,
+      demandMidday: 120,
+      demandQ: 0.9,
+      unknownCount: 2,
+      unknownRate: 0.5,
+      poi: 0.3,
+      leadReason: "demand" as const,
+    };
+    const { getByText } = render(
+      <EvidenceCard
+        stop={stop}
+        criteria={{}}
+        rank={null}
+        population={0}
+        evidence="근거"
+        onClose={() => {}}
+        surveyRow={surveyRow}
+      />,
+    );
+    expect(getByText("한낮 승차 순위")).toBeInTheDocument();
+    expect(getByText(/승차 데이터 미확인/)).toBeInTheDocument();
+  });
+});
+
 describe("<EvidenceCard> (d) 산식 항별 분해", () => {
   it("surveyRow 전달 시 산식과 항별 분해(실측→정규화×가중치), 선정 사유를 보여준다", () => {
     const surveyRow = {
