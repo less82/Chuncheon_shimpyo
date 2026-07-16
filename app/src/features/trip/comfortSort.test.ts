@@ -73,14 +73,14 @@ describe("sortByComfort", () => {
     expect(comfort[0].boardStopId).toBe("A");
   });
 
-  it("(c) 도보 차이가 크면(+25분) 최단 후보가 앞선다(패널티 동작)", () => {
+  it("(c) 도보 차이가 크면(+8분) 최단 후보가 앞선다(패널티 동작)", () => {
     const confirmed = mkStop("A", { seat: yes(), shade: yes() });
     const unconfirmed = mkStop("B");
     const stopsById = new Map([
       ["A", confirmed],
       ["B", unconfirmed],
     ]);
-    const options = [mkOption("B", 2), mkOption("A", 27)];
+    const options = [mkOption("B", 2), mkOption("A", 10)];
 
     const comfort = sortByComfort(options, stopsById, "comfort");
     expect(comfort[0].boardStopId).toBe("B");

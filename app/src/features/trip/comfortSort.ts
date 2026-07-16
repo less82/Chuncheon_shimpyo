@@ -10,8 +10,16 @@ import { sourceBadge } from "../../lib/facilityText";
 /** 정렬 모드. 기본 UI 기본값은 "comfort". */
 export type SortMode = "nearest" | "comfort";
 
-/** 도보 1분당 comfort 감점. "1분 더 걷고 앉기"가 이기도록 작게 고정. */
-const PENALTY_PER_MIN = 0.05;
+/**
+ * 도보 1분당 comfort 감점.
+ * 브리핑 스펙: "+1분이면 확인 정류장이 이기고, +8분이면 최단이 이긴다"를
+ * comfortScore=1.0(의자·그늘 둘 다 확인) 후보 기준으로 맞춘다.
+ * 교차점(d) = comfortScore / PENALTY_PER_MIN.
+ *   comfortScore=1.0(의자·그늘 둘 다 확인): 교차점 ≈ 1/0.15 ≈ 6.7분
+ *     → +1분엔 확인 정류장 승, +8분엔 최단 승.
+ *   comfortScore=0.5(단일 시설만 확인): 교차점 ≈ 0.5/0.15 ≈ 3.3분.
+ */
+const PENALTY_PER_MIN = 0.15;
 
 /**
  * options를 mode에 따라 정렬(불변 — 새 배열 반환).
