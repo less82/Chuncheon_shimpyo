@@ -22,10 +22,15 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - `data/...가로등정보_20260610.csv` — 위도,경도
 
 ## 산출
-- `app/public/data/stops.json` (StopsFile 스키마, stops 1890개)
+- `app/public/data/stops.json` (StopsFile 스키마, stops 1890개) + `routes.json`
 - `app/public/data/roadview_survey_template.csv` (헤더: 관리번호,정류장명,그늘,의자,조명,도착안내기,촬영시점(YYYY.MM),조사자,비고)
+- 본선 신규(계획 Phase A): `quality_report.py`(→`docs/데이터_검증.md`), `survey_targets.py`, `roadview_ai_draft.py`, `build_poi.py`(→`app/public/data/poi.json`)
+
+## 본선 추가 규칙 (v3.1)
+- **조명(light)은 AI 판독이 no여도 변환기가 "미확인"으로 강제**(주간 로드뷰 한계). 사람이 확정본에서 명시 변경할 때만 no.
+- AI 초안 CSV는 검수 전 `data/`·파이프라인 투입 금지(🛑 중단 조건 2). no 판정 기준 3단(yes=명확 확인/no=조사 범위 충분+부재 확인/unknown=확정 불가)을 프롬프트에 포함.
 
 ## 방식
-TDD: 실패 테스트(pytest) → 최소구현 → 통과 → 커밋. 단계적 결합(좌표→노선→수요→시설→로드뷰), 뒤 단계 실패해도 앞 단계로 데모 가능하게. 계획 `docs/superpowers/plans/2026-07-15-쉼표정류장.md` Phase 1 준수.
+TDD: 실패 테스트(pytest) → 최소구현 → 통과 → 커밋. 단계적 결합(좌표→노선→수요→시설→로드뷰), 뒤 단계 실패해도 앞 단계로 데모 가능하게. 계획 `docs/superpowers/plans/2026-07-16-본선.md` Phase A(A1·A5·A6) 준수.
 
 결과는 간결 요약 + 검증 명령 실제 출력으로 반환.

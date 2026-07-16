@@ -15,8 +15,12 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 ## 담당
 - `app/src/lib/loadStops.ts`, `app/src/store/useStops.ts`, `app/src/lib/geo.ts`(haversine), `app/src/App.tsx`(라우터 `/`·`/admin`), `app/src/lib/arrivals.ts`, `vite.config.ts`(vite-plugin-pwa).
 
+## 본선 추가 규칙 (v3.1)
+- **공개 배포는 무키 빌드**: `VITE_` 환경변수는 번들에 평문 인라인됨(실측 확인) — 배포 전 `.env` 키 비우고 빌드, dist에서 키 grep 0건 확인.
+- 클라이언트 번들에 LLM 등 과금 키 절대 금지.
+
 ## 참고
-- 계획: `docs/superpowers/plans/2026-07-15-쉼표정류장.md` (Phase 2)
+- 계획: `docs/superpowers/plans/2026-07-16-본선.md` (A12·A13, P2는 B3) · 설계: `docs/specs/2026-07-16-본선-design.md`
 - 타입: `app/src/types/stop.ts`
 
 ## 방식
