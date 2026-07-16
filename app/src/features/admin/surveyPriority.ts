@@ -35,7 +35,7 @@ function unknownCountOf(stop: Stop): number {
   return count;
 }
 
-function demandMiddayOf(stop: Stop, hourWindow: [number, number]): number {
+export function demandMiddayOf(stop: Stop, hourWindow: [number, number]): number {
   if (!stop.demand) return 0;
   const [start, end] = hourWindow;
   let sum = 0;

@@ -47,3 +47,20 @@ export interface NoDemandCandidate {
   stop: Stop;
   unknownCount: number;
 } // 수요 미확인 그룹(순위 없음)
+
+// 2단계 설치 검토 트랙. 물리 설치 대상 3종(도착안내기 sign은 설치 트랙 아님).
+// ⚠️ facilityText.ts의 FacilityKind(4종: shade/seat/light/sign)와 이름이 겹치지 않게 InstallFacilityKind로 둔다.
+export type InstallFacilityKind = "seat" | "shade" | "light";
+
+export interface InstallRow {
+  stop: Stop;
+  facility: InstallFacilityKind;
+  rank: number; // 1부터
+  demandMidday: number | null; // 수요 실측 없으면 null(+배지)
+  poi: number | null; // 생활지원시설 인접도. 미확보 시 null
+  surveySource: "roadview"; // no 확정의 출처는 로드뷰뿐(현재 계약)
+  capturedAt?: string; // 로드뷰 촬영시점 "YYYY.MM"
+}
+
+// 모든 설치 검토 행에 붙는 상태 라벨(UI/CSV 공통, A9가 렌더). "설치 우선순위" 아님 — "검토".
+export const INSTALL_STATUS_LABEL = "데이터상 설치 검토 후보 · 현장 설치 적합성 미검토";
