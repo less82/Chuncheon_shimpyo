@@ -1,0 +1,62 @@
+.presetbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.presetbar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.presetbar-btn {
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-base);
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--ink-body);
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.presetbar-btn[aria-pressed="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+.presetbar-rationale {
+  margin: 0;
+  font-size: var(--fs-base);
+  color: var(--ink-muted);
+}
+.presetbar-adjust summary {
+  cursor: pointer;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink-body);
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+}
+.presetbar-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+}
+.presetbar-slider {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr 44px;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-base);
+}
+.presetbar-slider input[type="range"] {
+  width: 100%;
+  min-height: var(--touch);
+}
+.presetbar-slider-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

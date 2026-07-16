@@ -75,3 +75,34 @@ describe("<EvidenceCard>", () => {
     expect(getByText("한낮 승차 상위 25% · 그늘 미확인")).toBeInTheDocument();
   });
 });
+
+describe("<EvidenceCard> (d) 산식 항별 분해", () => {
+  it("surveyRow 전달 시 산식과 항별 분해(실측→정규화×가중치), 선정 사유를 보여준다", () => {
+    const surveyRow = {
+      stop,
+      rank: 1,
+      score: 0.72,
+      demandMidday: 120,
+      demandQ: 0.9,
+      unknownCount: 2,
+      unknownRate: 0.5,
+      poi: 0.3,
+      leadReason: "demand" as const,
+    };
+    const { getByText, getAllByText } = render(
+      <EvidenceCard
+        stop={stop}
+        criteria={{}}
+        rank={1}
+        population={100}
+        evidence="근거"
+        onClose={() => {}}
+        surveyRow={surveyRow}
+      />,
+    );
+    expect(getByText(/지수 = /)).toBeInTheDocument();
+    expect(getAllByText(/0\.90/).length).toBeGreaterThan(0);
+    expect(getByText(/선정 사유/)).toBeInTheDocument();
+    expect(getByText("한낮 승차 실측")).toBeInTheDocument();
+  });
+});

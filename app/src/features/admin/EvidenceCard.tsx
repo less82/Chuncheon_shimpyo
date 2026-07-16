@@ -4,7 +4,9 @@
 import FacilityBadge from "../../components/FacilityBadge";
 import { KIND_LABEL, type FacilityKind } from "../../lib/facilityText";
 import { middayBoarding, type FilterCriteria } from "./filters";
+import { LEAD_REASON_LABEL } from "./exportCsv";
 import type { Stop } from "../../types/stop";
+import type { InstallRow, SurveyRow } from "../../types/priority";
 import "./EvidenceCard.css";
 
 interface Props {
@@ -15,6 +17,10 @@ interface Props {
   population: number;
   evidence: string;
   onClose: () => void;
+  /** 1단계 "조사 검토 순서"에서 선택된 경우 — 산식 항별 분해를 함께 보여준다. */
+  surveyRow?: SurveyRow;
+  /** 2단계 "설치 검토 우선순위"에서 선택된 경우. */
+  installRow?: InstallRow;
 }
 
 const KINDS: FacilityKind[] = ["shade", "seat", "light", "sign"];
@@ -25,6 +31,8 @@ export default function EvidenceCard({
   population,
   evidence,
   onClose,
+  surveyRow,
+  installRow,
 }: Props) {
   const midday = middayBoarding(stop);
   // 확인되지 않았거나(미확인) 없는(없음) 시설 = 설치 검토 대상.
@@ -103,6 +111,59 @@ export default function EvidenceCard({
           <h3 className="ev-h3">후보 사유 (조건)</h3>
           <p className="ev-evidence">{evidence}</p>
         </section>
+
+        {/* 1단계 조사 검토 순서 — 산식 + 항별 분해 */}
+        {surveyRow && (
+          <section className="ev-block">
+            <h3 className="ev-h3">조사 검토 지수 산식</h3>
+            <p className="ev-formula">
+              지수 = ( 가중치×수요분위수 + 가중치×미확인비율 [+ 가중치×인접도] ) / Σ가중치
+            </p>
+            <ul className="ev-breakdown">
+              <li>
+                한낮 승차(실측) <strong>{surveyRow.demandMidday.toLocaleString()}건</strong> →
+                수요 분위수 정규화 <strong>{surveyRow.demandQ.toFixed(2)}</strong>
+              </li>
+              <li>
+                미확인 시설 <strong>{surveyRow.unknownCount}종</strong>(4종 중) → 미확인비율
+                정규화 <strong>{surveyRow.unknownRate.toFixed(2)}</strong>
+              </li>
+              {surveyRow.poi !== null && (
+                <li>
+                  생활지원시설 인접도 정규화 <strong>{surveyRow.poi.toFixed(2)}</strong>
+                </li>
+              )}
+            </ul>
+            <p className="ev-lead">
+              선정 사유: <strong>{LEAD_REASON_LABEL[surveyRow.leadReason]}</strong>
+            </p>
+          </section>
+        )}
+
+        {/* 2단계 설치 검토 우선순위 */}
+        {installRow && (
+          <section className="ev-block">
+            <h3 className="ev-h3">설치 검토 근거</h3>
+            <ul className="ev-breakdown">
+              <li>
+                시설 <strong>{KIND_LABEL[installRow.facility]}</strong>
+              </li>
+              <li>
+                한낮 승차(실측){" "}
+                {installRow.demandMidday !== null ? (
+                  <strong>{installRow.demandMidday.toLocaleString()}건</strong>
+                ) : (
+                  <span className="ev-muted">수요 미확인</span>
+                )}
+              </li>
+              {installRow.poi !== null && (
+                <li>
+                  생활지원시설 인접도 <strong>{installRow.poi.toFixed(2)}</strong>
+                </li>
+              )}
+            </ul>
+          </section>
+        )}
 
         {/* 로드뷰 캡처 자리 */}
         <section className="ev-block">
