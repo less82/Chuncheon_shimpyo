@@ -145,3 +145,94 @@
 3. **`prefers-reduced-motion` 실제 OS 설정 반영** — OS 접근성 설정에서 "동작 줄이기" 켠 상태로 지도 화면 진입해 pulse 애니메이션이 실제로 정지하는지 육안 확인.
 4. **줌 200%/글자 확대 시 레이아웃 붕괴 여부** — 브라우저 확대 200% 또는 OS 폰트 확대 시 버튼 텍스트 잘림·터치타깃 겹침이 없는지(토큰상 `--touch: 48px` 하한은 지키고 있으나 실측 필요).
 5. **포커스 순서(탭 순서)의 논리적 흐름** — Dashboard 3탭 → 서브탭 → 표 행 → 상세 카드로 이어지는 실제 탭 이동 순서가 시각적 순서와 일치하는지 실기기 확인(DOM 순서상 일치하나 브라우저별 렌더링 차이 가능성).
+
+---
+
+# A12 — 보안·오프라인 E2E·QA 최종 게이트 (2026-07-16)
+
+> 목표: 본선 데모 시나리오가 네트워크 불안 상태에서도 통과. `docs/specs/2026-07-16-본선-design.md` §1(완료 기준 8종)·§5(검증 계획) 기준. `cd app && npm run build && npm run preview` 정적 빌드 재현.
+
+## 1. 무키 빌드 검증 (키 노출 방지)
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| `.env`·`dist` gitignore 처리 | ✅ | `.gitignore:18` `app/.env`, `app/.gitignore:11` `dist` — `git check-ignore -v`로 둘 다 확인 |
+| 무키 빌드(`VITE_TAGO_KEY= npm run build`) | ✅ 빌드 성공 | tsc+vite+PWA 정상, precache 10 entries |
+| 무키 빌드 산출물에 실제 키 문자열 0건 | ✅ **0건** | `.env`의 `VITE_TAGO_KEY` 값(64자)을 `dist/assets/*.js`·`dist/sw.js` 전체에서 grep — 매치 0건(값 자체는 출력하지 않고 매치 카운트만 확인). 빌드 후 `.env` 원복, 정상 키로 재빌드해 개발환경 복구 |
+| 키 없을 때 도착정보 폴백 | ✅ | `app/src/lib/arrivals.ts:84-85` — `key`나 `stop.tagoNodeId` 중 하나라도 없으면 `fetch` 시도 자체 없이 즉시 `headwayFallback()`(`"배차간격 약 N분"`, `live:false`) 반환. 무한 스피너 없음 |
+| `npm audit` | ✅ **0 vulnerabilities** | prod 41 / dev 503 / optional 77 / peer 7, 전 등급 0건 |
+| QR/공유 페이로드에 개인정보 없음 | ✅ | `app/src/features/share/shareLink.ts` — payload는 `?fav=<stopId,...>` 뿐. 수신측(`ImportOnLoad.tsx`)이 로드된 `stops` id 화이트리스트와 교집합만 통과시켜 임의 문자열/스크립트 주입 방어. `StopCard.tsx:91`의 정류장 QR도 동일하게 `buildShareUrl([stop.id])`만 인코딩 — 위치·이름 등 부가 정보 없음 |
+
+## 2. 오프라인 E2E 매트릭스 (설계 §5)
+
+**판정 근거:** `app/vite.config.ts` workbox 설정 — `globPatterns`(app shell: js/css/html/svg/ico/png/woff2) + `additionalManifestEntries`(`/data/stops.sample.json`, `/data/routes.json`) precache, `navigateFallback: '/index.html'`(오프라인 시 모든 same-origin 네비게이션이 캐시된 app shell로 폴백), 런타임 캐시(OSM 타일 CacheFirst, `stops*.json` StaleWhileRevalidate). SW 등록·설치(=precache 완료)는 **최초 1회 온라인 접속이 전제조건**이다.
+
+설치 PWA는 정의상 설치 자체가 최초 온라인 로드를 전제하므로 "최초 접속" 조합은 해당 없음(재방문과 동일하게 동작) — 아래 표는 이를 반영해 축약.
+
+| 접속 유형 | 매체 | 네트워크 | 진입 경로 | 예상 동작 | 근거 |
+|---|---|---|---|---|---|
+| 최초 접속 | 브라우저 | 완전 오프라인 | 새로고침/직접 URL/QR 진입 | ❌ **실패**(알려진 한계) | SW가 아직 설치되지 않아 precache가 비어 있음 — 최초 요청 자체가 네트워크 필요. QR 최초 진입도 동일하게 실패 |
+| 최초 접속 | 브라우저 | 느린 네트워크 | 새로고침/직접 URL/QR 진입 | ✅ 완료(지연) | 앱 자체 fetch(도보/도착)는 전부 2.5초 타임아웃 후 폴백(`arrivals.ts`·`walking.ts` `TIMEOUT_MS=2500`) — 무한 대기 없음. 최초 페이지 로드는 브라우저 네트워크 계층이 담당(지연되나 실패 아님), 로드 완료 후 SW 설치됨 |
+| 재방문 | 브라우저 | 완전 오프라인 | 새로고침 | ✅ 통과 | precache된 app shell을 `navigateFallback`이 서빙, `stops.json`은 런타임 캐시 폴백(없으면 precache된 `stops.sample.json`), 도보/도착은 함수 레벨 폴백 |
+| 재방문 | 브라우저 | 완전 오프라인 | 직접 URL(`/favorites`, `/go`, `/print/:id` 등) | ✅ 통과 | SPA 라우트도 `navigateFallback: '/index.html'`로 동일 처리 — same-origin 경로면 진입 경로 구분 없음 |
+| 재방문 | 브라우저 | 완전 오프라인 | QR 진입(`?fav=id`) | ✅ 통과 | QR 링크도 same-origin 네비게이션이라 위와 동일하게 폴백 서빙 후, 클라이언트에서 `ImportOnLoad`가 로컬 화이트리스트로 처리(네트워크 불필요) |
+| 재방문 | 브라우저 | 느린 네트워크 | 새로고침/직접 URL/QR 진입 | ✅ 통과 | StaleWhileRevalidate가 캐시본 즉시 반환 + 백그라운드 갱신 시도(실패해도 캐시본 유지), 도보/도착 함수는 2.5초 타임아웃 |
+| 재방문(=설치 PWA 전체) | 설치 PWA | 완전 오프라인 | 새로고침/직접 URL/QR 진입 | ✅ 통과 | 설치 자체가 SW 등록·precache 완료를 전제 — 브라우저 재방문과 동일 캐시 경로. standalone 모드라 URL바 직접입력은 드물지만 딥링크(QR로 열기)는 동일 폴백 적용 |
+| 재방문(=설치 PWA 전체) | 설치 PWA | 느린 네트워크 | 새로고침/직접 URL/QR 진입 | ✅ 통과 | 위와 동일 StaleWhileRevalidate + 함수 타임아웃 |
+
+**알려진 한계(명기):** "QR 최초 진입 + 완전 오프라인 = 실패" — SW가 설치되지 않은 기기가 오프라인 상태로 QR을 처음 스캔하면 아무것도 뜨지 않는다(캐시가 없으므로). **발표 데모는 반드시 사전 1회 접속(SW 설치 완료)된 기기를 사용**(설계 §5, 시나리오 1 조건과 동일).
+
+**한계:** 이 환경은 헤드리스로 실제 SW 등록·오프라인 재현(Service Worker lifecycle, `navigator.onLine=false` 실제 네트워크 차단)을 실행하지 못함. 위 판정은 precache 매니페스트(`dist/sw.js` 정적 분석: precache 10 entries 확인)와 각 함수의 폴백 경로 코드 분석으로 내림. **실기기에서 1회 로드 후 비행기모드로 재접속하는 리허설을 발표 전 권장**(새로고침·즐겨찾기 화면 직접 URL·QR 재스캔 3가지 모두).
+
+## 3. 데모 시나리오 8종 (설계 §1)
+
+| # | 시나리오 | 결과 | 근거 |
+|---|---|---|---|
+| 1 | (B2C) QR 스캔 → 가입 없이 즐겨찾기 등록 + 확인 문구(사전 1회 접속 기기) | ✅ 통과 | `StopCard.tsx`의 정류장 QR은 `toQrDataUrl(buildShareUrl([stop.id]))`(로컬 생성, 네트워크 불필요). 스캔 시 `ImportOnLoad.tsx`가 `?fav=` 화이트리스트 검증 후 `addMany`(로그인 없음) → `/favorites`로 이동 + `importedNames` state로 확인 배너 노출(`Favorites.tsx:86-104`). qr.test.ts·shareLink.test.ts·ImportOnLoad.test.tsx 통과 |
+| 2 | (B2C) "앉아서 기다리는 길" — 최단/시설우선 토글, 시설별 문구, 점수 숫자 없음 | ✅ 통과 | `TripView.tsx`에 "가까운 순"/"시설 확인된 곳 우선" 토글(`sortMode`), 부제 "확인된 시설이 있는 길을 우선 보여드려요". `comfortSort.ts`의 `comfortSentence()`가 의자/그늘/조명/미확인 4종 문구 반환, 숫자 미포함(`comfortSort.test.ts` (d)(e)(f) 통과 — 의자 미확인 카드에 "앉아서" 미포함 강제 테스트 포함) |
+| 3 | (B2C) 최초 접속 후 오프라인 전환 → 전 흐름 폴백 | ✅ 통과(코드 근거, §2 매트릭스 참조) | 도보=`straightWalk` 직선 폴백, 도착=`headwayFallback`, 경로탐색=로컬 `routes.json`(precache됨), QR=로컬 생성, 즐겨찾기=로컬스토리지(zustand persist) — 전부 네트워크 비의존. §2 매트릭스의 "재방문" 행 전부 통과 |
+| 4 | (B2G) 1단계 조사 검토 순서 표 + 수요 미확인 별도 그룹 + CSV | ✅ 통과 | `SurveyTab.tsx` — 순위·정류장·한낮승차·미확인시설·선정사유·지수(보조) 표, "수요 미확인 조사 후보 — 순위 없음" 별도 섹션(`buildSurveyPriority`가 `noDemand`를 `ranked`와 분리 반환), `exportSurveyCsv` 버튼. `surveyPriority.test.ts` 통과 |
+| 5 | (B2G) 조사 CSV 투입 → 파이프라인 재실행 → 전후 수치 4종 변화 | ⚠️ 부분 확인("투입 전" 상태만) | 현재 실데이터 `stops.json` 4시설 전부 `no=0`(`shade/seat/light/sign` 전수 확인) — "투입 전" 상태 코드 근거 확인. `InstallTab.tsx:70-73`이 이 상태에서 "조사 반영 전 — 1단계를 먼저 진행해 로드뷰로 '없음'을 확정해야 설치 검토 후보가 나타납니다" 정직 안내. **"투입 후" 라이브 전환은 본선 전 실제 로드뷰 조사 CSV(`data/roadview_survey_template.csv` 등)를 파이프라인에 넣어야 재현 가능 — 이번 게이트 범위 밖(기능 변경 금지, 실데이터 조사 미완료)** |
+| 6 | (B2G) 2단계 설치 검토(상태 라벨 상시 표기) + 시설별 예산 | ✅ 통과 | `INSTALL_STATUS_LABEL = "데이터상 설치 검토 후보 · 현장 설치 적합성 미검토"`(`types/priority.ts:66`) — 표의 모든 행(`InstallTab.tsx:127`)과 CSV(`exportCsv.ts:184`) 양쪽에 상시 고정 표기. `buildInstallPriority`가 `status==="no" && source==="roadview"`만 대상(unknown/yes 제외, `installPriority.ts` 주석·중단조건1 준수). `BudgetSim`이 시설(벤치/그늘막/조명)별 트랙으로 분리 표시 |
+| 7 | (B2G) 근거 카드(산식·실측·출처) → CSV·A4 | ✅ CSV / ⚠️ A4 수동 확인 필요 | `EvidenceCard.tsx` — 산식 문자열(`ev-formula`), 항별 분해(수요분위수·미확인비율·POI), 근거요약, 로드뷰 캡처 자리(위경도 병기) 전부 표시. CSV는 `surveyRowsToCsv`/`installRowsToCsv`가 산식 원값 전부 포함해 재검산 가능(`exportCsv.test.ts` 통과). **A4 인쇄**는 시민용 `PrintPoster`(`/print/:id`)만 `@media print` 전용 스타일이 있고, **`EvidenceCard`(관리자용)에는 인쇄 전용 CSS가 없음** — `position: fixed` 오버레이라 브라우저 기본 인쇄(Ctrl+P) 시 잘리거나 배경 오버레이가 함께 찍힐 수 있음(하단 발견 이슈 A12-1 참조, 실기기 확인 권장) |
+| 8 | (B2G) 프리셋 3종 전환 + 정책 시나리오 비교 표 | ✅ 통과 | `PresetBar`로 폭염 대응형/고령자 이동지원형/이용량 중심형 전환(`PRESETS`), `SurveyTab.tsx`의 "정책 시나리오 비교" 섹션이 Top10 진입 빈도·평균 순위 표 표시. 화면·CSV·주석 어디에도 "민감도 분석" 문자열 없음(§4 grep 결과) |
+
+## 4. 표현 금지어 grep (전부 0건 확인)
+
+| 금지어/규칙 | `app/src` 렌더/화면 문자열 | 비고 |
+|---|---|---|
+| "현장 확인" | ✅ 0건 | 매치는 전부 테스트 파일의 "금지 검증" 어서션(`comfort.test.ts`, `Dashboard.test.tsx`) — 정당 |
+| "수혜" | ✅ 0건 | 매치는 `BudgetSim.tsx`·`budgetSimulate.ts`의 "이 단어를 쓰지 않는다"는 금지 주석뿐 — 정당 |
+| "일평균"(근거 없는) | ✅ 0건 | 위와 동일 파일의 금지 주석뿐 |
+| B2C 화면 점수 숫자 | ✅ 0건 | `features/citizen`·`features/trip` 전체에 `toFixed`/`score` 렌더 없음. `comfortScore`는 정렬용 내부 계산에만 사용(`comfortSort.ts:44`), 화면 미노출 |
+| "민감도 분석"(화면) | ✅ 0건 | 렌더 문자열 없음. `Dashboard.test.tsx`에 "민감도" 미노출 검증 테스트 유지(정당). `surveyPriority.ts` JSDoc의 리터럴 "민감도 분석" 1건은 **정리 완료**(아래 참조) |
+| 조건 없는 "오프라인 동작" | ✅ 0건(화면) | `TripView.tsx:42`에 코드 주석 1건("로컬 routes.json — 오프라인 동작")은 화면 렌더 문자열이 아니고 맥락상 "로컬 데이터라서"라는 조건이 이미 붙어 있어 오표기 아님 |
+| "취약" 지표명 오용 | ✅ 없음(재확인) | POI 지표는 전 코드에서 "생활지원시설 인접도"로 일관(`types/priority.ts`, `loadPoi.ts`, `EvidenceCard.tsx`, `exportCsv.ts`, `PresetBar.tsx`). `tokens.css:2`의 "취약한 고령자"는 사용자 설명(정당, 유지) |
+| 미확인의 "없음" 오표기 | ✅ 없음 | `facilityText`/`FacilityBadge` 3상태 분리 유지(A9까지 검증됨, 재확인) |
+| 의자 미확인 카드의 "앉아서" 문구 | ✅ 없음 | `comfortSort.test.ts` (f) 테스트로 강제 |
+
+### 코드 정리 (Minor)
+
+- `app/src/features/admin/surveyPriority.ts`의 `presetStability()` JSDoc — `"민감도 분석" 명칭 금지`라는 금지어 리터럴이 주석에 그대로 노출돼 있던 것을 `"발표 명칭은 "정책 시나리오 비교" — 세 프리셋은 팀이 정한 세 점일 뿐 통계적 변동폭 분석이 아니므로 다른 명칭으로 부르지 않는다"`로 의도를 유지한 채 리워드. 기능 변경 없음(주석만).
+
+## 5. 전체 자동 테스트 (A12 최종)
+
+- 프론트 vitest: **173 passed (29 files)**
+- `npx tsc --noEmit`: **에러 0건**
+- `npm run build`: **성공**(tsc+vite+PWA, precache 10 entries, `dist/assets/index-*.js` 478KB)
+- `npm audit`: **0 vulnerabilities**
+- 파이프라인 pytest: **60 passed**(10 files)
+
+## 6. 발견 이슈
+
+| # | 심각도 | 영역 | 현상/재현 | 조치 |
+|---|---|---|---|---|
+| A12-1 | 낮음(발표 리스크) | B2G `EvidenceCard`(근거 카드) 인쇄 | `EvidenceCard.css`에 `@media print` 규칙이 전혀 없음(`ev-overlay`가 `position: fixed; inset: 0`인 채로 그대로 인쇄됨). 시민용 `PrintPoster`는 인쇄 전용 스타일이 있으나 관리자용 근거 카드는 없어, 시나리오 7의 "A4" 요구를 브라우저 기본 인쇄(Ctrl+P)로만 충족해야 하는 상태 — 오버레이 배경·모달 잘림 위험. **재현:** 대시보드에서 조사/설치 표 행 클릭 → 근거 카드 열림 → Ctrl+P → 미리보기에서 배경 반투명 오버레이가 함께 인쇄되거나 카드가 뷰포트 밖으로 잘릴 수 있음(브라우저별 상이) | 기능 변경 금지 범위라 미수정. **발표 전 실기기에서 Ctrl+P 미리보기 육안 확인 필수**. 정식 수정 시 `EvidenceCard.css`에 `@media print { .ev-overlay { position: static; background: none; } .ev-close { display: none; } }` 류 추가 검토(다음 이터레이션 과제로 별도 티켓화 권장) |
+
+## 7. 수동 확인 필요 목록 (헤드리스로 대체 불가)
+
+1. **QR 최초 스캔 리허설(온라인)** — 시나리오 1을 실제 스마트폰 카메라로 QR 스캔 → 즐겨찾기 등록 확인 배너까지 육안 확인.
+2. **오프라인 비행기모드 3종 재현** — §2 매트릭스의 "재방문 + 완전 오프라인" 행 3가지(새로고침/직접 URL/QR 재스캔)를 실기기에서 1회 로드 후 비행기모드로 리허설.
+3. **근거 카드 A4 인쇄 미리보기(A12-1)** — 대시보드 근거 카드에서 Ctrl+P 미리보기 육안 확인, 필요 시 인쇄 CSS 추가를 다음 작업으로 티켓화.
+4. **조사 CSV "투입 후" 라이브 전환(시나리오 5 후반부)** — 본선 전 실제 로드뷰 조사 CSV를 파이프라인에 투입해 no=0→B곳 등 4종 수치 변화를 실제로 재생성해 확인(현재는 "투입 전" 상태만 코드로 검증됨).
+5. **느린 네트워크(스로틀링) 실측** — 브라우저 devtools "Slow 3G" 등으로 실제 로딩 체감 시간 측정(코드상 2.5초 타임아웃은 확인했으나 체감 UX는 실기기 권장).
