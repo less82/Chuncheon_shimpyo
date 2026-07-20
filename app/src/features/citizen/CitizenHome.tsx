@@ -7,6 +7,7 @@ import MapView from "../map/MapView";
 import StopCard from "./StopCard";
 import ImportOnLoad from "../share/ImportOnLoad";
 import ShareSheet from "../share/ShareSheet";
+import QrScanner from "../share/QrScanner";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
@@ -15,6 +16,7 @@ import "./CitizenHome.css";
 export default function CitizenHome() {
   const [selected, setSelected] = useState<Stop | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const loaded = useStops((s) => s.loaded);
   const favCount = useFavorites((s) => s.ids.length);
   const favIds = useFavorites((s) => s.ids);
@@ -22,9 +24,21 @@ export default function CitizenHome() {
   return (
     <main className="home">
       <ImportOnLoad />
+      {scanning && <QrScanner onClose={() => setScanning(false)} />}
 
       <header className="home__bar">
         <div className="home__actions">
+          <button
+            type="button"
+            className="home__scan"
+            onClick={() => setScanning(true)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" />
+              <path d="M7 12h10" />
+            </svg>
+            <span>QR 스캔</span>
+          </button>
           <Link className="home__go" to="/go">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73V19a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1.27A2 2 0 0 1 4 16zm2-1h12V6H6v9zm1.5 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zm9 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" />
