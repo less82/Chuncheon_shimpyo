@@ -27,23 +27,10 @@ foreach ($stop in $stops) {
   $stopById[[string]$stop.id] = $stop
 }
 
-function Get-UnknownFacilities([object]$stop) {
-  if ($null -eq $stop) { return @() }
-  $labels = [ordered]@{ shade = '그늘'; seat = '의자'; light = '조명'; sign = '도착안내기' }
-  $unknown = @()
-  foreach ($property in $labels.Keys) {
-    if ($stop.facilities.$property.status -eq 'unknown') {
-      $unknown += $labels[$property]
-    }
-  }
-  return $unknown
-}
-
 $fullRows = foreach ($survey in $surveyRows) {
   $id = [string]$survey.관리번호
   $location = $locationById[$id]
   $stop = $stopById[$id]
-  $unknown = @(Get-UnknownFacilities $stop)
   $lat = if ($location) { [string]$location.위도 } elseif ($stop) { [string]$stop.lat } else { '' }
   $lng = if ($location) { [string]$location.경도 } elseif ($stop) { [string]$stop.lng } else { '' }
   $name = if ($location) { [string]$location.정류장명 } else { [string]$survey.정류장명 }
@@ -51,7 +38,7 @@ $fullRows = foreach ($survey in $surveyRows) {
   $pinUrl = if ($lat -and $lng) { "https://map.kakao.com/link/map/${pinLabel},${lat},${lng}" } else { '' }
   $isNumericRank = 0
   $rankIsNumber = [int]::TryParse([string]$survey.우선순위, [ref]$isNumericRank)
-  $priorityType = if ($rankIsNumber) { '승차자료 기반 순위 대상' } else { '승차자료 없음·별도 조사후보' }
+  $priorityType = if ($rankIsNumber) { '승차자료 있음(순위 산정)' } else { '승차자료 없음(별도 조사)' }
 
   [pscustomobject][ordered]@{
     우선순위 = [string]$survey.우선순위
@@ -63,7 +50,6 @@ $fullRows = foreach ($survey in $surveyRows) {
     경도 = $lng
     위도 = $lat
     '표본기간 한낮(11~16시) 승차건수' = [string]$survey.한낮승차
-    '미확인 시설 목록' = $unknown -join ' · '
     '정류장 위치 확인 URL(카카오맵)' = $pinUrl
     '정류장 주변 확인 URL(카카오 로드뷰)' = [string]$survey.로드뷰URL
     그늘 = [string]$survey.그늘
@@ -81,7 +67,7 @@ $fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
   [int]::TryParse([string]$_.우선순위, [ref]$rank) -and $rank -ge 66 -and $rank -le 110
-} | Select-Object 우선순위,'조사대상 구분','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'표본기간 한낮(11~16시) 승차건수','미확인 시설 목록','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
+} | Select-Object 우선순위,'조사대상 구분','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'표본기간 한낮(11~16시) 승차건수','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
 )
 $maengRows | Export-Csv -LiteralPath $MaengOutputCsv -NoTypeInformation -Encoding UTF8
 
@@ -99,8 +85,7 @@ $columnBasis = @(
   [pscustomobject]@{ 열='데이터기준일'; 구분='출처 근거표에서만 관리'; 공식출처='춘천시 버스정류장 위치정보'; 원본필드='데이터기준일'; 처리='조사 작업표에서는 제외'; 비고='사용한 위치 원본은 2026-03-26 기준' }
   [pscustomobject]@{ 열='표본기간 한낮(11~16시) 승차건수'; 구분='프로젝트 집계'; 공식출처='강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'; 원본필드='이용일자, 이용시간대, 정류장명, 승차건수'; 처리='2025-06-25~28 중 11~16시 승차건수를 정규화된 동명 정류장 단위로 합산'; 비고='4일 표본·양방향 합산이며 일평균이나 연간 수요가 아님' }
   [pscustomobject]@{ 열='우선순위'; 구분='프로젝트 산출'; 공식출처='없음'; 원본필드='없음'; 처리='한낮 승차 분위수(D) + 미확인 시설 수/4(UNK) 내림차순'; 비고='상위 150곳 뒤 수요 미확인 조사후보 15곳 추가; 공식 행정 우선순위가 아님' }
-  [pscustomobject]@{ 열='조사대상 구분'; 구분='프로젝트 산출'; 공식출처='없음'; 원본필드='없음'; 처리='승차자료가 연결되면 순위 대상, 연결되지 않으면 별도 조사후보'; 비고='시설 설치 우선순위가 아니라 로드뷰 조사대상 분류' }
-  [pscustomobject]@{ 열='미확인 시설 목록'; 구분='프로젝트 기존자료'; 공식출처='시설별 대장 및 stops.json'; 원본필드='그늘, 의자, 조명, 도착안내기 상태'; 처리='상태가 미확인인 시설명만 나열'; 비고='뒤의 시설별 조사값을 작성하면 재생성 시 갱신되는 참고 목록' }
+  [pscustomobject]@{ 열='조사대상 구분'; 구분='프로젝트 산출'; 공식출처='없음'; 원본필드='없음'; 처리='승차자료가 연결되면 순위 산정, 연결되지 않으면 별도 조사'; 비고='시설 설치 우선순위가 아니라 로드뷰 조사대상 분류' }
   [pscustomobject]@{ 열='정류장 위치 확인 URL(카카오맵)'; 구분='편의용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오맵 위치 링크 형식으로 변환'; 비고='춘천시 원본 필드가 아닌 조사 참고 링크' }
   [pscustomobject]@{ 열='정류장 주변 확인 URL(카카오 로드뷰)'; 구분='조사용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오 로드뷰 링크 형식으로 변환'; 비고='가장 가까운 파노라마로 이동할 수 있음' }
   [pscustomobject]@{ 열='그늘·의자·조명·도착안내기'; 구분='현장 조사'; 공식출처='없음'; 원본필드='없음'; 처리='있음/없음/미확인 3상태 입력'; 비고='근거 없이 없음으로 입력하지 않음' }
