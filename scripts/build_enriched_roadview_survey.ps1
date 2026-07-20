@@ -41,7 +41,7 @@ $fullRows = foreach ($survey in $surveyRows) {
   $rankIsNumber = [int]::TryParse([string]$survey.우선순위, [ref]$isNumericRank)
 
   [pscustomobject][ordered]@{
-    우선순위 = [string]$survey.우선순위
+    '현황조사 우선순위(한낮 승차수요·시설정보 미확인도 기반)' = [string]$survey.우선순위
     '정류장 번호' = if ($location) { [string]$location.'정류장 번호' } else { '' }
     관리번호 = $id
     정류장명 = $name
@@ -65,8 +65,8 @@ $fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding 
 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
-  [int]::TryParse([string]$_.우선순위, [ref]$rank) -and $rank -ge 66 -and $rank -le 110
-} | Select-Object 우선순위,'정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'표본기간 한낮(11~16시) 승차건수(동명 정류장 합산)','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
+  [int]::TryParse([string]$_.'현황조사 우선순위(한낮 승차수요·시설정보 미확인도 기반)', [ref]$rank) -and $rank -ge 66 -and $rank -le 110
+} | Select-Object '현황조사 우선순위(한낮 승차수요·시설정보 미확인도 기반)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'표본기간 한낮(11~16시) 승차건수(동명 정류장 합산)','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
 )
 $maengRows | Export-Csv -LiteralPath $MaengOutputCsv -NoTypeInformation -Encoding UTF8
 
