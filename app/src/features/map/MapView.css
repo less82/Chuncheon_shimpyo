@@ -70,6 +70,14 @@
   }
 }
 
+/* 움직임에 민감한 사용자 배려: 애니메이션 정지, 고정 링만 표시 */
+@media (prefers-reduced-motion: reduce) {
+  .user-dot__pulse {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
 /* Leaflet 툴팁을 앱 톤에 맞춤 */
 .leaflet-tooltip {
   font-size: var(--fs-sm);

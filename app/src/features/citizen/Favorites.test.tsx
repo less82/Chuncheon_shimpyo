@@ -53,4 +53,37 @@ describe("<Favorites>", () => {
     const { getByText } = renderFav();
     expect(getByText(/즐겨찾기한 정류장이 없어요/)).toBeInTheDocument();
   });
+
+  it("QR 로 등록된 정류장명을 배너로 보여준다(1곳)", () => {
+    useFavorites.setState({ ids: ["A"] });
+    const { getByText } = render(
+      <MemoryRouter
+        initialEntries={[
+          { pathname: "/favorites", state: { importedNames: ["장학교차로"] } },
+        ]}
+      >
+        <Favorites />
+      </MemoryRouter>,
+    );
+    expect(
+      getByText(/장학교차로 정류장을 즐겨찾기에 넣었어요/),
+    ).toBeInTheDocument();
+  });
+
+  it("여러 곳이 등록되면 '외 N곳' 문구를 보여준다", () => {
+    useFavorites.setState({ ids: ["A", "B"] });
+    const { getByText } = render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: "/favorites",
+            state: { importedNames: ["장학교차로", "상공회의소"] },
+          },
+        ]}
+      >
+        <Favorites />
+      </MemoryRouter>,
+    );
+    expect(getByText(/장학교차로 외 1곳/)).toBeInTheDocument();
+  });
 });

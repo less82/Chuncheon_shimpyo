@@ -91,6 +91,29 @@ def load_boarding() -> pd.DataFrame:
     return out
 
 
+def load_boarding_daily() -> pd.DataFrame:
+    """시간대별 승하차 원본을 날짜(기준일자) 포함으로 읽는다.
+
+    quality_report.py의 "하루 제외" 안정성 분석 전용. load_boarding()과 달리
+    날짜 컬럼을 버리지 않는다. load_boarding()의 시그니처·동작은 변경하지 않음.
+
+    반환 컬럼: 기준일자(str, YYYY-MM-DD), 정류장아이디, 정류장명, 이용시간대(int), 승차건수(int)
+    """
+    df = _read("*시간대별 승하차 인원*.csv")
+    out = pd.DataFrame(
+        {
+            "기준일자": df["수집일자"].astype(str).str.strip(),
+            "정류장아이디": df["정류장아이디"].astype(str).str.strip(),
+            "정류장명": df["정류장명"].astype(str).str.strip(),
+            "이용시간대": pd.to_numeric(df["이용시간대"], errors="coerce").astype("Int64"),
+            "승차건수": pd.to_numeric(df["승차건수"], errors="coerce").fillna(0).astype(int),
+        }
+    )
+    out = out.dropna(subset=["이용시간대"]).reset_index(drop=True)
+    out["이용시간대"] = out["이용시간대"].astype(int)
+    return out
+
+
 def load_bench() -> pd.DataFrame:
     """벤치 현황(의자 근거). 반환 컬럼: 명칭, lat, lng."""
     df = _read("*벤치 현황*.csv")

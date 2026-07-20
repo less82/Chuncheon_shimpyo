@@ -135,3 +135,20 @@
   font-size: var(--fs-sm);
   color: var(--ink-muted);
 }
+
+.ev-formula {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  font-family: var(--font-mono, monospace);
+}
+.ev-breakdown {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: var(--fs-base);
+  line-height: 1.6;
+}
+.ev-lead {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-base);
+}

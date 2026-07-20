@@ -28,8 +28,11 @@ export default function ImportOnLoad() {
     if (incoming.length === 0) return;
 
     addMany(incoming);
-    // 처리한 파라미터 제거 후 큰 즐겨찾기 화면으로 이동.
-    navigate("/favorites", { replace: true });
+    const importedNames = incoming
+      .map((id) => stops.find((s) => s.id === id)?.name)
+      .filter((n): n is string => Boolean(n));
+    // 처리한 파라미터 제거 후 큰 즐겨찾기 화면으로 이동 + 등록된 정류장명 전달(확인 배너용).
+    navigate("/favorites", { replace: true, state: { importedNames } });
   }, [loaded, stops, addMany, navigate]);
 
   return null;

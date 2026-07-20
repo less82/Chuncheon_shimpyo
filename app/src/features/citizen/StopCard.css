@@ -129,6 +129,45 @@
   margin-top: var(--sp-4);
 }
 
+/* 이 정류장 QR — 스캔하면 로그인 없이 즐겨찾기에 등록 */
+.stopcard__qrbtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--touch-lg);
+  border-radius: var(--radius);
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink-body);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  cursor: pointer;
+}
+.stopcard__qrbtn:active {
+  transform: scale(0.98);
+}
+
+.stopcard__qr {
+  margin-top: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  text-align: center;
+}
+.stopcard__qr-hint {
+  font-size: var(--fs-sm);
+  color: var(--ink-body);
+  margin-bottom: var(--sp-2);
+}
+.stopcard__qr-img {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
 .stopcard__share,
 .stopcard__print {
   flex: 1;

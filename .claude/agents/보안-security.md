@@ -13,7 +13,9 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 4. **CSP**: `index.html`에 CSP 메타 — 외부 스크립트 차단, 허용 도메인은 OSM 타일·(있으면)TAGO만.
 5. **의존성**: `npm audit` high 이상 해결.
 
+6. **무키 빌드 검증(본선)**: 공개 배포 빌드에 TAGO 키 인라인 0건(`dist` grep). 클라이언트 번들에 LLM 키 금지. P2 카운터 도입 시 CSP `connect-src` 동시 갱신 + "서버 로그 IP 한계" 문구 확인.
+
 ## 참고
-- 계획: `docs/superpowers/plans/2026-07-15-쉼표정류장.md` (Task 5.3, 3.5)
+- 계획: `docs/superpowers/plans/2026-07-16-본선.md` (A12·A13) · 설계: `docs/specs/2026-07-16-본선-design.md` §9
 
 발견 사항은 `docs/보안점검.md`에 기록하고, 코드 수정이 필요하면 직접 수정 후 재검증. 결과는 간결 요약으로 반환.
