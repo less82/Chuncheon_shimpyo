@@ -1,58 +1,33 @@
 .home {
   position: relative;
-  height: 100dvh;
+  min-height: 100dvh;
   width: 100%;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
 }
 
-/* 상단 얇은 브랜드 바(플로팅) */
+/* 상단 액션 바 — 일반 흐름(sticky). 지도 위 플로팅을 없애 확대/축소 버튼과
+   겹치지 않게 하고, 아래로 스크롤 가능한 문서 구조로 만든다. */
 .home__bar {
-  position: absolute;
-  inset: 0 0 auto 0;
+  position: sticky;
+  top: 0;
   z-index: 600;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  pointer-events: none;
-}
-.home__bar > * {
-  pointer-events: auto;
-}
-
-.home__brand {
-  display: inline-flex;
-  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--radius-pill);
+  padding: var(--sp-3) var(--sp-4);
   background: var(--surface);
   box-shadow: var(--shadow-card);
-}
-.home__logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--brand);
-  color: var(--on-brand);
-  font-size: 30px;
-  font-weight: 900;
-  line-height: 0.6;
-  padding-bottom: 10px;
-}
-.home__title {
-  font-size: var(--fs-md);
-  font-weight: 800;
-  color: var(--ink);
 }
 
 .home__actions {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--sp-2);
 }
 
@@ -109,17 +84,18 @@
 }
 
 .home__map {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  flex: none;
+  height: 55dvh;
+  min-height: 340px;
 }
 
-/* 하단 카드 시트 */
+/* 카드 시트 — 지도 아래 일반 흐름. 페이지가 세로로 스크롤된다. */
 .home__sheet {
-  position: absolute;
-  inset: auto 0 0 0;
-  z-index: 600;
-  max-height: 72dvh;
-  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  background: var(--surface-2);
 }
 
 .home__hint {
@@ -135,12 +111,14 @@
 }
 
 @media (min-width: 640px) {
+  .home__map {
+    height: 62dvh;
+  }
   .home__sheet {
-    left: auto;
-    right: var(--sp-5);
-    bottom: var(--sp-5);
-    width: 420px;
-    max-height: calc(100dvh - 120px);
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 var(--sp-4);
   }
   .home__sheet .stopcard {
     border-radius: var(--radius-lg);

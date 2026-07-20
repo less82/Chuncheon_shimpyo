@@ -24,12 +24,6 @@ export default function CitizenHome() {
       <ImportOnLoad />
 
       <header className="home__bar">
-        <div className="home__brand">
-          <span className="home__logo" aria-hidden="true">
-            ,
-          </span>
-          <span className="home__title">쉼표 정류장</span>
-        </div>
         <div className="home__actions">
           <Link className="home__go" to="/go">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
