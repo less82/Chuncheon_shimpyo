@@ -9,6 +9,7 @@ import type { TripLeg, TripOption } from "../../types/trip";
 import type { LatLng } from "../../lib/geo";
 import { getWalkRoute } from "../../lib/walking";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import { comfortSentence } from "./comfortSort";
 import "./TripView.css";
 
 interface Props {
@@ -114,6 +115,9 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
       <p className="tripcard__tag">
         {option.directBus ? "직접 가는 버스" : "한 번 갈아타는 길"}
       </p>
+      {boardStop && (
+        <p className="tripcard__comfort">{comfortSentence(boardStop)}</p>
+      )}
     </article>
   );
 }

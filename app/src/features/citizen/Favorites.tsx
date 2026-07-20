@@ -1,7 +1,8 @@
 // 고령자가 검색하지 않고, 본인이나 가족이 저장한 목적지를 바로 선택하는 화면.
 
-import { ChevronLeft, Navigation, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { ChevronLeft, Navigation } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
@@ -33,12 +34,24 @@ function DestinationCard({ stop }: { stop: Stop }) {
   );
 }
 
+/** "○○정류장을 즐겨찾기에 넣었어요" / "○○ 외 N곳을 즐겨찾기에 넣었어요" */
+export function importedBannerText(names: string[]): string {
+  if (names.length === 0) return "";
+  if (names.length === 1) return `${names[0]} 정류장을 즐겨찾기에 넣었어요`;
+  return `${names[0]} 외 ${names.length - 1}곳을 즐겨찾기에 넣었어요`;
+}
+
 export default function Favorites() {
   const favIds = useFavorites((s) => s.ids);
   const stops = useStops((s) => s.stops);
   const favStops = favIds
     .map((id) => stops.find((s) => s.id === id))
     .filter((s): s is Stop => Boolean(s));
+
+  const location = useLocation();
+  const navImportedNames =
+    (location.state as { importedNames?: string[] } | null)?.importedNames ?? [];
+  const [importedNames, setImportedNames] = useState<string[]>(navImportedNames);
 
   return (
     <main className="favpage">
@@ -52,12 +65,24 @@ export default function Favorites() {
       </header>
 
       <section className="favpage__intro">
-        <Users aria-hidden="true" />
         <div>
           <strong>검색 없이 목적지를 고르세요</strong>
           <p>가족이 보내 준 정류장도 여기에 저장됩니다.</p>
         </div>
       </section>
+      {importedNames.length > 0 && (
+        <div className="favpage__banner" role="status">
+          <span>{importedBannerText(importedNames)}</span>
+          <button
+            type="button"
+            className="favpage__banner-close"
+            aria-label="알림 닫기"
+            onClick={() => setImportedNames([])}
+          >
+            닫기
+          </button>
+        </div>
+      )}
 
       {favStops.length === 0 ? (
         <section className="favpage__empty">

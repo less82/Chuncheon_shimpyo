@@ -4,8 +4,13 @@ import {
   UTF8_BOM,
   rowsToCsv,
   buildCsvContent,
+  surveyRowsToCsv,
+  installRowsToCsv,
+  LEAD_REASON_LABEL,
   type CsvRow,
 } from "./exportCsv";
+import type { FacilityInfo, Stop } from "../../types/stop";
+import type { InstallRow, SurveyRow } from "../../types/priority";
 
 const rows: CsvRow[] = [
   {
@@ -62,5 +67,77 @@ describe("exportCsv — CSV 문자열 생성", () => {
     expect(content.startsWith("﻿")).toBe(true);
     expect(content.charCodeAt(0)).toBe(0xfeff);
     expect(content).toContain(CSV_HEADER.join(","));
+  });
+});
+
+function fac(status: FacilityInfo["status"]): FacilityInfo {
+  return { status, source: status === "no" ? "roadview" : "none", capturedAt: status === "no" ? "2026.03" : undefined };
+}
+
+function makeStop(id: string): Stop {
+  return {
+    id,
+    stopNo: id,
+    name: `정류장${id}`,
+    lat: 37.88,
+    lng: 127.73,
+    routes: ["1"],
+    facilities: {
+      shade: fac("unknown"),
+      seat: fac("no"),
+      light: fac("unknown"),
+      sign: fac("unknown"),
+    },
+  };
+}
+
+describe("(e) surveyRowsToCsv — 1단계 구성요소 전 컬럼 + 선정 사유", () => {
+  const rows: SurveyRow[] = [
+    {
+      stop: makeStop("250000001"),
+      rank: 1,
+      score: 0.75,
+      demandMidday: 120,
+      demandQ: 0.9,
+      unknownCount: 2,
+      unknownRate: 0.5,
+      poi: 0.3,
+      leadReason: "demand",
+    },
+  ];
+
+  it("헤더에 구성요소 컬럼(분위수·미확인비율·인접도)과 선정사유 열이 있다", () => {
+    const csv = surveyRowsToCsv(rows);
+    const header = csv.split("\r\n")[0];
+    expect(header).toContain("수요분위수");
+    expect(header).toContain("미확인비율");
+    expect(header).toContain("생활지원시설 인접도");
+    expect(header).toContain("선정사유");
+  });
+
+  it("데이터 행에 leadReason 한글 라벨이 들어간다", () => {
+    const csv = surveyRowsToCsv(rows);
+    const dataLine = csv.split("\r\n")[1];
+    expect(dataLine).toContain(LEAD_REASON_LABEL["demand"]);
+  });
+});
+
+describe("(e) installRowsToCsv — 2단계 CSV", () => {
+  const rows: InstallRow[] = [
+    {
+      stop: makeStop("250000002"),
+      facility: "seat",
+      rank: 1,
+      demandMidday: 50,
+      poi: null,
+      surveySource: "roadview",
+      capturedAt: "2026.03",
+    },
+  ];
+
+  it("시설·상태 라벨을 포함한다", () => {
+    const csv = installRowsToCsv(rows);
+    expect(csv).toContain("의자");
+    expect(csv).toContain("데이터상 설치 검토 후보");
   });
 });

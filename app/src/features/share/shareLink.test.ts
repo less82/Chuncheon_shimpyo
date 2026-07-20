@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildShareUrl, parseShareParam } from "./shareLink";
+import {
+  buildShareUrl,
+  parseShareParam,
+  extractFavIdsFromScan,
+} from "./shareLink";
 
 const VALID = ["250001192", "250001193", "250026779"];
 
@@ -50,5 +54,37 @@ describe("buildShareUrl ↔ parseShareParam round-trip", () => {
     const url = buildShareUrl([]);
     const search = url.includes("?") ? url.slice(url.indexOf("?")) : "";
     expect(parseShareParam(search, VALID)).toEqual([]);
+  });
+});
+
+describe("extractFavIdsFromScan (QR 스캔 텍스트 → id)", () => {
+  it("우리 QR(전체 URL)을 스캔하면 id 목록을 얻는다", () => {
+    const url = "https://chuncheon-shimpyo.vercel.app/?fav=250001192,250001193";
+    expect(extractFavIdsFromScan(url, VALID)).toEqual([
+      "250001192",
+      "250001193",
+    ]);
+  });
+
+  it("검색문자열/파라미터 단독 형태도 허용한다", () => {
+    expect(extractFavIdsFromScan("?fav=250026779", VALID)).toEqual([
+      "250026779",
+    ]);
+    expect(extractFavIdsFromScan("fav=250026779", VALID)).toEqual([
+      "250026779",
+    ]);
+  });
+
+  it("우리 형식이 아닌 임의 QR(다른 URL/문자열)은 빈 배열", () => {
+    expect(extractFavIdsFromScan("https://example.com/foo", VALID)).toEqual([]);
+    expect(extractFavIdsFromScan("아무 텍스트", VALID)).toEqual([]);
+    expect(extractFavIdsFromScan("", VALID)).toEqual([]);
+  });
+
+  it("화이트리스트 밖 id·주입 문자열은 스캔에서도 걸러낸다", () => {
+    const url = "https://x.app/?fav=<script>,250001192,BAD";
+    const out = extractFavIdsFromScan(url, VALID);
+    expect(out).toEqual(["250001192"]);
+    expect(out.join("")).not.toContain("<");
   });
 });

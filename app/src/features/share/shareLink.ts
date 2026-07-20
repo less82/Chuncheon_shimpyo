@@ -46,3 +46,24 @@ export function parseShareParam(
   }
   return out;
 }
+
+/**
+ * 스캔된 QR 텍스트에서 유효한 즐겨찾기 id 만 추출한다.
+ * 우리 QR 은 buildShareUrl → `.../?fav=id1,id2` 형태. 전체 URL 도, 검색문자열도 허용한다.
+ * 임의의 QR(우리 형식 아님)은 fav 파라미터가 없어 [] 를 반환한다.
+ * 최종 통과는 parseShareParam 의 화이트리스트(로드된 stop.id) 교집합 — 주입/XSS 방어 동일.
+ */
+export function extractFavIdsFromScan(
+  text: string,
+  validIds: Iterable<string>,
+): string[] {
+  if (!text) return [];
+  let search: string;
+  try {
+    search = new URL(text).search; // 전체 URL 이면 검색문자열만 사용
+  } catch {
+    const q = text.indexOf("?");
+    search = q >= 0 ? text.slice(q) : text; // '?fav=...' 또는 'fav=...' 로 간주
+  }
+  return parseShareParam(search, validIds);
+}

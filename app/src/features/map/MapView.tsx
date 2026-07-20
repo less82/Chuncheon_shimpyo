@@ -90,10 +90,16 @@ export default function MapView({ onSelect, selectedId }: Props) {
     mapRef.current = map;
     walkLayerRef.current = new WalkLayer(map);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap 기여자",
-    }).addTo(map);
+    // CARTO Voyager — 키 불필요, 도로·라벨 대비가 높아 고령자 가독성이 좋다.
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {
+        maxZoom: 20,
+        subdomains: "abcd",
+        detectRetina: true,
+        attribution: "© OpenStreetMap 기여자 · © CARTO",
+      },
+    ).addTo(map);
 
     const goTo = (lat: number, lng: number, isUser: boolean) => {
       // 도보 경로 출발점(현위치, 거부 시 춘천시청 폴백).

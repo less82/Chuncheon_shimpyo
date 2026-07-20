@@ -1,18 +1,23 @@
 .home {
   position: relative;
-  height: 100dvh;
+  min-height: 100dvh;
   width: 100%;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
 }
 
 /* 지도 위 공통 내비게이션 */
+/* 상단 액션 바 — 일반 흐름(sticky). 지도 위 플로팅을 없애 확대/축소 버튼과
+   겹치지 않게 하고, 아래로 스크롤 가능한 문서 구조로 만든다. */
 .home__bar {
-  position: absolute;
-  inset: 0 0 auto 0;
+  position: sticky;
+  top: 0;
   z-index: 600;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
@@ -54,11 +59,14 @@
 .home__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
 }
 
-.home__share {
-  display: flex;
-  flex-direction: column;
+.home__share,
+.home__scan {
+  display: inline-flex;
   align-items: center;
   gap: 3px;
   min-height: 58px;
@@ -71,8 +79,19 @@
   font-weight: 800;
   cursor: pointer;
 }
-.home__share:active {
+.home__share:active,
+.home__scan:active {
   background: var(--brand-soft);
+}
+
+/* QR 스캔 — 시민앱 핵심 진입 동작이라 강조색 */
+.home__scan {
+  background: var(--brand);
+  color: var(--on-brand);
+  border: 1.5px solid var(--border-strong);
+}
+.home__scan:active {
+  background: var(--brand-strong);
 }
 
 .home__go {
@@ -110,17 +129,18 @@
 }
 
 .home__map {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  flex: none;
+  height: 55dvh;
+  min-height: 340px;
 }
 
-/* 하단 카드 시트 */
+/* 카드 시트 — 지도 아래 일반 흐름. 페이지가 세로로 스크롤된다. */
 .home__sheet {
-  position: absolute;
-  inset: auto 0 0 0;
-  z-index: 600;
-  max-height: 61%;
-  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  background: var(--surface-2);
 }
 
 .home__hint {
@@ -136,3 +156,18 @@
 }
 
 .home__bar svg { width: 24px; height: 24px; }
+
+@media (min-width: 640px) {
+  .home__map {
+    height: 62dvh;
+  }
+  .home__sheet {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 var(--sp-4);
+  }
+  .home__sheet .stopcard {
+    border-radius: var(--radius-lg);
+  }
+}

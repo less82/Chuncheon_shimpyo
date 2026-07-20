@@ -132,6 +132,25 @@
   color: #555;
 }
 
+.poster__qr {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 2px dashed #ddd;
+}
+.poster__qr-img {
+  flex: none;
+  border-radius: 8px;
+}
+.poster__qr-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.4;
+}
+
 .poster__foot {
   margin-top: var(--sp-5);
   padding-top: var(--sp-4);

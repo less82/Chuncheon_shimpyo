@@ -1,6 +1,7 @@
 // A4 안내문 인쇄 — /print/:id. 큰 글씨로 4시설 3상태를 보여주고 브라우저 인쇄.
 // 가족·복지사가 출력해 정류장/경로당에 붙일 수 있게.
 
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronLeft, Printer } from "lucide-react";
 import { useStops } from "../../store/useStops";
@@ -12,6 +13,8 @@ import {
   type FacilityKind,
 } from "../../lib/facilityText";
 import type { FacilityInfo } from "../../types/stop";
+import { buildShareUrl } from "../share/shareLink";
+import { toQrDataUrl } from "../share/qr";
 import "./print.css";
 
 const ORDER: FacilityKind[] = ["shade", "seat", "light", "sign"];
@@ -31,6 +34,19 @@ export default function PrintPoster() {
   const { id } = useParams();
   const stops = useStops((s) => s.stops);
   const stop = stops.find((s) => s.id === id);
+  const [qr, setQr] = useState<string | null>(null);
+
+  // 정류장 QR — 휴대폰 카메라로 찍으면 즐겨찾기에 등록됨(로그인 불필요, 오프라인 생성).
+  useEffect(() => {
+    if (!stop) return;
+    let alive = true;
+    toQrDataUrl(buildShareUrl([stop.id]))
+      .then((d) => alive && setQr(d))
+      .catch(() => alive && setQr(null));
+    return () => {
+      alive = false;
+    };
+  }, [stop?.id]);
 
   if (!stop) {
     return (
@@ -73,6 +89,21 @@ export default function PrintPoster() {
           {ORDER.map((k) => (
             <Row key={k} kind={k} info={stop.facilities[k]} />
           ))}
+        </section>
+
+        <section className="poster__qr" aria-label="정류장 즐겨찾기 QR">
+          {qr && (
+            <img
+              className="poster__qr-img"
+              src={qr}
+              alt={`${stop.name} 정류장 QR 코드`}
+              width={140}
+              height={140}
+            />
+          )}
+          <p className="poster__qr-text">
+            휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록됩니다
+          </p>
         </section>
 
         <footer className="poster__foot">

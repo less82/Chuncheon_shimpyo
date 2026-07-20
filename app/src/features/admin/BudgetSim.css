@@ -1,0 +1,53 @@
+.budgetsim {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.budgetsim-h3 {
+  font-size: var(--fs-md);
+  margin: 0 0 var(--sp-3);
+  color: var(--ink);
+}
+.budgetsim-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.budgetsim-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-size: var(--fs-base);
+  color: var(--ink-body);
+}
+.budgetsim-field input {
+  min-height: var(--touch);
+  font-size: var(--fs-base);
+  font-family: inherit;
+  padding: 0 var(--sp-3);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  width: 160px;
+}
+.budgetsim-assume {
+  font-style: normal;
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  margin-left: var(--sp-1);
+}
+.budgetsim-result {
+  font-size: var(--fs-base);
+  color: var(--ink-body);
+  line-height: 1.6;
+  margin: 0;
+}
+.budgetsim-result strong {
+  color: var(--brand-strong);
+}
+.budgetsim-empty {
+  color: var(--ink-muted);
+  margin: 0;
+}

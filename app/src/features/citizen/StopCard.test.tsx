@@ -1,9 +1,15 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import StopCard from "./StopCard";
 import { useFavorites } from "../../store/useFavorites";
+import { buildShareUrl } from "../share/shareLink";
+
+vi.mock("../share/qr", () => ({
+  toQrDataUrl: vi.fn(async () => "data:image/png;base64,MOCKQR"),
+}));
+import { toQrDataUrl } from "../share/qr";
 
 const sample: Stop = {
   id: "250001192",
@@ -74,5 +80,15 @@ describe("<StopCard>", () => {
       </MemoryRouter>,
     );
     expect(getByText(/직선거리 약 4분/)).toBeInTheDocument();
+  });
+
+  it("'이 정류장 QR' 버튼을 누르면 buildShareUrl([stop.id]) 기반 QR 이 표시된다", async () => {
+    const { getByRole, findByRole } = renderCard(sample);
+    const btn = getByRole("button", { name: /이 정류장 QR/ });
+    fireEvent.click(btn);
+
+    const img = await findByRole("img", { name: /QR/ });
+    expect(img.getAttribute("src")).toBe("data:image/png;base64,MOCKQR");
+    expect(toQrDataUrl).toHaveBeenCalledWith(buildShareUrl([sample.id]));
   });
 });
