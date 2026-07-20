@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   buildShareUrl,
+  buildQrEntryUrl,
+  parseQrStopId,
   parseShareParam,
   extractFavIdsFromScan,
 } from "./shareLink";
@@ -42,7 +44,7 @@ describe("parseShareParam (보안: 화이트리스트 교집합만)", () => {
 describe("buildShareUrl ↔ parseShareParam round-trip", () => {
   it("build 한 URL 을 parse 하면 원래 id 목록을 얻는다", () => {
     const url = buildShareUrl(["250001192", "250001193"]);
-    expect(new URL(url).pathname).toBe("/qr_main");
+    expect(new URL(url).pathname).toBe("/app");
     expect(url).toContain("fav=");
     const search = url.slice(url.indexOf("?"));
     expect(parseShareParam(search, VALID)).toEqual([
@@ -53,9 +55,22 @@ describe("buildShareUrl ↔ parseShareParam round-trip", () => {
 
   it("빈 목록이면 fav 파라미터가 비거나 없다", () => {
     const url = buildShareUrl([]);
-    expect(new URL(url).pathname).toBe("/qr_main");
+    expect(new URL(url).pathname).toBe("/app");
     const search = url.includes("?") ? url.slice(url.indexOf("?")) : "";
     expect(parseShareParam(search, VALID)).toEqual([]);
+  });
+});
+
+describe("정류장 출발 QR", () => {
+  it("qr_main 경로와 출발 정류장 ID를 만든다", () => {
+    const url = buildQrEntryUrl("250001192");
+    expect(new URL(url).pathname).toBe("/qr_main");
+    expect(parseQrStopId(url, VALID)).toBe("250001192");
+  });
+
+  it("존재하지 않는 정류장이나 다른 경로는 거부한다", () => {
+    expect(parseQrStopId("https://x/qr_main?from=BAD", VALID)).toBeNull();
+    expect(parseQrStopId("https://x/app?from=250001192", VALID)).toBeNull();
   });
 });
 

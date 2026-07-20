@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import StopCard from "./StopCard";
 import { useFavorites } from "../../store/useFavorites";
-import { buildShareUrl } from "../share/shareLink";
+import { buildQrEntryUrl } from "../share/shareLink";
 
 vi.mock("../share/qr", () => ({
   toQrDataUrl: vi.fn(async () => "data:image/png;base64,MOCKQR"),
@@ -89,6 +89,6 @@ describe("<StopCard>", () => {
 
     const img = await findByRole("img", { name: /QR/ });
     expect(img.getAttribute("src")).toBe("data:image/png;base64,MOCKQR");
-    expect(toQrDataUrl).toHaveBeenCalledWith(buildShareUrl([sample.id]));
+    expect(toQrDataUrl).toHaveBeenCalledWith(buildQrEntryUrl(sample.id));
   });
 });

@@ -10,7 +10,7 @@ import FavoriteStar from "../../components/FavoriteStar";
 import AltStopHint from "./AltStopHint";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
-import { buildShareUrl } from "../share/shareLink";
+import { buildQrEntryUrl, buildShareUrl } from "../share/shareLink";
 import { toQrDataUrl } from "../share/qr";
 import { useFavorites } from "../../store/useFavorites";
 import "./StopCard.css";
@@ -87,11 +87,11 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
     };
   }, [stop, injected, walkMin, walkReal]);
 
-  // 이 정류장 QR: 스캔하면 로그인 없이 바로 즐겨찾기에 등록된다(?fav=id → ImportOnLoad).
+  // 이 정류장 QR: 스캔하면 이 정류장을 출발지로 고정한 qr_main이 열린다.
   useEffect(() => {
     if (!showStopQr) return;
     let alive = true;
-    toQrDataUrl(buildShareUrl([stop.id]))
+    toQrDataUrl(buildQrEntryUrl(stop.id))
       .then((d) => alive && setStopQr(d))
       .catch(() => alive && setStopQr(null));
     return () => {
@@ -187,7 +187,7 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       {showStopQr && (
         <div className="stopcard__qr" role="group" aria-label={`${stop.name} 정류장 QR 코드`}>
           <p className="stopcard__qr-hint">
-            휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록돼요.
+            휴대폰 카메라로 찍고 목적지를 말하면 탈 버스를 알려드려요.
           </p>
           {stopQr ? (
             <img

@@ -67,7 +67,7 @@ describe("<PrintPoster>", () => {
     const img = await findByRole("img", { name: /QR/ });
     expect(img.getAttribute("src")).toMatch(/^data:image\//);
     expect(
-      getByText(/휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록됩니다/),
+      getByText(/목적지를 말하면 탈 버스와 도착시간을 알려드립니다/),
     ).toBeInTheDocument();
   });
 });

@@ -13,7 +13,7 @@ import {
   type FacilityKind,
 } from "../../lib/facilityText";
 import type { FacilityInfo } from "../../types/stop";
-import { buildShareUrl } from "../share/shareLink";
+import { buildQrEntryUrl } from "../share/shareLink";
 import { toQrDataUrl } from "../share/qr";
 import "./print.css";
 
@@ -36,11 +36,11 @@ export default function PrintPoster() {
   const stop = stops.find((s) => s.id === id);
   const [qr, setQr] = useState<string | null>(null);
 
-  // 정류장 QR — 휴대폰 카메라로 찍으면 즐겨찾기에 등록됨(로그인 불필요, 오프라인 생성).
+  // 정류장 QR — 출발 정류장을 고정한 qr_main 링크를 오프라인으로 생성한다.
   useEffect(() => {
     if (!stop) return;
     let alive = true;
-    toQrDataUrl(buildShareUrl([stop.id]))
+    toQrDataUrl(buildQrEntryUrl(stop.id))
       .then((d) => alive && setQr(d))
       .catch(() => alive && setQr(null));
     return () => {
@@ -102,7 +102,7 @@ export default function PrintPoster() {
             />
           )}
           <p className="poster__qr-text">
-            휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록됩니다
+            휴대폰 카메라로 찍고 목적지를 말하면 탈 버스와 도착시간을 알려드립니다
           </p>
         </section>
 

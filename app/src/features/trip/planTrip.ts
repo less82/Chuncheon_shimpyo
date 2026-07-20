@@ -9,6 +9,8 @@ import type { TripLeg, TripOption } from "../../types/trip";
 import { haversine, type LatLng } from "../../lib/geo";
 
 export interface PlanOptions {
+  /** 지정하면 현위치 주변 탐색 대신 이 정류장만 출발지로 사용한다. */
+  boardStopId?: string;
   /** 출발 후보 도보 반경(m). 기본 500m(≈도보 6분). */
   walkRadiusM?: number;
   /** 출발 후보 정류장 최대 개수(가까운 순). 기본 5. */
@@ -19,7 +21,7 @@ export interface PlanOptions {
   walkSpeed?: number;
 }
 
-const DEFAULTS: Required<PlanOptions> = {
+const DEFAULTS: Required<Omit<PlanOptions, "boardStopId">> = {
   walkRadiusM: 500,
   maxCandidates: 5,
   maxTransfers: 1,
@@ -70,6 +72,7 @@ export function planTrip(
   // 출발 후보: 도보권 내 정류장(목적지 제외), 가까운 순으로 제한.
   const candidates = stops
     .filter((s) => s.id !== destStop.id)
+    .filter((s) => !opts?.boardStopId || s.id === opts.boardStopId)
     .map((s) => ({
       stop: s,
       dist: haversine(fromPos, { lat: s.lat, lng: s.lng }),

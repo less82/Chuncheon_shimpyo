@@ -4,14 +4,35 @@
 
 const PARAM = "fav";
 export const QR_ENTRY_PATH = "/qr_main";
+const QR_FROM_PARAM = "from";
 
 /** 즐겨찾기 id 목록으로 공유 URL 을 만든다(`?fav=id1,id2`). */
 export function buildShareUrl(ids: string[]): string {
   const origin =
     typeof location !== "undefined" ? location.origin : "https://localhost";
   const clean = ids.map((id) => encodeURIComponent(id)).filter(Boolean);
-  if (clean.length === 0) return `${origin}${QR_ENTRY_PATH}`;
-  return `${origin}${QR_ENTRY_PATH}?${PARAM}=${clean.join(",")}`;
+  if (clean.length === 0) return `${origin}/app`;
+  return `${origin}/app?${PARAM}=${clean.join(",")}`;
+}
+
+/** 정류장에 부착할 QR URL. 스캔한 정류장을 출발지로 고정한다. */
+export function buildQrEntryUrl(stopId: string): string {
+  const origin =
+    typeof location !== "undefined" ? location.origin : "https://localhost";
+  return `${origin}${QR_ENTRY_PATH}?${QR_FROM_PARAM}=${encodeURIComponent(stopId)}`;
+}
+
+/** QR URL에서 실제 데이터에 존재하는 출발 정류장 ID만 반환한다. */
+export function parseQrStopId(text: string, validIds: Iterable<string>): string | null {
+  const whitelist = validIds instanceof Set ? validIds : new Set(validIds);
+  try {
+    const url = new URL(text, "https://localhost");
+    if (url.pathname !== QR_ENTRY_PATH) return null;
+    const id = url.searchParams.get(QR_FROM_PARAM);
+    return id && whitelist.has(id) ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

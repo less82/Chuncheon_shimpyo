@@ -135,7 +135,7 @@
   margin-top: var(--sp-4);
 }
 
-/* 이 정류장 QR — 스캔하면 로그인 없이 즐겨찾기에 등록 */
+/* 이 정류장 QR — 스캔하면 해당 정류장을 출발지로 고정 */
 .stopcard__qrbtn {
   flex: 1;
   display: inline-flex;
