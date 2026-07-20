@@ -42,6 +42,7 @@ describe("parseShareParam (보안: 화이트리스트 교집합만)", () => {
 describe("buildShareUrl ↔ parseShareParam round-trip", () => {
   it("build 한 URL 을 parse 하면 원래 id 목록을 얻는다", () => {
     const url = buildShareUrl(["250001192", "250001193"]);
+    expect(new URL(url).pathname).toBe("/qr_main");
     expect(url).toContain("fav=");
     const search = url.slice(url.indexOf("?"));
     expect(parseShareParam(search, VALID)).toEqual([
@@ -52,6 +53,7 @@ describe("buildShareUrl ↔ parseShareParam round-trip", () => {
 
   it("빈 목록이면 fav 파라미터가 비거나 없다", () => {
     const url = buildShareUrl([]);
+    expect(new URL(url).pathname).toBe("/qr_main");
     const search = url.includes("?") ? url.slice(url.indexOf("?")) : "";
     expect(parseShareParam(search, VALID)).toEqual([]);
   });

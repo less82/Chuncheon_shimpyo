@@ -3,14 +3,15 @@
 // 교집합만 통과시킨다. 임의 문자열(<script> 등)은 화이트리스트에 없으므로 제거된다.
 
 const PARAM = "fav";
+export const QR_ENTRY_PATH = "/qr_main";
 
 /** 즐겨찾기 id 목록으로 공유 URL 을 만든다(`?fav=id1,id2`). */
 export function buildShareUrl(ids: string[]): string {
   const origin =
     typeof location !== "undefined" ? location.origin : "https://localhost";
   const clean = ids.map((id) => encodeURIComponent(id)).filter(Boolean);
-  if (clean.length === 0) return `${origin}/`;
-  return `${origin}/?${PARAM}=${clean.join(",")}`;
+  if (clean.length === 0) return `${origin}${QR_ENTRY_PATH}`;
+  return `${origin}${QR_ENTRY_PATH}?${PARAM}=${clean.join(",")}`;
 }
 
 /**

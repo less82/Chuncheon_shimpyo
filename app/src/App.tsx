@@ -23,6 +23,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<DesignPreview />} />
         <Route path="/app" element={<CitizenHome />} />
+        <Route path="/qr_main" element={<CitizenHome />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/go" element={<TripView />} />
         <Route path="/print/:id" element={<PrintPoster />} />
