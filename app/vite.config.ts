@@ -47,11 +47,11 @@ export default defineConfig({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
-            // OpenStreetMap 지도 타일 런타임 캐시.
-            urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\/.*/i,
+            // CARTO Voyager 지도 타일 런타임 캐시(오프라인 재방문 시 캐시 폴백).
+            urlPattern: /^https:\/\/[a-d]\.basemaps\.cartocdn\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'osm-tiles',
+              cacheName: 'carto-tiles',
               expiration: {
                 maxEntries: 500,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
