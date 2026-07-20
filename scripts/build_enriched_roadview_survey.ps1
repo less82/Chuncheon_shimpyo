@@ -5,7 +5,8 @@ param(
   [string]$FullOutputCsv,
   [Parameter(Mandatory = $true)]
   [string]$MaengOutputCsv,
-  [string]$BasisOutputCsv = ''
+  [string]$BasisOutputCsv = '',
+  [string]$PriorityEvidenceOutputCsv = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,18 +39,15 @@ $fullRows = foreach ($survey in $surveyRows) {
   $pinUrl = if ($lat -and $lng) { "https://map.kakao.com/link/map/${pinLabel},${lat},${lng}" } else { '' }
   $isNumericRank = 0
   $rankIsNumber = [int]::TryParse([string]$survey.우선순위, [ref]$isNumericRank)
-  $priorityType = if ($rankIsNumber) { '승차자료 있음(순위 산정)' } else { '승차자료 없음(별도 조사)' }
 
   [pscustomobject][ordered]@{
     우선순위 = [string]$survey.우선순위
-    '조사대상 구분' = $priorityType
     '정류장 번호' = if ($location) { [string]$location.'정류장 번호' } else { '' }
     관리번호 = $id
     정류장명 = $name
     '정류장명(영어)' = if ($location) { [string]$location.'정류장명(영어)' } else { '' }
     경도 = $lng
     위도 = $lat
-    '표본기간 한낮(11~16시) 승차건수' = [string]$survey.한낮승차
     '정류장 위치 확인 URL(카카오맵)' = $pinUrl
     '정류장 주변 확인 URL(카카오 로드뷰)' = [string]$survey.로드뷰URL
     그늘 = [string]$survey.그늘
@@ -67,7 +65,7 @@ $fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
   [int]::TryParse([string]$_.우선순위, [ref]$rank) -and $rank -ge 66 -and $rank -le 110
-} | Select-Object 우선순위,'조사대상 구분','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'표본기간 한낮(11~16시) 승차건수','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
+} | Select-Object 우선순위,'정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
 )
 $maengRows | Export-Csv -LiteralPath $MaengOutputCsv -NoTypeInformation -Encoding UTF8
 
@@ -83,9 +81,7 @@ $columnBasis = @(
   [pscustomobject]@{ 열='위도'; 구분='공식 원본'; 공식출처='춘천시 버스정류장 위치정보'; 원본필드='위도'; 처리='원문 그대로'; 비고='' }
   [pscustomobject]@{ 열='경도'; 구분='공식 원본'; 공식출처='춘천시 버스정류장 위치정보'; 원본필드='경도'; 처리='원문 그대로'; 비고='' }
   [pscustomobject]@{ 열='데이터기준일'; 구분='출처 근거표에서만 관리'; 공식출처='춘천시 버스정류장 위치정보'; 원본필드='데이터기준일'; 처리='조사 작업표에서는 제외'; 비고='사용한 위치 원본은 2026-03-26 기준' }
-  [pscustomobject]@{ 열='표본기간 한낮(11~16시) 승차건수'; 구분='프로젝트 집계'; 공식출처='강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'; 원본필드='이용일자, 이용시간대, 정류장명, 승차건수'; 처리='2025-06-25~28 중 11~16시 승차건수를 정규화된 동명 정류장 단위로 합산'; 비고='4일 표본·양방향 합산이며 일평균이나 연간 수요가 아님' }
   [pscustomobject]@{ 열='우선순위'; 구분='프로젝트 산출'; 공식출처='없음'; 원본필드='없음'; 처리='한낮 승차 분위수(D) + 미확인 시설 수/4(UNK) 내림차순'; 비고='상위 150곳 뒤 수요 미확인 조사후보 15곳 추가; 공식 행정 우선순위가 아님' }
-  [pscustomobject]@{ 열='조사대상 구분'; 구분='프로젝트 산출'; 공식출처='없음'; 원본필드='없음'; 처리='승차자료가 연결되면 순위 산정, 연결되지 않으면 별도 조사'; 비고='시설 설치 우선순위가 아니라 로드뷰 조사대상 분류' }
   [pscustomobject]@{ 열='정류장 위치 확인 URL(카카오맵)'; 구분='편의용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오맵 위치 링크 형식으로 변환'; 비고='춘천시 원본 필드가 아닌 조사 참고 링크' }
   [pscustomobject]@{ 열='정류장 주변 확인 URL(카카오 로드뷰)'; 구분='조사용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오 로드뷰 링크 형식으로 변환'; 비고='가장 가까운 파노라마로 이동할 수 있음' }
   [pscustomobject]@{ 열='그늘·의자·조명·도착안내기'; 구분='현장 조사'; 공식출처='없음'; 원본필드='없음'; 처리='있음/없음/미확인 3상태 입력'; 비고='근거 없이 없음으로 입력하지 않음' }
@@ -93,8 +89,43 @@ $columnBasis = @(
 )
 $columnBasis | Export-Csv -LiteralPath $BasisOutputCsv -NoTypeInformation -Encoding UTF8
 
+if (-not $PriorityEvidenceOutputCsv) {
+  $PriorityEvidenceOutputCsv = Join-Path (Split-Path -Parent $FullOutputCsv) 'roadview_survey_priority_evidence.csv'
+}
+
+$priorityEvidence = foreach ($survey in $surveyRows) {
+  $id = [string]$survey.관리번호
+  $location = $locationById[$id]
+  $stop = $stopById[$id]
+  $unknownCount = if ($stop) {
+    @('shade','seat','light','sign' | Where-Object { $stop.facilities.$_.status -eq 'unknown' }).Count
+  } else { '' }
+  $numericRank = 0
+  $hasRank = [int]::TryParse([string]$survey.우선순위, [ref]$numericRank)
+  [pscustomobject][ordered]@{
+    우선순위 = [string]$survey.우선순위
+    '조사대상 구분' = if ($hasRank) { '승차자료 있음(순위 산정)' } else { '승차자료 없음(별도 조사)' }
+    '정류장 번호' = if ($location) { [string]$location.'정류장 번호' } else { '' }
+    관리번호 = $id
+    정류장명 = if ($location) { [string]$location.정류장명 } else { [string]$survey.정류장명 }
+    '위치정보 데이터기준일' = if ($location) { [string]$location.데이터기준일 } else { '' }
+    '승차자료 데이터기준일' = '2025-12-09'
+    '승차자료 표본기간' = '2025-06-25~2025-06-28'
+    '한낮 시간대' = '11~16시'
+    '표본기간 한낮 승차건수' = [string]$survey.한낮승차
+    '기존자료 미확인 시설 수' = $unknownCount
+    '우선순위 산정식' = if ($hasRank) { '승차건수 분위수(D) + 미확인 시설 수/4(UNK)' } else { '순위 미산정' }
+    '승차자료 연결 방식' = '정류장명 기준 합산'
+    '연결 한계' = '승차자료 정류장아이디와 위치정보 관리번호의 공식 대응표가 없어 동명 정류장은 양방향 합산'
+    '승차자료 출처' = '강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'
+    '위치정보 출처' = '강원특별자치도 춘천시_버스정류장 위치정보_20260326.csv'
+  }
+}
+$priorityEvidence | Export-Csv -LiteralPath $PriorityEvidenceOutputCsv -NoTypeInformation -Encoding UTF8
+
 Write-Output "FULL_ROWS=$($fullRows.Count)"
 Write-Output "MAENG_ROWS=$($maengRows.Count)"
 Write-Output "FULL_OUTPUT=$FullOutputCsv"
 Write-Output "MAENG_OUTPUT=$MaengOutputCsv"
 Write-Output "BASIS_OUTPUT=$BasisOutputCsv"
+Write-Output "PRIORITY_EVIDENCE_OUTPUT=$PriorityEvidenceOutputCsv"
