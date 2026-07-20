@@ -7,6 +7,7 @@
   background: var(--surface-2);
 }
 
+/* 지도 위 공통 내비게이션 */
 /* 상단 액션 바 — 일반 흐름(sticky). 지도 위 플로팅을 없애 확대/축소 버튼과
    겹치지 않게 하고, 아래로 스크롤 가능한 문서 구조로 만든다. */
 .home__bar {
@@ -15,16 +16,48 @@
   z-index: 600;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--surface);
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-card);
+  pointer-events: none;
+}
+.home__bar > * {
+  pointer-events: auto;
+}
+
+.home__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-2);
+  min-height: 58px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand);
+  text-decoration: none;
+  flex-direction: row;
+  justify-content: center;
+}
+.home__screen-title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--ink);
+  text-align: center;
+  white-space: nowrap;
+}
+.home__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
 }
 
 .home__actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -35,17 +68,16 @@
 .home__scan {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-2);
-  min-height: var(--touch);
-  padding: 0 var(--sp-4);
+  gap: 3px;
+  min-height: 58px;
+  padding: var(--sp-1);
   border: none;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--brand);
-  font-size: var(--fs-base);
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: var(--shadow-card);
 }
 .home__share:active,
 .home__scan:active {
@@ -63,18 +95,18 @@
 }
 
 .home__go {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--sp-2);
-  min-height: var(--touch);
-  padding: 0 var(--sp-4);
-  border-radius: var(--radius-pill);
+  gap: 3px;
+  min-height: 58px;
+  padding: var(--sp-1);
+  border-radius: var(--radius-sm);
   background: var(--brand);
   color: var(--on-brand);
-  font-size: var(--fs-base);
+  font-size: 12px;
   font-weight: 800;
   text-decoration: none;
-  box-shadow: var(--shadow-card);
 }
 .home__go:active {
   background: var(--brand-strong);
@@ -82,17 +114,18 @@
 
 .home__fav {
   display: inline-flex;
+  flex-direction: row;
   align-items: center;
   gap: var(--sp-2);
-  min-height: var(--touch);
-  padding: 0 var(--sp-4);
-  border-radius: var(--radius-pill);
-  background: var(--warm);
-  color: var(--on-warm);
-  font-size: var(--fs-base);
+  min-height: 58px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--radius);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 16px;
   font-weight: 800;
   text-decoration: none;
-  box-shadow: var(--shadow-card);
+  white-space: nowrap;
 }
 
 .home__map {
@@ -121,6 +154,8 @@
   font-weight: 700;
   color: var(--ink-body);
 }
+
+.home__bar svg { width: 24px; height: 24px; }
 
 @media (min-width: 640px) {
   .home__map {

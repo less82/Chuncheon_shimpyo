@@ -1,44 +1,44 @@
-/* 쉼표 정류장 — 전역 디자인 토큰 (단일 진실)
+/* 전역 디자인 토큰 (단일 진실)
  * 사용자: 폭염·한파에 취약한 고령자.
  * 원칙: 기본 폰트 ≥18px, 터치타깃 ≥48px, 대비 WCAG AA, 아이콘+한글 병기.
- * 시각 언어: 따뜻한 종이 배경 + 그늘(쉼)을 상징하는 깊은 포레스트 그린. */
+ * 시각 언어: 고휘도 중성 배경 + 저채도 먹남색 + 명확한 의미 상태색. */
 
 :root {
-  /* ---- 브랜드 (그늘·쉼) ---- */
-  --brand: #2f6b3a;        /* 깊은 포레스트 그린 */
-  --brand-strong: #1f4d29;
-  --brand-soft: #e7f0e6;   /* 브랜드 배경 틴트 */
-  --brand-ink: #10331a;
+  --brand: #26344a;
+  --brand-strong: #182334;
+  --brand-soft: #eef1f5;
+  --brand-ink: #171f2d;
 
-  /* ---- 따뜻한 강조 (온기·주행동) ---- */
-  --warm: #c2410c;         /* 테라코타 — 폭염/온기 상징, CTA 강조 */
-  --warm-strong: #9a3412;
-  --warm-soft: #fdece3;
+  --warm: #26344a;
+  --warm-strong: #182334;
+  --warm-soft: #eef1f5;
+  --warning: #8a4b08;
+  --warning-bg: #fff1d6;
 
   /* ---- 표면 / 배경 ---- */
-  --bg: #faf6ef;           /* 따뜻한 종이색 */
+  --bg: #f5f6f8;
   --surface: #ffffff;
-  --surface-2: #f4efe6;    /* 살짝 가라앉은 카드 내부 */
-  --overlay: rgba(28, 25, 23, 0.55);
+  --surface-2: #eef1f5;
+  --overlay: rgba(23, 27, 33, 0.58);
 
   /* ---- 글자 ---- */
-  --ink: #1c1917;          /* 제목 (stone-900) */
-  --ink-body: #3d3833;     /* 본문 */
-  --ink-muted: #6b635a;    /* 보조 (AA 충족) */
+  --ink: #171b21;
+  --ink-body: #343b45;
+  --ink-muted: #5b6571;
   --on-brand: #ffffff;
   --on-warm: #ffffff;
 
   /* ---- 3상태 (색만으로 구분 금지 — 항상 아이콘+한글 병기) ---- */
-  --yes: #15803d;          /* 있음 = 초록 (green-700, AA on white) */
-  --yes-bg: #e6f4ea;
-  --no: #c1121f;           /* 없음 = 빨강 (red-700, AA) */
-  --no-bg: #fdeaea;
-  --unknown: #57534e;      /* 미확인 = 회색 (stone-600, AA) */
-  --unknown-bg: #eeeae4;
+  --yes: #146c5a;
+  --yes-bg: #e4f3ee;
+  --no: #b4232c;
+  --no-bg: #fdebec;
+  --unknown: #565d66;
+  --unknown-bg: #eceff2;
 
   /* ---- 선/구분 ---- */
-  --border: #e2d9cc;
-  --border-strong: #cfc3b2;
+  --border: #dce1e7;
+  --border-strong: #bbc4cf;
 
   /* ---- 간격 (4pt 기반) ---- */
   --sp-1: 4px;
@@ -65,10 +65,10 @@
   --radius: 16px;
   --radius-lg: 24px;
   --radius-pill: 999px;
-  --shadow-card: 0 2px 4px rgba(28, 25, 23, 0.06),
-    0 8px 24px rgba(28, 25, 23, 0.08);
-  --shadow-float: 0 6px 16px rgba(28, 25, 23, 0.14),
-    0 16px 40px rgba(28, 25, 23, 0.12);
+  --shadow-card: 0 2px 4px rgba(23, 27, 33, 0.06),
+    0 8px 24px rgba(23, 27, 33, 0.08);
+  --shadow-float: 0 6px 16px rgba(23, 27, 33, 0.14),
+    0 16px 40px rgba(23, 27, 33, 0.12);
 
   /* ---- 터치타깃 하한 ---- */
   --touch: 48px;

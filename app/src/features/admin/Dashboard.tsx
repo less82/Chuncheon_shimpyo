@@ -26,7 +26,7 @@ export default function Dashboard() {
     <main className="dash">
       <header className="dash-head">
         <div>
-          <h1 className="dash-title">쉼표 정류장 · 설치 후보 대시보드</h1>
+          <h1 className="dash-title">정류장 시설 설치 후보</h1>
           <p className="dash-sub">
             1단계는 조사(로드뷰) 우선순위, 2단계는 조사로 확정된 "없음" 시설의 설치
             검토 순위입니다. 순위와 승차량은 모두 <strong>실측치</strong>이며, 미확인

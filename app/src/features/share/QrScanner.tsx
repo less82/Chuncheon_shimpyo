@@ -1,4 +1,4 @@
-// 앱 내 QR 스캔 — 정류장 QR을 앱 안에서 바로 찍어 즐겨찾기에 등록.
+// 앱 내 QR 스캔 — 정류장 QR을 읽고 해당 정류장을 출발지로 고정한 qr_main으로 이동.
 // 폰 기본 카메라로도 동일하게 동작하지만(권장), 이 버튼은 어르신 친화 + 시연용.
 // 보안: 해독한 텍스트는 extractFavIdsFromScan 화이트리스트로만 통과(주입 방어).
 
@@ -6,8 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import jsQR from "jsqr";
 import { useStops } from "../../store/useStops";
-import { useFavorites } from "../../store/useFavorites";
-import { extractFavIdsFromScan } from "./shareLink";
+import { parseQrStopId } from "./shareLink";
 import "./QrScanner.css";
 
 interface Props {
@@ -24,7 +23,6 @@ export default function QrScanner({ onClose }: Props) {
   const handledRef = useRef(false);
 
   const stops = useStops((s) => s.stops);
-  const addMany = useFavorites((s) => s.addMany);
   const navigate = useNavigate();
 
   const [phase, setPhase] = useState<Phase>("starting");
@@ -56,15 +54,11 @@ export default function QrScanner({ onClose }: Props) {
           const code = jsQR(img.data, w, h, { inversionAttempts: "dontInvert" });
           if (code && code.data) {
             const validIds = stops.map((s) => s.id);
-            const ids = extractFavIdsFromScan(code.data, validIds);
-            if (ids.length > 0) {
+            const stopId = parseQrStopId(code.data, validIds);
+            if (stopId) {
               handledRef.current = true;
-              addMany(ids);
-              const importedNames = ids
-                .map((id) => stops.find((s) => s.id === id)?.name)
-                .filter((n): n is string => Boolean(n));
               stop();
-              navigate("/favorites", { replace: true, state: { importedNames } });
+              navigate(`/qr_main?from=${encodeURIComponent(stopId)}`, { replace: true });
               return;
             }
             setNotMine(true); // 코드는 읽혔지만 우리 QR 아님 → 계속 스캔

@@ -1,0 +1,25 @@
+.qrmain { min-height: 100dvh; padding: var(--sp-4); background: var(--bg); color: var(--ink); }
+.qrmain__stop, .qrmain__ask, .qrmain__results, .qrmain__error { max-width: 680px; margin: 0 auto var(--sp-4); padding: var(--sp-5); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }
+.qrmain__stop { background: var(--brand-strong); color: var(--on-brand); }
+.qrmain__stop span { font-weight: 800; opacity: .85; }
+.qrmain__stop h1 { margin: var(--sp-2) 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.05; }
+.qrmain__stop p, .qrmain__ask p { margin: 0; font-size: var(--fs-base); font-weight: 700; }
+.qrmain__ask h2, .qrmain__results h2 { margin: 0 0 var(--sp-2); font-size: var(--fs-xl); }
+.qrmain__mic { display: flex; width: 100%; min-height: 84px; margin: var(--sp-4) 0; align-items: center; justify-content: center; gap: var(--sp-3); border: 0; border-radius: var(--radius-lg); background: var(--brand); color: var(--on-brand); font-size: var(--fs-lg); font-weight: 900; cursor: pointer; }
+.qrmain__mic[data-listening="true"] { background: var(--danger, #b42318); }
+.qrmain__mic svg { width: 32px; height: 32px; }
+.qrmain__form { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); }
+.qrmain__form input { min-width: 0; min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 2px solid var(--border-strong); border-radius: var(--radius); font-size: var(--fs-md); }
+.qrmain__form button { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 0; border-radius: var(--radius); background: var(--ink); color: white; font-weight: 900; }
+.qrmain__results { display: grid; gap: var(--sp-3); }
+.qrmain__route { padding: var(--sp-4); border: 2px solid var(--border); border-radius: var(--radius); }
+.qrmain__route > div { display: flex; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.qrmain__route strong { font-size: var(--fs-lg); }
+.qrmain__route > div span { color: var(--brand-strong); font-weight: 900; }
+.qrmain__route p { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-2); margin: var(--sp-2) 0 0; font-size: var(--fs-md); }
+.qrmain__route p svg { color: var(--brand); }
+.qrmain__route em { color: var(--brand-strong); font-size: var(--fs-lg); font-style: normal; font-weight: 900; }
+.qrmain__state { max-width: 680px; margin: var(--sp-6) auto; text-align: center; font-size: var(--fs-md); font-weight: 800; line-height: 1.5; }
+.qrmain__error h1 { margin-top: 0; }
+.qrmain__error a { display: inline-flex; margin-top: var(--sp-3); color: var(--brand); font-weight: 900; }
+@media (max-width: 480px) { .qrmain__form { grid-template-columns: 1fr; } }

@@ -3,7 +3,7 @@
 ## 팀 협업 규칙
 **[AGENTS.md](./AGENTS.md) 를 반드시 따르세요.** 팀의 브랜치·커밋·PR 규칙이 거기에 있습니다(Codex 팀원과 공용). 요약:
 
-- **사람별 브랜치**에서만 작업 (`kook`/`oh`/`master` 등). `main`·남의 브랜치에 직접 push 금지.
+- **사람별 브랜치**에서만 작업 (`kook`/`oh`/`master` 등). `princess-work`·남의 브랜치에 직접 push 금지.
 - **작업이 일단락되면 자기 브랜치에 커밋+push.** 응답 종료 시 `Stop` 훅(`scripts/auto-push.sh`)이 자동으로 해줍니다.
   - `main`/`master`에서는 자동 푸시하지 않음(가드). 변경 없으면 커밋 안 함.
 - **`main` 병합은 PR 리뷰로만.** 직접 머지 금지.

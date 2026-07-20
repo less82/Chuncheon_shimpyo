@@ -13,7 +13,7 @@ export default defineConfig({
       // OSM 지도 타일은 런타임 캐시(네트워크 우선 실패 시 캐시).
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: '쉼표 정류장',
+        name: '춘천 정류장 안내',
         short_name: '쉼표정류장',
         description:
           '춘천시 버스정류장 그늘·의자·조명·도착안내기 정보를 3상태로 보여주는 고령자용 웹앱',
@@ -21,7 +21,7 @@ export default defineConfig({
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#2f6b3a',
+        theme_color: '#26344a',
         icons: [
           {
             src: 'favicon.svg',

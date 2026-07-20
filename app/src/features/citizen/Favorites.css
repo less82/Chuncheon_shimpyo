@@ -209,3 +209,25 @@
   font-weight: 800;
   text-decoration: none;
 }
+
+.favpage__intro {
+  margin: var(--sp-4);
+  padding: var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.favpage__intro strong {
+  display: block;
+  font-size: var(--fs-md);
+  line-height: 1.25;
+}
+
+.favpage__intro p {
+  margin: var(--sp-1) 0 0;
+  color: var(--ink-body);
+  font-size: var(--fs-base);
+  line-height: 1.45;
+  word-break: keep-all;
+}

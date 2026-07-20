@@ -14,7 +14,7 @@
 .mapview__locate {
   position: absolute;
   right: var(--sp-4);
-  top: var(--sp-4);
+  top: 134px;
   z-index: 500;
   display: inline-flex;
   align-items: center;
@@ -30,11 +30,12 @@
   box-shadow: var(--shadow-card);
   cursor: pointer;
 }
+.mapview__locate { right: var(--sp-2); font-size: 16px; padding-inline: var(--sp-3); }
 .mapview__locate:active {
   transform: scale(0.97);
 }
 
-/* 현재 위치 표시(맥동하는 파란 점) */
+/* 현재 위치 표시(키 컬러) */
 .user-dot {
   position: relative;
 }
@@ -45,9 +46,9 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #1d4ed8;
+  background: var(--brand);
   border: 2px solid #fff;
-  box-shadow: 0 0 0 1px rgba(29, 78, 216, 0.4);
+  box-shadow: 0 0 0 1px rgba(38, 52, 74, 0.45);
 }
 .user-dot__pulse {
   position: absolute;
@@ -56,7 +57,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(29, 78, 216, 0.25);
+  background: rgba(38, 52, 74, 0.25);
   animation: user-pulse 1.8s ease-out infinite;
 }
 @keyframes user-pulse {

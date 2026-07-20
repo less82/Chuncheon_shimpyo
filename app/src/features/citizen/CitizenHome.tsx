@@ -1,8 +1,9 @@
 // 시민 첫 화면 — 켜자마자 지도 + 내 주변 최근접 정류장 카드.
 // 화면당 주행동 1개: "가까운 정류장 정보 보기". 검색·메뉴·온보딩 없음.
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { House, Star } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import MapView from "../map/MapView";
 import StopCard from "./StopCard";
 import ImportOnLoad from "../share/ImportOnLoad";
@@ -15,11 +16,20 @@ import "./CitizenHome.css";
 
 export default function CitizenHome() {
   const [selected, setSelected] = useState<Stop | null>(null);
+  const [searchParams] = useSearchParams();
   const [sharing, setSharing] = useState(false);
   const [scanning, setScanning] = useState(false);
   const loaded = useStops((s) => s.loaded);
+  const stops = useStops((s) => s.stops);
   const favCount = useFavorites((s) => s.ids.length);
   const favIds = useFavorites((s) => s.ids);
+
+  useEffect(() => {
+    const stopId = searchParams.get("stop");
+    if (!stopId) return;
+    const stop = stops.find((item) => item.id === stopId);
+    if (stop) setSelected(stop);
+  }, [searchParams, stops]);
 
   return (
     <main className="home">
@@ -27,6 +37,11 @@ export default function CitizenHome() {
       {scanning && <QrScanner onClose={() => setScanning(false)} />}
 
       <header className="home__bar">
+        <Link className="home__brand" to="/">
+          <House aria-hidden="true" />
+          <span className="home__title">홈으로</span>
+        </Link>
+        <h1 className="home__screen-title">정류장 지도</h1>
         <div className="home__actions">
           <button
             type="button"
@@ -56,9 +71,7 @@ export default function CitizenHome() {
             <span>공유</span>
           </button>
           <Link className="home__fav" to="/favorites">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18.8 6.2 21.9l1.1-6.5L2.6 9.8l6.5-.9z" />
-            </svg>
+            <Star aria-hidden="true" />
             <span>즐겨찾기{favCount > 0 ? ` ${favCount}` : ""}</span>
           </Link>
         </div>

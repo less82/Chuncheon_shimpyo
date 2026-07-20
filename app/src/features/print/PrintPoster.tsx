@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { ChevronLeft, Printer } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import {
   facilityLabel,
@@ -12,7 +13,7 @@ import {
   type FacilityKind,
 } from "../../lib/facilityText";
 import type { FacilityInfo } from "../../types/stop";
-import { buildShareUrl } from "../share/shareLink";
+import { buildQrEntryUrl } from "../share/shareLink";
 import { toQrDataUrl } from "../share/qr";
 import "./print.css";
 
@@ -35,11 +36,11 @@ export default function PrintPoster() {
   const stop = stops.find((s) => s.id === id);
   const [qr, setQr] = useState<string | null>(null);
 
-  // 정류장 QR — 휴대폰 카메라로 찍으면 즐겨찾기에 등록됨(로그인 불필요, 오프라인 생성).
+  // 정류장 QR — 출발 정류장을 고정한 qr_main 링크를 오프라인으로 생성한다.
   useEffect(() => {
     if (!stop) return;
     let alive = true;
-    toQrDataUrl(buildShareUrl([stop.id]))
+    toQrDataUrl(buildQrEntryUrl(stop.id))
       .then((d) => alive && setQr(d))
       .catch(() => alive && setQr(null));
     return () => {
@@ -51,7 +52,7 @@ export default function PrintPoster() {
     return (
       <main className="poster poster--missing">
         <p>정류장을 찾을 수 없어요.</p>
-        <Link className="poster__back" to="/">
+        <Link className="poster__back" to="/app">
           지도로 돌아가기
         </Link>
       </main>
@@ -63,21 +64,21 @@ export default function PrintPoster() {
   return (
     <main className="poster">
       <div className="poster__toolbar">
-        <Link className="poster__back" to="/">
-          ← 돌아가기
+        <Link className="poster__back" to="/app">
+          <ChevronLeft aria-hidden="true" /> 돌아가기
         </Link>
         <button
           type="button"
           className="poster__printbtn"
           onClick={() => window.print()}
         >
-          인쇄하기
+          <Printer aria-hidden="true" /> 인쇄하기
         </button>
       </div>
 
       <article className="poster__sheet">
         <header className="poster__head">
-          <span className="poster__brand">쉼표 정류장 안내문</span>
+          <span className="poster__brand">춘천 정류장 안내문</span>
           <h1 className="poster__name">{stop.name}</h1>
           {stop.routes.length > 0 && (
             <p className="poster__routes">경유 노선 {stop.routes.join(" · ")}</p>
@@ -101,7 +102,7 @@ export default function PrintPoster() {
             />
           )}
           <p className="poster__qr-text">
-            휴대폰 카메라로 찍으면 이 정류장이 즐겨찾기에 등록됩니다
+            휴대폰 카메라로 찍고 목적지를 말하면 탈 버스와 도착시간을 알려드립니다
           </p>
         </section>
 
@@ -110,7 +111,7 @@ export default function PrintPoster() {
             <b>있음</b> 확인됨 · <b>없음</b> 없음 · <b>미확인</b> 자료 없음
           </p>
           {captured && <p className="poster__captured">로드뷰 조사 {captured} 기준</p>}
-          <p className="poster__made">춘천시 · 쉼표 정류장 제공</p>
+          <p className="poster__made">춘천시 정류장 정보</p>
         </footer>
       </article>
     </main>

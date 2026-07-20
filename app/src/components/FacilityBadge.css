@@ -36,6 +36,7 @@
 .fbadge__kind-label {
   font-size: var(--fs-base);
   font-weight: 700;
+  word-break: keep-all;
 }
 
 .fbadge__status {
@@ -49,6 +50,7 @@
   font-size: var(--fs-md);
   font-weight: 800;
   letter-spacing: -0.3px;
+  word-break: keep-all;
 }
 
 .fbadge__source {

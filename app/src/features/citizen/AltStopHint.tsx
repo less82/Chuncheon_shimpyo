@@ -2,6 +2,7 @@
 // 아니면 아무것도 그리지 않는다(null). 주인공 UI(카드·지도)를 침범하지 않는다.
 
 import type { Stop } from "../../types/stop";
+import { Footprints } from "lucide-react";
 import type { Arrival } from "../../lib/arrivals";
 import { useStops } from "../../store/useStops";
 import { suggestAlt, describeAlt } from "./altStop";
@@ -37,9 +38,7 @@ export default function AltStopHint({ stop, arrival }: Props) {
 
   return (
     <p className="stopcard__alt" aria-label="대안 정류장 안내">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M13 5.5a1.5 1.5 0 1 0 0-.01M11 21l1.2-5-2.7-1.8.9-4.2 3.6 1.8 1.8 2.4M8 12l1-4.5 3.5-1" />
-      </svg>
+      <Footprints width={20} height={20} aria-hidden="true" />
       <span>
         걸어서 {hint.walkMin}분 거리 <b>{alt.name}</b> 정류장에 {facilityText}가
         있습니다{hint.route ? ` (같은 ${hint.route}번 버스)` : ""}
