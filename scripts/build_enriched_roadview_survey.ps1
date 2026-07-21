@@ -7,7 +7,8 @@ param(
   [string]$MaengOutputCsv,
   [string]$BasisOutputCsv = '',
   [string]$PriorityEvidenceOutputCsv = '',
-  [string]$StopIdMappingCsv = ''
+  [string]$StopIdMappingCsv = '',
+  [string]$OperationalAuditCsv = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -35,6 +36,13 @@ $mappingByManagementId = @{}
 if ($StopIdMappingCsv -and (Test-Path -LiteralPath $StopIdMappingCsv)) {
   foreach ($mapping in (Import-Csv -LiteralPath $StopIdMappingCsv -Encoding UTF8)) {
     $mappingByManagementId[[string]$mapping.관리번호] = $mapping
+  }
+}
+
+$operationalAuditByManagementId = @{}
+if ($OperationalAuditCsv -and (Test-Path -LiteralPath $OperationalAuditCsv)) {
+  foreach ($audit in (Import-Csv -LiteralPath $OperationalAuditCsv -Encoding UTF8)) {
+    $operationalAuditByManagementId[[string]$audit.관리번호] = $audit
   }
 }
 
@@ -78,6 +86,7 @@ $fullRows = foreach ($survey in $surveyRows) {
   $name = if ($location) { [string]$location.정류장명 } else { [string]$survey.정류장명 }
   $majorDirection = Get-MajorDirection $id
   $mapping = $mappingByManagementId[$id]
+  $operationalAudit = $operationalAuditByManagementId[$id]
   $pinLabel = [uri]::EscapeDataString("${name} 정류장")
   $pinUrl = if ($lat -and $lng) { "https://map.kakao.com/link/map/${pinLabel},${lat},${lng}" } else { '' }
   $isNumericRank = 0
@@ -91,7 +100,8 @@ $fullRows = foreach ($survey in $surveyRows) {
     '정류장명(영어)' = if ($location) { [string]$location.'정류장명(영어)' } else { '' }
     경도 = $lng
     위도 = $lat
-    '운행정보 연결상태' = if ($routeEntriesByStop.ContainsKey($id)) { '공식 노선정보 연결' } else { '운행 여부 확인 필요(노선·TAGO 미연결)' }
+    '운행정보 연결상태' = if ($routeEntriesByStop.ContainsKey($id)) { '공식 노선정보 연결' } elseif ($operationalAudit) { [string]$operationalAudit.종합분류 } else { '운행 여부 확인 필요(노선·TAGO 미연결)' }
+    '운행정보 확인조치' = if ($routeEntriesByStop.ContainsKey($id)) { '' } elseif ($operationalAudit) { [string]$operationalAudit.조치 } else { '노선·지도·현장 교차확인' }
     '주요 진행방면(공식 노선순서 기반)' = $majorDirection
     '승차자료 정류장 ID' = if ($mapping) { [string]$mapping.승차정류장ID } else { '' }
     '표본기간 한낮(11~16시) 개별 승차건수' = if ($mapping) { [string]$mapping.'개별 한낮 승차건수' } else { '' }
@@ -114,7 +124,7 @@ $fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
   [int]::TryParse([string]$_.'조사 순번(내부 작업순서)', [ref]$rank) -and $rank -ge 66 -and $rank -le 110
-} | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'운행정보 연결상태','주요 진행방면(공식 노선순서 기반)','승차자료 정류장 ID','표본기간 한낮(11~16시) 개별 승차건수','승차자료 매칭방법','승차자료 매칭신뢰등급','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
+} | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'운행정보 연결상태','운행정보 확인조치','주요 진행방면(공식 노선순서 기반)','승차자료 정류장 ID','표본기간 한낮(11~16시) 개별 승차건수','승차자료 매칭방법','승차자료 매칭신뢰등급','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
 )
 $maengRows | Export-Csv -LiteralPath $MaengOutputCsv -NoTypeInformation -Encoding UTF8
 
@@ -133,7 +143,7 @@ $columnBasis = @(
   [pscustomobject]@{ 열='표본기간 한낮(11~16시) 개별 승차건수'; 구분='승차 ID별 집계'; 공식출처='강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'; 원본필드='수집일자, 정류장아이디, 이용시간대, 승차건수'; 처리='2025-06-25~28의 11~16시 승차건수를 승차 정류장 ID별로 합산'; 비고='관리번호 매칭이 보류된 행은 빈칸' }
   [pscustomobject]@{ 열='승차자료 매칭방법·신뢰등급'; 구분='공식자료 및 좌표 기반 연결'; 공식출처='국토교통부 버스정류장 API, 춘천시 위치정보'; 원본필드='정류장 ID, ARS 번호, 읍면동, 관리번호, 정류장 번호, 좌표'; 처리='ARS 직접 일치, 단일 후보, 읍면동 1:1만 연결'; 비고='근거가 부족한 경우 합산하거나 임의 배정하지 않고 보류' }
   [pscustomobject]@{ 열='주요 진행방면(공식 노선순서 기반)'; 구분='공식자료 기반 파생'; 공식출처='강원특별자치도 춘천시_버스정류장 노선정보_20260326.csv'; 원본필드='노선, 정류장순서, 정류장, 정류장명'; 처리='해당 관리번호 뒤에 가장 자주 등장하는 다음 정류장 최대 2곳을 방면으로 표시'; 비고='춘천시 원본의 공식 상행·하행 필드가 아니라 노선순서 기반 파생값' }
-  [pscustomobject]@{ 열='운행정보 연결상태'; 구분='교차검증 상태'; 공식출처='춘천시 노선정보 및 TAGO 정류소정보'; 원본필드='관리번호/정류소ID 존재 여부'; 처리='노선정보 연결 여부 표시, 노선·TAGO 모두 미연결이면 확인 필요'; 비고='미연결만으로 폐지·비활성 확정 금지' }
+  [pscustomobject]@{ 열='운행정보 연결상태·확인조치'; 구분='교차검증 상태'; 공식출처='춘천시 위치·노선정보, TAGO 정류소정보, OpenStreetMap 지도 객체'; 원본필드='관리번호/정류소ID 존재 여부, 좌표, 지도 정류장 객체'; 처리='노선 미연결 37건을 TAGO·OSM·50m 이내 동일명 활성 정류장과 대조해 3개 상태로 분류'; 비고='카카오 지도·로드뷰 링크는 수기 확인용이며, 미연결만으로 폐지·비활성 확정 금지' }
   [pscustomobject]@{ 열='조사 순번(내부 작업순서)'; 구분='프로젝트 내부값'; 공식출처='없음'; 원본필드='없음'; 처리='기존 대상 선정 결과의 작업 순서를 보존'; 비고='개별 정류장 위험도나 공식 행정 우선순위로 사용하지 않음' }
   [pscustomobject]@{ 열='정류장 위치 확인 URL(카카오맵)'; 구분='편의용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오맵 위치 링크 형식으로 변환'; 비고='춘천시 원본 필드가 아닌 조사 참고 링크' }
   [pscustomobject]@{ 열='정류장 주변 확인 URL(카카오 로드뷰)'; 구분='조사용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오 로드뷰 링크 형식으로 변환'; 비고='가장 가까운 파노라마로 이동할 수 있음' }
@@ -168,8 +178,8 @@ $priorityEvidence = foreach ($survey in $surveyRows) {
     '표본기간 한낮 승차건수' = [string]$survey.한낮승차
     '기존자료 미확인 시설 수' = $unknownCount
     '우선순위 산정식' = if ($hasRank) { '승차건수 분위수(D) + 미확인 시설 수/4(UNK)' } else { '순위 미산정' }
-    '승차자료 연결 방식' = '정류장명 기준 합산'
-    '연결 한계' = '승차자료 정류장아이디와 위치정보 관리번호의 공식 대응표가 없어 동명 정류장은 양방향 합산'
+    '승차자료 연결 방식' = '승차 정류장 ID별 개별 집계 후 공식자료 기반 관리번호 매칭'
+    '연결 한계' = 'ARS 직접 일치·단일 후보·읍면동 1:1 근거가 없는 동명 정류장은 합산하거나 임의 배정하지 않고 보류'
     '승차자료 출처' = '강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'
     '위치정보 출처' = '강원특별자치도 춘천시_버스정류장 위치정보_20260326.csv'
     '노령인구 데이터 활용 주의' = '행정경계 인접 정류장에 읍면동 전체 노령인구를 직접 부여하지 않음; 향후 좌표 주변 격자·생활권 단위 자료 사용'
