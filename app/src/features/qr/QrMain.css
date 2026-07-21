@@ -63,9 +63,6 @@
 .qrmain__location-proof .qrmain__map { height: 190px; margin: 0; border-radius: var(--radius-lg); }
 .qrmain__location-recovery { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%; padding: 8px 0; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.35; }
 .qrmain__location-recovery button { min-height: 44px; padding: 0 14px; border: 0; border-radius: var(--radius-sm); background: var(--brand); color: white; font-size: 15px; font-weight: 900; white-space: nowrap; }
-.qrmain__start-bar { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; }
-.qrmain__start-bar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
-.qrmain__start-bar button { min-height: 42px; padding: 0 13px; border: 1px solid var(--brand); border-radius: var(--radius-sm); background: white; color: var(--brand); font-size: 15px; font-weight: 900; white-space: nowrap; }
 .qrmain__manual-stop { display: grid; width: 100%; gap: 16px; margin: 0; padding: 0; border: 0; }
 .qrmain__manual-stop label { display: block; }
 .qrmain__voice-input { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 8px; }

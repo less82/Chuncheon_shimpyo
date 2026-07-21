@@ -118,7 +118,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [arrival, setArrival] = useState<Arrival | null>(null);
   const [listeningTarget, setListeningTarget] = useState<VoiceTarget | null>(null);
-  const [showStartSearch, setShowStartSearch] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceStopRequestedRef = useRef(false);
   const resultsRef = useRef<HTMLElement | null>(null);
@@ -230,7 +229,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
     setLocationError(false);
     setOutsideServiceArea(false);
     setManualStopQuery("");
-    setShowStartSearch(false);
   };
 
   useEffect(() => {
@@ -376,8 +374,7 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
         {(outsideServiceArea || locationError) && <div className="qrmain__location-recovery" role="alert"><span>위치 정보를 찾을 수 없습니다</span><button type="button" onClick={openDestination}>위치 찾기</button></div>}
-        {(!start || showStartSearch) && manualStopSearch}
-        {start && <div className="qrmain__start-bar"><span><b>{start.name}</b>{start.stopNo && ` #${start.stopNo}`}</span><button type="button" onClick={() => setShowStartSearch((value) => !value)}>{showStartSearch ? "닫기" : "출발지 변경"}</button></div>}
+        {manualStopSearch}
         {start && locationSource && <div className="qrmain__location-proof">
           <QrStopMap stop={start} />
         </div>}
