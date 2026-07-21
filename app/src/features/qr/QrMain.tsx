@@ -133,6 +133,7 @@ export default function QrMain() {
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
   const [reportPhoto, setReportPhoto] = useState("");
+  const [reportReview, setReportReview] = useState(false);
   const [reportDone, setReportDone] = useState(false);
   const start = stops.find((stop) => stop.id === startId) ?? null;
   const [query, setQuery] = useState("");
@@ -206,6 +207,7 @@ export default function QrMain() {
     setReportDone(false);
     setReportIssue("");
     setReportPhoto("");
+    setReportReview(false);
     setOutsideServiceArea(false);
     setStartId(null);
     setLocationSource(null);
@@ -261,6 +263,7 @@ export default function QrMain() {
     setReportDone(false);
     setReportIssue("");
     setReportPhoto("");
+    setReportReview(false);
     setLocationError(false);
     setOutsideServiceArea(false);
     setLocating(false);
@@ -377,7 +380,8 @@ export default function QrMain() {
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
     </section></main>;
-    if (reportDone) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>확인</button></section></main>;
+    if (reportDone) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>민원이 접수됐어요</h1><p><b>{start.name}</b><br />{reportIssue}</p><p>담당 부서에서 확인합니다.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>완료</button></section></main>;
+    if (reportReview) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportReview(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>이 내용으로 접수할까요?</h1><p><b>{start.name}</b><br />{reportIssue}</p>{reportPhoto && <img className="qrmain__photo-preview" src={reportPhoto} alt="민원 첨부 사진" />}<button type="button" className="qrmain__report-submit" onClick={() => { saveReport(start, reportIssue, reportPhoto || undefined); setReportDone(true); setReportReview(false); }}>확인</button></section></main>;
     return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-start">
       <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
@@ -392,7 +396,7 @@ export default function QrMain() {
         }} />
       </label>
       {reportPhoto && <img className="qrmain__photo-preview" src={reportPhoto} alt="민원 첨부 사진 미리보기" />}
-      <button type="button" className="qrmain__report-submit" disabled={!reportIssue} onClick={() => { saveReport(start, reportIssue, reportPhoto || undefined); setReportDone(true); }}>민원 접수하기</button>
+      <button type="button" className="qrmain__report-submit" disabled={!reportIssue} onClick={() => setReportReview(true)}>민원 접수하기</button>
     </section></main>;
   }
 

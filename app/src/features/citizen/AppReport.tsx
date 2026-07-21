@@ -126,7 +126,7 @@ export default function AppReport() {
           <h1>어떤 점이 불편했나요?</h1>
           <p>해당하는 항목을 하나 눌러주세요.</p>
           <div className="appreport__issues">{ISSUES.map((item) => <button type="button" key={item} aria-pressed={issue === item} onClick={() => setIssue(item)}>{item}</button>)}</div>
-          <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("confirm")}>이전</button><button type="button" className="appreport__primary" disabled={!issue} onClick={submit}>불편 사항 보내기</button></div>
+          <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("confirm")}>이전</button><button type="button" className="appreport__primary" disabled={!issue} onClick={submit}>민원 접수하기</button></div>
         </section>
       )}
 
