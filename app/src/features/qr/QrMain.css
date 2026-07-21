@@ -36,7 +36,11 @@
 .qrmain__form { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); }
 .qrmain__form input { min-width: 0; min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 2px solid var(--border-strong); border-radius: var(--radius); font-size: var(--fs-md); }
 .qrmain__form button { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 0; border-radius: var(--radius); background: var(--ink); color: white; font-weight: 900; }
+.qrmain__location-error { display: grid; gap: 4px; margin-top: var(--sp-3); padding: var(--sp-4); border-radius: var(--radius); background: var(--warning-bg); color: var(--warning); }
+.qrmain__location-error span { font-size: 15px; font-weight: 700; }
+.qrmain__location-error button { min-height: 48px; margin-top: var(--sp-2); border: 0; border-radius: var(--radius-sm); background: var(--warning); color: white; font-weight: 900; }
 .qrmain__results { display: grid; gap: var(--sp-3); padding: 0; background: transparent; box-shadow: none; }
+.qrmain__results { scroll-margin-top: var(--sp-3); }
 .qrmain__results > h2 { padding: var(--sp-2) var(--sp-1); }
 .qrmain__result-set { display: grid; gap: var(--sp-3); }
 .qrmain__route { position: relative; overflow: hidden; padding: var(--sp-5); border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }

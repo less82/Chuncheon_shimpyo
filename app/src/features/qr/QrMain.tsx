@@ -104,6 +104,7 @@ export default function QrMain() {
   const [arrival, setArrival] = useState<Arrival | null>(null);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const resultsRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -130,15 +131,17 @@ export default function QrMain() {
     [submitted, start, stops, routes],
   );
 
-  const submit = (event?: FormEvent) => {
-    event?.preventDefault();
-    setSubmitted(query.trim());
-  };
-
   const openDestination = () => {
     setMode("destination");
     setLocationError(false);
-    if (startId || qrStopId) return;
+  };
+
+  const locateAndSearch = (destination: string) => {
+    if (!destination) return;
+    if (startId || qrStopId) {
+      setSubmitted(destination);
+      return;
+    }
     if (!navigator.geolocation) {
       setLocationError(true);
       return;
@@ -152,6 +155,7 @@ export default function QrMain() {
         setStartId(nearest?.id ?? null);
         setLocationError(!nearest);
         setLocating(false);
+        if (nearest) setSubmitted(destination);
       },
       () => {
         setLocationError(true);
@@ -160,6 +164,19 @@ export default function QrMain() {
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
     );
   };
+
+  const submit = (event?: FormEvent) => {
+    event?.preventDefault();
+    locateAndSearch(query.trim());
+  };
+
+  useEffect(() => {
+    if (!submitted || !start || !routes) return;
+    const frame = window.requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [submitted, start, routes]);
 
   const startVoice = () => {
     const speechWindow = window as typeof window & {
@@ -179,7 +196,7 @@ export default function QrMain() {
     recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript?.trim() ?? "";
       setQuery(transcript);
-      setSubmitted(transcript);
+      if (mode === "destination") locateAndSearch(transcript);
     };
     recognition.onerror = () => setListening(false);
     recognition.onend = () => setListening(false);
@@ -230,24 +247,23 @@ export default function QrMain() {
     </section></main>;
   }
 
-  if (locating || !start) {
+  if (locating) {
     return <main className="qrmain"><section className="qrmain__error">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
       <Navigation aria-hidden="true" className="qrmain__locate-icon" />
-      <h1>{locating ? "가까운 정류장을 찾고 있어요" : "현재 위치가 필요해요"}</h1>
-      <p>{locating ? "잠시만 기다려 주세요." : "목적지로 갈 버스를 찾으려면 위치 사용을 허용해 주세요."}</p>
-      {locationError && <button type="button" className="qrmain__retry" onClick={openDestination}>위치 다시 확인하기</button>}
+      <h1>가까운 정류장을 찾고 있어요</h1>
+      <p>말씀하신 목적지로 가는 버스를 이어서 확인할게요.</p>
     </section></main>;
   }
 
   return (
     <main className="qrmain">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
-      <header className="qrmain__stop">
-        <span>현재 출발 정류장</span>
+      {start && <header className="qrmain__stop">
+        <span>현재 위치에서 가장 가까운 정류장</span>
         <h1>{start.name}</h1>
         <p>{start.routes.length ? `${start.routes.slice(0, 6).join(" · ")}번 운행` : "운행 노선 확인 중"}</p>
-      </header>
+      </header>}
 
       <section className="qrmain__ask">
         <h2>어디로 가세요?</h2>
@@ -265,10 +281,11 @@ export default function QrMain() {
           />
           <button type="submit"><Search aria-hidden="true" /> 찾기</button>
         </form>
+        {locationError && <div className="qrmain__location-error" role="alert"><b>위치를 확인하지 못했어요.</b><span>휴대폰의 위치 사용을 허용한 뒤 다시 눌러주세요.</span><button type="button" onClick={() => locateAndSearch(query.trim())}>위치 다시 확인하기</button></div>}
       </section>
 
-      {submitted && (
-        <section className="qrmain__results" aria-live="polite">
+      {submitted && start && (
+        <section className="qrmain__results" aria-live="polite" ref={resultsRef}>
           <h2>갈 수 있는 버스</h2>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
