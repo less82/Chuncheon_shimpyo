@@ -50,7 +50,7 @@
 .qrmain__stop p, .qrmain__ask p { margin: 0; font-size: var(--fs-base); font-weight: 700; }
 .qrmain__ask h2, .qrmain__results h2 { margin: 0 0 var(--sp-2); font-size: var(--fs-xl); }
 .qrmain__mic { display: flex; width: 100%; min-height: 64px; margin: 0; align-items: center; justify-content: center; gap: var(--sp-2); border: 0; border-radius: var(--radius); background: var(--brand); color: var(--on-brand); font-size: 20px; font-weight: 900; cursor: pointer; }
-.qrmain__mic[data-listening="true"], .qrmain__voice-input button[data-listening="true"] { background: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+.qrmain__mic[data-listening="true"] { background: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
 .qrmain__mic svg { width: 26px; height: 26px; }
 .qrmain__form { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); }
 .qrmain__form input { min-width: 0; min-height: 60px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); font-size: 18px; }
@@ -67,10 +67,7 @@
 .qrmain__location-recovery button { min-height: 44px; padding: 0 14px; border: 0; border-radius: var(--radius-sm); background: var(--brand); color: white; font-size: 15px; font-weight: 900; white-space: nowrap; }
 .qrmain__manual-stop { display: grid; width: 100%; gap: 16px; margin: 0; padding: 0; border: 0; }
 .qrmain__manual-stop label { display: block; }
-.qrmain__voice-input { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 8px; }
-.qrmain__voice-input input { min-width: 0; min-height: 60px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: white; color: var(--ink); font-size: 18px; }
-.qrmain__voice-input button { display: grid; width: 60px; height: 60px; place-items: center; border: 0; border-radius: var(--radius); background: var(--brand); color: white; }
-.qrmain__voice-input svg { width: 25px; height: 25px; }
+.qrmain__manual-input { width: 100%; min-height: 60px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: white; color: var(--ink); font-size: 18px; }
 .qrmain__manual-stop ul { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
 .qrmain__manual-stop li button { display: flex; width: 100%; min-height: 50px; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; color: var(--ink); text-align: left; }
 .qrmain__manual-stop li span { color: var(--brand); font-size: 14px; font-weight: 900; white-space: nowrap; }

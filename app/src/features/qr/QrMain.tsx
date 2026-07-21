@@ -239,10 +239,11 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
 
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
-    <div className="qrmain__voice-input">
-      <input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
-      <button type="button" data-listening={listeningTarget === "start"} aria-label={listeningTarget === "start" ? "출발 정류장 듣는 중, 누르면 완료" : "출발 정류장 말하기"} onClick={() => startVoice("start")}><Mic aria-hidden="true" /></button>
-    </div>
+    <button type="button" className="qrmain__mic" data-listening={listeningTarget === "start"} onClick={() => startVoice("start")}>
+      <Mic aria-hidden="true" />
+      {listeningTarget === "start" ? "듣는 중 · 누르면 완료" : "출발지 말하기"}
+    </button>
+    <input className="qrmain__manual-input" id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
     {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
   </div>;
 
