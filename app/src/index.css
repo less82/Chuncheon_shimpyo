@@ -28,21 +28,21 @@ body {
 
 /* 모든 제품 화면은 같은 모바일 기기 영역을 사용한다. */
 body .home,
+body .qrmain,
 body .tripview,
 body .favpage,
-body .poster,
-body .dash {
+body .poster {
   width: min(390px, 100vw);
   max-width: 390px;
   margin-inline: auto;
   background: var(--surface);
 }
 
-body .home { height: min(844px, 100svh); }
+body .home,
+body .qrmain { height: min(844px, 100svh); }
 body .tripview,
 body .favpage,
-body .poster,
-body .dash {
+body .poster {
   height: min(844px, 100svh);
   min-height: 0;
   overflow-y: auto;
@@ -50,10 +50,10 @@ body .dash {
 
 @media (min-width: 601px) {
   body .home,
+  body .qrmain,
   body .tripview,
   body .favpage,
-  body .poster,
-  body .dash {
+  body .poster {
     border: 8px solid #222a36;
     border-radius: 38px;
     box-shadow: var(--shadow-float);
