@@ -10,7 +10,7 @@ export interface CitizenReport {
   stopName: string;
   issue: string;
   createdAt: string;
-  status: "received";
+  status: "received" | "reviewing" | "task_created" | "resolved";
 }
 
 export function loadReports(): CitizenReport[] {
@@ -35,4 +35,9 @@ export function saveReport(stop: Stop, issue: string): CitizenReport {
   localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify([...loadReports(), report]));
   window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
   return report;
+}
+
+export function updateReportStatus(id: string, status: CitizenReport["status"]): void {
+  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(loadReports().map((report) => report.id === id ? { ...report, status } : report)));
+  window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
 }

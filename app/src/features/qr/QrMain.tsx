@@ -98,6 +98,8 @@ export default function QrMain() {
   const [startId, setStartId] = useState<string | null>(qrStopId);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
+  const [locationConsent, setLocationConsent] = useState(false);
+  const [pendingDestination, setPendingDestination] = useState("");
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
@@ -174,12 +176,19 @@ export default function QrMain() {
     );
   };
 
-  const locateAndSearch = (destination: string) => {
+  const requestTrip = (destination: string) => {
     if (!destination) return;
     if (startId || qrStopId) {
       setSubmitted(destination);
       return;
     }
+    setPendingDestination(destination);
+    setLocationConsent(true);
+  };
+
+  const locateAndSearch = () => {
+    const destination = pendingDestination;
+    setLocationConsent(false);
     if (!navigator.geolocation) {
       setLocationError(true);
       return;
@@ -203,7 +212,7 @@ export default function QrMain() {
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
-    locateAndSearch(query.trim());
+    requestTrip(query.trim());
   };
 
   useEffect(() => {
@@ -232,7 +241,7 @@ export default function QrMain() {
     recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript?.trim() ?? "";
       setQuery(transcript);
-      if (mode === "destination") locateAndSearch(transcript);
+      if (mode === "destination") requestTrip(transcript);
     };
     recognition.onerror = () => setListening(false);
     recognition.onend = () => setListening(false);
@@ -305,6 +314,16 @@ export default function QrMain() {
     </section></main>;
   }
 
+  if (mode === "destination" && locationConsent) {
+    return <main className="qrmain"><section className="qrmain__ask qrmain__consent">
+      <span className="qrmain__report-icon"><Navigation aria-hidden="true" /></span>
+      <h1>현재 위치를 사용해도 될까요?</h1>
+      <p><b>“{pendingDestination}”</b>까지 갈 수 있는 가장 가까운 정류장과 버스를 찾기 위해 현재 위치가 필요해요.</p>
+      <ul><li>위치는 가까운 정류장을 찾는 데만 사용해요.</li><li>허용하면 휴대폰의 위치 권한 창이 이어서 열려요.</li></ul>
+      <div className="qrmain__consent-actions"><button type="button" onClick={locateAndSearch}>위치 사용하고 찾기</button><button type="button" onClick={() => setLocationConsent(false)}>취소</button></div>
+    </section></main>;
+  }
+
   return (
     <main className="qrmain">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
@@ -330,7 +349,7 @@ export default function QrMain() {
           />
           <button type="submit"><Search aria-hidden="true" /> 찾기</button>
         </form>
-        {locationError && <div className="qrmain__location-error" role="alert"><b>위치를 확인하지 못했어요.</b><span>휴대폰의 위치 사용을 허용한 뒤 다시 눌러주세요.</span><button type="button" onClick={() => locateAndSearch(query.trim())}>위치 다시 확인하기</button></div>}
+        {locationError && <div className="qrmain__location-error" role="alert"><b>위치를 확인하지 못했어요.</b><span>휴대폰의 위치 사용을 허용한 뒤 다시 눌러주세요.</span><button type="button" onClick={() => requestTrip(query.trim())}>위치 다시 확인하기</button></div>}
       </section>
 
       {submitted && start && (
