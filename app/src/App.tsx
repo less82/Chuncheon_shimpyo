@@ -9,6 +9,7 @@ import Dashboard from "./features/admin/Dashboard";
 import AdminConcepts from "./features/admin/AdminConcepts";
 import DesignPreview from "./features/design/DesignPreview";
 import QrMain from "./features/qr/QrMain";
+import QrCompare from "./features/qr/QrCompare";
 import { useStops } from "./store/useStops";
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/" element={<CitizenHome />} />
         <Route path="/app" element={<CitizenHome />} />
         <Route path="/qr_main" element={<QrMain />} />
+        <Route path="/qr-compare" element={<QrCompare />} />
         <Route path="/app/report" element={<AppReport />} />
         <Route path="/report" element={<Navigate to="/app/report" replace />} />
         <Route path="/design-preview" element={<DesignPreview />} />
