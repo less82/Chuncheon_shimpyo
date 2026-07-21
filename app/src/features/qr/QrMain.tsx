@@ -329,7 +329,7 @@ export default function QrMain() {
   }
 
   if (mode === "report") {
-    if (locating) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
+    if (locating) return <main className="qrmain"><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
     if (locationError || outsideServiceArea || !start) return <main className="qrmain">
       <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__report-location">
       <h1>주변 정류장을 찾지 못했습니다</h1>
@@ -353,7 +353,6 @@ export default function QrMain() {
 
   if (locating) {
     return <main className="qrmain"><section className="qrmain__error">
-      <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
       <Navigation aria-hidden="true" className="qrmain__locate-icon" />
       <h1>가까운 정류장을 찾고 있어요</h1>
       <p>위치를 확인한 뒤 목적지를 여쭤볼게요.</p>
