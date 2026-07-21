@@ -1,7 +1,7 @@
-.qrmain { width: min(430px, 100vw); min-height: 0; margin: 0 auto; padding: var(--sp-4); overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: #f4f6f8; color: var(--ink); }
+.qrmain { width: min(430px, 100vw); min-height: 0; margin: 0 auto; padding: var(--sp-4); overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: white; color: var(--ink); }
 .qrmain::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .qrmain__stop, .qrmain__ask, .qrmain__results, .qrmain__error, .qrmain__welcome { max-width: 680px; margin: 0 auto var(--sp-4); padding: var(--sp-5); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }
-.qrmain__welcome { display: flex; height: 100%; min-height: 0; margin-bottom: 0; flex-direction: column; padding-top: var(--sp-6); }
+.qrmain__welcome { display: flex; height: 100%; min-height: 0; margin-bottom: 0; padding: var(--sp-4); flex-direction: column; border-radius: 0; background: transparent; box-shadow: none; }
 .qrmain__brand { align-self: flex-start; padding: 7px 12px; border-radius: var(--radius-pill); background: var(--brand-soft); color: var(--brand); font-size: 15px; font-weight: 900; }
 .qrmain__hello { margin-top: 52px; }
 .qrmain__hello span { color: var(--brand); font-size: var(--fs-lg); font-weight: 900; }
@@ -60,6 +60,8 @@
 .qrmain__form { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); }
 .qrmain__form input { min-width: 0; min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 2px solid var(--border-strong); border-radius: var(--radius); font-size: var(--fs-md); }
 .qrmain__form button { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 0; border-radius: var(--radius); background: var(--ink); color: white; font-weight: 900; }
+.qrmain__located { display: inline-flex; align-items: center; gap: 5px; margin-bottom: var(--sp-3); padding: 7px 10px; border-radius: var(--radius-pill); background: var(--yes-bg); color: var(--yes); font-size: 14px; font-weight: 900; }
+.qrmain__located svg { width: 17px; }
 .qrmain__location-error { display: grid; gap: 4px; margin-top: var(--sp-3); padding: var(--sp-4); border-radius: var(--radius); background: var(--warning-bg); color: var(--warning); }
 .qrmain__location-error span { font-size: 15px; font-weight: 700; }
 .qrmain__location-error button { min-height: 48px; margin-top: var(--sp-2); border: 0; border-radius: var(--radius-sm); background: var(--warning); color: white; font-weight: 900; }
@@ -69,6 +71,7 @@
 .qrmain__result-set { display: grid; gap: var(--sp-3); }
 .qrmain__route { position: relative; overflow: hidden; padding: var(--sp-5); border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }
 .qrmain__route[data-best="true"] { border: 3px solid var(--brand); }
+.qrmain__instruction { margin-bottom: var(--sp-2); color: var(--ink-muted); font-size: 15px; font-weight: 900; }
 .qrmain__recommend { display: inline-flex; margin: calc(var(--sp-5) * -1) 0 var(--sp-4) calc(var(--sp-5) * -1); padding: 8px 18px; border-radius: 0 0 var(--radius) 0; background: var(--brand); color: white; font-size: var(--fs-sm); font-weight: 900; }
 .qrmain__route-head { display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: var(--sp-3); }
 .qrmain__bus-icon { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 16px; background: var(--brand-soft); color: var(--brand); }
@@ -88,6 +91,7 @@
 .qrmain__boarding strong { display: block; margin: 3px 0; font-size: 20px; }
 .qrmain__boarding strong small { display: inline; color: var(--brand); font-size: 15px; }
 .qrmain__boarding p { color: var(--ink-body); font-size: 15px; font-weight: 700; }
+.qrmain__map { width: 100%; height: 180px; margin-top: var(--sp-3); border: 0; border-radius: var(--radius); background: var(--surface-2); }
 .qrmain__facilities { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); }
 .qrmain__facilities span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: var(--radius-pill); background: var(--unknown-bg); color: var(--unknown); font-size: 14px; font-weight: 800; }
 .qrmain__facilities span[data-state="yes"] { background: var(--yes-bg); color: var(--yes); }

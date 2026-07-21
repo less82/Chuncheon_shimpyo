@@ -40,6 +40,7 @@ interface RouteSummary {
   rideMin: number;
   totalMin: number;
   live: boolean;
+  directionName: string;
 }
 
 type QrMode = "home" | "destination" | "report";
@@ -64,6 +65,12 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
 function clockAfter(minutes: number): string {
   return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
     .format(new Date(Date.now() + minutes * 60_000));
+}
+
+function mapEmbedUrl(stop: Stop): string {
+  const delta = 0.004;
+  const bbox = `${stop.lng - delta},${stop.lat - delta},${stop.lng + delta},${stop.lat + delta}`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${stop.lat},${stop.lng}`;
 }
 
 export function findTrips(
@@ -98,8 +105,6 @@ export default function QrMain() {
   const [startId, setStartId] = useState<string | null>(qrStopId);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
-  const [locationConsent, setLocationConsent] = useState(false);
-  const [pendingDestination, setPendingDestination] = useState("");
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
@@ -141,6 +146,19 @@ export default function QrMain() {
   const openDestination = () => {
     setMode("destination");
     setLocationError(false);
+    if (startId || qrStopId) return;
+    if (!navigator.geolocation) { setLocationError(true); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const nearest = nearestStops(coords.latitude, coords.longitude)[0];
+        setStartId(nearest?.id ?? null);
+        setLocationError(!nearest);
+        setLocating(false);
+      },
+      () => { setLocationError(true); setLocating(false); },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
+    );
   };
 
   const nearestStops = (latitude: number, longitude: number) => stops
@@ -178,36 +196,8 @@ export default function QrMain() {
 
   const requestTrip = (destination: string) => {
     if (!destination) return;
-    if (startId || qrStopId) {
-      setSubmitted(destination);
-      return;
-    }
-    setPendingDestination(destination);
-    setLocationConsent(true);
-  };
-
-  const locateAndSearch = () => {
-    const destination = pendingDestination;
-    setLocationConsent(false);
-    if (!navigator.geolocation) {
-      setLocationError(true);
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const nearest = nearestStops(coords.latitude, coords.longitude)[0];
-        setStartId(nearest?.id ?? null);
-        setLocationError(!nearest);
-        setLocating(false);
-        if (nearest) setSubmitted(destination);
-      },
-      () => {
-        setLocationError(true);
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
-    );
+    if (startId || qrStopId) setSubmitted(destination);
+    else openDestination();
   };
 
   const submit = (event?: FormEvent) => {
@@ -291,6 +281,7 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
       <span className="qrmain__report-icon"><MapPin aria-hidden="true" /></span>
       <p>현재 위치에서 가장 가까운 정류장이에요.</p><h1>{start.name}</h1><strong>{start.stopNo ? `정류장 번호 ${start.stopNo}` : "정류장 번호 확인 중"}</strong>
+      <iframe className="qrmain__map" title={`${start.name} 정류장 지도`} src={mapEmbedUrl(start)} loading="lazy" />
       <h2>이 정류장이 맞나요?</h2>
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
@@ -310,30 +301,16 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
       <Navigation aria-hidden="true" className="qrmain__locate-icon" />
       <h1>가까운 정류장을 찾고 있어요</h1>
-      <p>말씀하신 목적지로 가는 버스를 이어서 확인할게요.</p>
-    </section></main>;
-  }
-
-  if (mode === "destination" && locationConsent) {
-    return <main className="qrmain"><section className="qrmain__ask qrmain__consent">
-      <span className="qrmain__report-icon"><Navigation aria-hidden="true" /></span>
-      <h1>현재 위치를 사용해도 될까요?</h1>
-      <p><b>“{pendingDestination}”</b>까지 갈 수 있는 가장 가까운 정류장과 버스를 찾기 위해 현재 위치가 필요해요.</p>
-      <ul><li>위치는 가까운 정류장을 찾는 데만 사용해요.</li><li>허용하면 휴대폰의 위치 권한 창이 이어서 열려요.</li></ul>
-      <div className="qrmain__consent-actions"><button type="button" onClick={locateAndSearch}>위치 사용하고 찾기</button><button type="button" onClick={() => setLocationConsent(false)}>취소</button></div>
+      <p>위치를 확인한 뒤 목적지를 여쭤볼게요.</p>
     </section></main>;
   }
 
   return (
     <main className="qrmain">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
-      {start && <header className="qrmain__stop">
-        <span>현재 위치에서 가장 가까운 정류장</span>
-        <h1>{start.name}</h1>
-        <p>{start.routes.length ? `${start.routes.slice(0, 6).join(" · ")}번 운행` : "운행 노선 확인 중"}</p>
-      </header>}
 
       <section className="qrmain__ask">
+        {start && <span className="qrmain__located"><MapPin aria-hidden="true" /> 현재 위치 확인됨</span>}
         <h2>어디로 가세요?</h2>
         <p>마이크를 누르고 목적지를 말씀해 주세요.</p>
         <button type="button" className="qrmain__mic" data-listening={listening} onClick={startVoice}>
@@ -366,12 +343,16 @@ export default function QrMain() {
               const routeArrivals: RouteSummary[] = firstLeg.routeNos.map((routeNo) => {
                 const liveArrival = arrival?.byRoute?.find((item) => item.routeNo === routeNo);
                 const waitMin = liveArrival?.min ?? start.headwayMin ?? 15;
+                const route = routes.routes.find((candidate) => candidate.routeNo === routeNo);
+                const boardIndex = route?.stops.indexOf(start.id) ?? -1;
+                const nextStop = boardIndex >= 0 ? stops.find((stop) => stop.id === route?.stops[boardIndex + 1]) : null;
                 return {
                   routeNo,
                   waitMin,
                   rideMin,
                   totalMin: option.walkMin + waitMin + rideMin,
                   live: Boolean(liveArrival),
+                  directionName: nextStop?.name ?? destination.name,
                 };
               }).filter((item) => item.waitMin >= option.walkMin + 1)
                 .sort((a, b) => a.totalMin - b.totalMin)
@@ -381,6 +362,7 @@ export default function QrMain() {
                   {routeArrivals.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={index === 0 && routeIndex === 0} key={item.routeNo}>
                       {index === 0 && routeIndex === 0 && <span className="qrmain__recommend">가장 빨리 도착해요</span>}
+                      <p className="qrmain__instruction">이 버스를 타세요</p>
                       <div className="qrmain__route-head">
                         <span className="qrmain__bus-icon"><BusFront aria-hidden="true" /></span>
                         <div><strong>{item.routeNo}번</strong><small>{option.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
@@ -393,8 +375,10 @@ export default function QrMain() {
                       <div className="qrmain__boarding">
                         <span>버스를 탈 곳</span>
                         <strong>{start.name} <small>{start.stopNo ? `#${start.stopNo}` : ""}</small></strong>
-                        <p>{destination.name} 방면 · {item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</p>
+                        <p><b>{item.directionName} 방면</b> · 다음 정류장 기준 방향</p>
+                        <p>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</p>
                       </div>
+                      <iframe className="qrmain__map" title={`${start.name} 승차 위치 지도`} src={mapEmbedUrl(start)} loading="lazy" />
                       <div className="qrmain__facilities" aria-label="정류장 편의시설">
                         <span data-state={start.facilities.seat.status}><Armchair aria-hidden="true" /> 의자 {start.facilities.seat.status === "yes" ? "있음" : "미확인"}</span>
                         <span data-state={start.facilities.shade.status}><Umbrella aria-hidden="true" /> 그늘 {start.facilities.shade.status === "yes" ? "있음" : "미확인"}</span>
