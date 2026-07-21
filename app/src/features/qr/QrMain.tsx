@@ -379,7 +379,11 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
           <QrStopMap stop={start} />
         </div>}
         <h2>목적지를 입력하세요</h2>
-        <form className="qrmain__voice-input" onSubmit={submit}>
+        <button type="button" className="qrmain__mic" data-listening={listeningTarget === "destination"} onClick={() => startVoice("destination")}>
+          <Mic aria-hidden="true" />
+          {listeningTarget === "destination" ? "듣는 중 · 누르면 완료" : "목적지 말하기"}
+        </button>
+        <form className="qrmain__form" onSubmit={submit}>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -387,7 +391,7 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
             aria-label="목적지"
             enterKeyHint="search"
           />
-          <button type="button" data-listening={listeningTarget === "destination"} aria-label={listeningTarget === "destination" ? "목적지 듣는 중, 누르면 완료" : "목적지 말하기"} onClick={() => startVoice("destination")}><Mic aria-hidden="true" /></button>
+          <button type="submit">찾기</button>
         </form>
       </section>}
 
