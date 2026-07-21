@@ -35,8 +35,17 @@
 .dash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .dash-head h2 { font-size: 25px; }
 .dash-today { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
-.report-flow { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.report-section-head, .report-list-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+.report-section-head { margin-bottom: 14px; }
+.report-section-head h3, .report-list-head h3 { margin: 0; color: var(--ink); font-size: 18px; line-height: 1.3; }
+.report-section-head p { max-width: 400px; color: var(--ink-muted); font-size: 13px; text-align: right; }
+.report-list-head { margin: 26px 0 12px; padding-top: 20px; border-top: 1px solid var(--border); }
+.report-total { display: flex; align-items: baseline; gap: 5px; color: var(--ink-muted); }
+.report-total strong { color: var(--ink); font-size: 26px; line-height: 1; }
+.report-total span { font-size: 12px; font-weight: 800; }
+.report-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
 .report-flow > div { position: relative; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: var(--sp-2); padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: white; box-shadow: var(--shadow-card); }
+.report-flow > div:not(:last-child)::after { content: ""; position: absolute; z-index: 2; right: calc(var(--sp-3) * -1 - 1px); width: var(--sp-3); height: 2px; background: var(--border-strong); }
 .report-flow > div > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: var(--brand); color: white; font-size: 13px; font-weight: 900; }
 .report-flow p { font-size: 13px; font-weight: 900; }
 .report-flow strong { font-size: 17px; }
@@ -47,10 +56,16 @@
 .report-summary p { font-weight: 700; }
 .report-empty { padding: var(--sp-7); border: 2px dashed var(--border-strong); border-radius: var(--radius-lg); background: white; text-align: center; }
 .report-empty h2 { margin-bottom: var(--sp-2); }
-.report-table { min-width: 820px; }
+.report-table { min-width: 0; table-layout: fixed; }
+.report-table th:nth-child(1) { width: 18%; }
+.report-table th:nth-child(2) { width: 20%; }
+.report-table th:nth-child(3) { width: 25%; }
+.report-table th:nth-child(4) { width: 16%; }
+.report-table th:nth-child(5) { width: 21%; }
+.report-table th, .report-table td { overflow-wrap: anywhere; }
 .report-status { display: inline-flex; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--warning-bg); color: var(--warning); font-size: var(--fs-sm); font-weight: 900; }
 .report-status[data-status="resolved"] { background: var(--yes-bg); color: var(--yes); }
-.report-action { min-height: 42px; padding: 0 14px; border: 0; border-radius: var(--radius-sm); background: var(--brand); color: white; font-weight: 900; cursor: pointer; }
+.report-action { width: 100%; min-height: 40px; padding: 6px 10px; border: 0; border-radius: var(--radius-sm); background: var(--brand); color: white; font-size: 12px; font-weight: 900; line-height: 1.25; cursor: pointer; white-space: normal; }
 .dash-title {
   font-size: var(--fs-xl);
   line-height: 1.2;
@@ -78,9 +93,18 @@
   .dash-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-head { align-items: flex-start; gap: 12px; }
   .dash-today { text-align: right; }
+  .report-section-head { align-items: flex-start; }
+  .report-section-head p { max-width: 260px; }
+  .report-flow > div { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .report-flow > div::after { display: none; }
+  .report-table th:nth-child(1) { width: 17%; }
+  .report-table th:nth-child(2) { width: 19%; }
+  .report-table th:nth-child(3) { width: 24%; }
+  .report-table th:nth-child(4) { width: 17%; }
+  .report-table th:nth-child(5) { width: 23%; }
 }
 
-@container dashboard-workspace (max-width: 520px) {
+@container dashboard-workspace (max-width: 600px) {
   .report-flow,
   .dash-presets,
   .report-summary { grid-template-columns: 1fr; }
@@ -88,6 +112,16 @@
   .dash-today { text-align: left; }
   .dash-resultbar { align-items: stretch; }
   .dash-csv { width: 100%; }
+  .report-section-head { display: grid; }
+  .report-section-head p { max-width: none; text-align: left; }
+  .report-tablewrap { overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .report-table, .report-table tbody { display: block; width: 100%; }
+  .report-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .report-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin-bottom: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-card); }
+  .report-table td { display: block; min-width: 0; padding: 0; }
+  .report-table td::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--ink-muted); font-size: 11px; font-weight: 800; }
+  .report-table td:nth-child(3), .report-table td:nth-child(5) { grid-column: 1 / -1; }
+  .report-action { width: auto; min-width: 132px; }
 }
 
 .dash-section {
@@ -238,7 +272,9 @@
 
 /* ---- 표 ---- */
 .dash-tablewrap {
-  overflow-x: auto;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   scrollbar-width: none;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -249,7 +285,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  min-width: 760px;
+  min-width: 0;
+  table-layout: fixed;
 }
 .dash-table thead th {
   position: sticky;
@@ -291,6 +328,7 @@
 .dash-table td {
   padding: 11px 13px;
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 .dash-stopname {
   display: block;
@@ -335,7 +373,6 @@
 }
 .dash-c-ev {
   color: var(--ink-body);
-  min-width: 190px;
 }
 .dash-c-num {
   font-size: var(--fs-md);
