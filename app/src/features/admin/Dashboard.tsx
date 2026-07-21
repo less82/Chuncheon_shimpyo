@@ -13,10 +13,10 @@ import "./Dashboard.css";
 type TabKey = "reports" | "survey" | "install" | "filter";
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "reports", label: "시민 불편 제보" },
-  { key: "survey", label: "1단계 조사 검토 순서" },
-  { key: "install", label: "2단계 설치 검토 우선순위" },
-  { key: "filter", label: "조건 필터" },
+  { key: "reports", label: "시민 제보 처리" },
+  { key: "survey", label: "정류장 조사 대상" },
+  { key: "install", label: "시설 개선 후보" },
+  { key: "filter", label: "데이터 분석" },
 ];
 
 const REPORT_STATUS = {
@@ -57,43 +57,22 @@ export default function Dashboard() {
 
   return (
     <main className="dash">
-      <header className="dash-head">
-        <div>
-          <h1 className="dash-title">쉼표정류장 행정 대시보드</h1>
-          <p className="dash-sub">
-            시민 제보를 정류장 ID로 묶어 공식자료와 대조하고, 담당자 검토 후 현장 과업과
-            시민 정보 반영까지 관리합니다. 시설 설치 후보는 <strong>사람이 확정한 자료</strong>만 사용합니다.
-          </p>
+      <aside className="dash-sidebar">
+        <div><span className="dash-kicker">춘천시 교통행정</span><h1 className="dash-title">쉼표정류장</h1></div>
+        <nav className="dash-tabs" role="tablist" aria-label="관리 업무">
+          {TABS.map((t) => <button key={t.key} type="button" role="tab" id={`tab-${t.key}`} aria-selected={tab === t.key} aria-controls={`tabpanel-${t.key}`} className="dash-tab" onClick={() => setTab(t.key)}>{t.label}</button>)}
+        </nav>
+        <p className="dash-source">시민 제보와 공공데이터를 구분해 관리합니다.</p>
+      </aside>
+      <section className="dash-workspace">
+        <header className="dash-head"><div><span className="dash-kicker">현재 업무</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div><span className="dash-today">2026 춘천시 데이터 활용</span></header>
+        <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
+          {tab === "reports" && <ReportsTab reports={reports} />}
+          {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}
+          {tab === "install" && <InstallTab stops={stops} loaded={loaded} />}
+          {tab === "filter" && <FilterTab stops={stops} loaded={loaded} />}
         </div>
-      </header>
-
-      <div className="dash-tabs" role="tablist" aria-label="대시보드 탭">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            id={`tab-${t.key}`}
-            aria-selected={tab === t.key}
-            aria-controls={`tabpanel-${t.key}`}
-            className="dash-tab"
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div
-        role="tabpanel"
-        id={`tabpanel-${tab}`}
-        aria-labelledby={`tab-${tab}`}
-      >
-        {tab === "reports" && <ReportsTab reports={reports} />}
-        {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}
-        {tab === "install" && <InstallTab stops={stops} loaded={loaded} />}
-        {tab === "filter" && <FilterTab stops={stops} loaded={loaded} />}
-      </div>
+      </section>
     </main>
   );
 }

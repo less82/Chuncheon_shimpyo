@@ -62,11 +62,24 @@
 .qrmain__form button { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch-lg); padding: 0 var(--sp-4); border: 0; border-radius: var(--radius); background: var(--ink); color: white; font-weight: 900; }
 .qrmain__located { display: inline-flex; align-items: center; gap: 5px; margin-bottom: var(--sp-3); padding: 7px 10px; border-radius: var(--radius-pill); background: var(--yes-bg); color: var(--yes); font-size: 14px; font-weight: 900; }
 .qrmain__located svg { width: 17px; }
+.qrmain__destination-page { display: grid; gap: var(--sp-3); }
+.qrmain__location-proof { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-2); }
+.qrmain__location-proof .qrmain__map { height: 190px; margin: 0; border-radius: 0; }
+.qrmain__location-proof > div { padding: var(--sp-4); }
+.qrmain__location-proof span { display: flex; align-items: center; gap: 5px; color: var(--yes); font-size: 14px; font-weight: 900; }
+.qrmain__location-proof span svg { width: 17px; }
+.qrmain__location-proof strong { display: block; margin: 5px 0; font-size: 22px; }
+.qrmain__location-proof strong small { color: var(--brand); font-size: 15px; }
+.qrmain__location-proof p { color: var(--ink-muted); font-size: 14px; }
 .qrmain__location-error { display: grid; gap: 4px; margin-top: var(--sp-3); padding: var(--sp-4); border-radius: var(--radius); background: var(--warning-bg); color: var(--warning); }
 .qrmain__location-error span { font-size: 15px; font-weight: 700; }
 .qrmain__location-error button { min-height: 48px; margin-top: var(--sp-2); border: 0; border-radius: var(--radius-sm); background: var(--warning); color: white; font-weight: 900; }
 .qrmain__results { display: grid; gap: var(--sp-3); padding: 0; background: transparent; box-shadow: none; }
 .qrmain__results { scroll-margin-top: var(--sp-3); }
+.qrmain__results-page { min-height: calc(100% - 64px); }
+.qrmain__results-title { padding: var(--sp-2) var(--sp-1); }
+.qrmain__results-title button { display: inline-flex; align-items: center; gap: 3px; min-height: 44px; margin-bottom: var(--sp-2); border: 0; background: transparent; color: var(--brand); font-weight: 900; }
+.qrmain__results-title button svg { width: 19px; }
 .qrmain__results > h2 { padding: var(--sp-2) var(--sp-1); }
 .qrmain__result-set { display: grid; gap: var(--sp-3); }
 .qrmain__route { position: relative; overflow: hidden; padding: var(--sp-5); border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }

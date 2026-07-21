@@ -105,6 +105,8 @@ export default function QrMain() {
   const [startId, setStartId] = useState<string | null>(qrStopId);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
+  const [stopDistance, setStopDistance] = useState<number | null>(null);
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
@@ -153,6 +155,8 @@ export default function QrMain() {
       ({ coords }) => {
         const nearest = nearestStops(coords.latitude, coords.longitude)[0];
         setStartId(nearest?.id ?? null);
+        setLocationAccuracy(Math.round(coords.accuracy));
+        setStopDistance(nearest ? Math.round(haversine({ lat: coords.latitude, lng: coords.longitude }, nearest)) : null);
         setLocationError(!nearest);
         setLocating(false);
       },
@@ -183,6 +187,8 @@ export default function QrMain() {
         const candidates = nearestStops(coords.latitude, coords.longitude);
         setNearbyStops(candidates);
         setStartId(candidates[0]?.id ?? null);
+        setLocationAccuracy(Math.round(coords.accuracy));
+        setStopDistance(candidates[0] ? Math.round(haversine({ lat: coords.latitude, lng: coords.longitude }, candidates[0])) : null);
         setLocationError(candidates.length === 0);
         setLocating(false);
       },
@@ -309,8 +315,11 @@ export default function QrMain() {
     <main className="qrmain">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
 
-      <section className="qrmain__ask">
-        {start && <span className="qrmain__located"><MapPin aria-hidden="true" /> 현재 위치 확인됨</span>}
+      {!submitted && <section className="qrmain__ask qrmain__destination-page">
+        {start && <div className="qrmain__location-proof">
+          <iframe className="qrmain__map" title={`${start.name} 주변 지도`} src={mapEmbedUrl(start)} loading="lazy" />
+          <div><span><MapPin aria-hidden="true" /> GPS로 찾은 가장 가까운 정류장</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>현재 위치에서 약 {stopDistance ?? "-"}m · GPS 오차범위 약 {locationAccuracy ?? "-"}m</p></div>
+        </div>}
         <h2>어디로 가세요?</h2>
         <p>마이크를 누르고 목적지를 말씀해 주세요.</p>
         <button type="button" className="qrmain__mic" data-listening={listening} onClick={startVoice}>
@@ -327,11 +336,11 @@ export default function QrMain() {
           <button type="submit"><Search aria-hidden="true" /> 찾기</button>
         </form>
         {locationError && <div className="qrmain__location-error" role="alert"><b>위치를 확인하지 못했어요.</b><span>휴대폰의 위치 사용을 허용한 뒤 다시 눌러주세요.</span><button type="button" onClick={() => requestTrip(query.trim())}>위치 다시 확인하기</button></div>}
-      </section>
+      </section>}
 
       {submitted && start && (
-        <section className="qrmain__results" aria-live="polite" ref={resultsRef}>
-          <h2>갈 수 있는 버스</h2>
+        <section className="qrmain__results qrmain__results-page" aria-live="polite" ref={resultsRef}>
+          <div className="qrmain__results-title"><button type="button" onClick={() => setSubmitted("")}><ChevronLeft aria-hidden="true" /> 목적지 다시 입력</button><h2>{submitted}까지 가는 버스</h2></div>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
           ) : results.length === 0 ? (
