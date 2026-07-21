@@ -21,9 +21,9 @@ const TABS: { key: TabKey; label: string; ariaLabel: string; step: string; descr
 
 const REPORT_STATUS = {
   received: { label: "신규 접수", next: "reviewing" as const, action: "근거 검토 시작" },
-  reviewing: { label: "자료 대조·검토", next: "task_created" as const, action: "현장 과업 생성" },
-  task_created: { label: "현장 점검 대기", next: "resolved" as const, action: "처리 완료" },
-  resolved: { label: "시민 정보 반영", next: null, action: "완료" },
+  reviewing: { label: "자료 대조", next: "task_created" as const, action: "현장 과업 생성" },
+  task_created: { label: "현장 점검", next: "resolved" as const, action: "처리 완료" },
+  resolved: { label: "정보 반영", next: null, action: "완료" },
 };
 
 function ReportsTab({ reports }: { reports: CitizenReport[] }) {
