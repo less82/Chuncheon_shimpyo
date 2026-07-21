@@ -11,12 +11,21 @@ import { loadReports, REPORT_CHANGED_EVENT, REPORT_STORAGE_KEY, updateReportStat
 import "./Dashboard.css";
 
 type TabKey = "reports" | "survey" | "install" | "filter";
+type LayoutKey = "workflow" | "queue" | "split" | "control" | "minimal";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "reports", label: "시민 제보 처리" },
   { key: "survey", label: "시설정보 검증 목록" },
   { key: "install", label: "시설 개선 후보" },
   { key: "filter", label: "데이터 분석" },
+];
+
+const LAYOUTS: { key: LayoutKey; label: string }[] = [
+  { key: "workflow", label: "업무 흐름형" },
+  { key: "queue", label: "목록 중심형" },
+  { key: "split", label: "분할 검토형" },
+  { key: "control", label: "관제형" },
+  { key: "minimal", label: "간결형" },
 ];
 
 const REPORT_STATUS = {
@@ -29,7 +38,7 @@ const REPORT_STATUS = {
 function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   const counts = (Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status) => reports.filter((report) => report.status === status).length);
   return <section className="dash-section report-panel">
-    <div className="report-section-head"><div><span className="dash-kicker">업무 흐름</span><h3>시민 신호에서 정보 반영까지</h3></div><p>AI는 분류와 대조를 돕고, 상태 변경은 담당자가 확정합니다.</p></div>
+    <div className="report-section-head"><div><span className="dash-kicker">업무 흐름</span><h3>시민 신호에서 정보 반영까지</h3></div></div>
     <div className="report-flow" aria-label="제보 처리 흐름">{(Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status, index) => <div key={status}><span>{index + 1}</span><p>{REPORT_STATUS[status].label}</p><strong>{counts[index]}건</strong></div>)}</div>
     <div className="report-list-head"><div><span className="dash-kicker">처리 목록</span><h3>접수된 시민 제보</h3></div><div className="report-total"><strong>{reports.length}</strong><span>전체 건</span></div></div>
     {reports.length === 0 ? <div className="report-empty"><h2>아직 접수된 제보가 없습니다</h2><p>시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다.</p></div> :
@@ -41,6 +50,7 @@ export default function Dashboard() {
   const stops = useStops((s) => s.stops);
   const loaded = useStops((s) => s.loaded);
   const [tab, setTab] = useState<TabKey>("reports");
+  const [layout, setLayout] = useState<LayoutKey>("workflow");
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {
@@ -58,17 +68,22 @@ export default function Dashboard() {
 
   return (
     <main className="dash">
-      <div className="dash-browser">
+      <div className="dash-browser" data-layout={layout}>
       <div className="dash-shell">
       <aside className="dash-sidebar">
         <div><span className="dash-kicker">춘천시 교통행정</span><h1 className="dash-title">쉼표정류장</h1></div>
         <nav className="dash-tabs" role="tablist" aria-label="관리 업무">
           {TABS.map((t) => <button key={t.key} type="button" role="tab" id={`tab-${t.key}`} aria-selected={tab === t.key} aria-controls={`tabpanel-${t.key}`} className="dash-tab" onClick={() => setTab(t.key)}>{t.label}</button>)}
         </nav>
-        <p className="dash-source">시민 제보와 공공데이터를 구분해 관리합니다.</p>
       </aside>
       <section className="dash-workspace">
-        <header className="dash-head"><div><span className="dash-kicker">현재 업무</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div><span className="dash-today">2026 춘천시 데이터 활용</span></header>
+        <div className="layout-switcher">
+          <span>화면 구성</span>
+          <div role="tablist" aria-label="대시보드 화면 구성">
+            {LAYOUTS.map((item) => <button key={item.key} type="button" role="tab" aria-selected={layout === item.key} onClick={() => setLayout(item.key)}>{item.label}</button>)}
+          </div>
+        </div>
+        <header className="dash-head"><div><span className="dash-kicker">현재 업무</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div></header>
         <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
           {tab === "reports" && <ReportsTab reports={reports} />}
           {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}

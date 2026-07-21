@@ -98,6 +98,16 @@ describe("<Dashboard> — 조건 필터 탭(v1 보존)", () => {
 });
 
 describe("<Dashboard> — (a) 탭 구조", () => {
+  it("레이아웃 시안 5개를 탭으로 전환한다", () => {
+    const { getByRole, getAllByRole, container } = render(<Dashboard />);
+    const layoutTabs = getAllByRole("tab").filter((tab) =>
+      ["업무 흐름형", "목록 중심형", "분할 검토형", "관제형", "간결형"].includes(tab.textContent ?? ""),
+    );
+    expect(layoutTabs).toHaveLength(5);
+    fireEvent.click(getByRole("tab", { name: "분할 검토형" }));
+    expect(container.querySelector(".dash-browser")).toHaveAttribute("data-layout", "split");
+  });
+
   it("시민 앱에서 저장한 불편 제보를 기본 화면에 표시한다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify([{ id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" }]));
     const { getByText } = render(<Dashboard />);
