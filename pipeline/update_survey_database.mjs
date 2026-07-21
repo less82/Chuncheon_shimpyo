@@ -128,7 +128,13 @@ for (const row of survey) {
       options.length === 1 ? 'unresolved_boarding_id_not_unique' : candidates.length ? 'unresolved_route_set_not_equal' : 'unresolved_no_name_candidate', lookup_date: '2026-07-21' });
 }
 
-const fields = Object.keys(survey[0]);
+const surveyExcludedFields = new Set([
+  '승차자료 정류장 ID',
+  '표본기간 한낮(11~16시) 개별 승차건수',
+  '승차자료 매칭방법',
+  '승차자료 매칭신뢰등급',
+]);
+const fields = Object.keys(survey[0]).filter((field) => !surveyExcludedFields.has(field));
 write(output, survey, fields);
 write(path.join(dataDir, 'stop_id_route_mapping_overrides.csv'), survey
   .filter((r) => r['승차자료 매칭방법'] === '전체 경유노선 집합 완전일치·1:1 교차매칭')
