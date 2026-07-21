@@ -138,3 +138,75 @@
   .qrmain__route-head { grid-template-columns: 1fr; align-items: start; }
   .qrmain__route-head > p { text-align: left; }
 }
+
+/* 갤럭시 폴더2급 웹 뷰포트: 320 × 533 CSS px */
+@media (max-width: 340px) and (max-height: 600px) {
+  .qrmain {
+    --qr-header: 44px;
+    --qr-control: 48px;
+    --qr-gap: 10px;
+    height: 100svh;
+    padding: 0 12px 12px;
+    overflow-y: hidden;
+  }
+  .qrmain__back { width: 44px; height: 44px; margin: 0 0 8px -8px; }
+  .qrmain h1,
+  .qrmain h2,
+  .qrmain__destination-page > h2,
+  .qrmain__manual-stop label { font-size: 24px; line-height: 1.25; }
+  .qrmain p { font-size: 15px; line-height: 1.45; }
+
+  .qrmain__welcome { justify-content: center; }
+  .qrmain__hello h1 { font-size: 28px; }
+  .qrmain__choices { gap: 10px; margin-top: 24px; }
+  .qrmain__choices button { min-height: 72px; padding: 10px; border-radius: 12px; }
+  .qrmain__choices strong { font-size: 19px; }
+
+  .qrmain__error { padding-top: 48px; }
+  .qrmain__error .qrmain__locate-icon { width: 32px; height: 32px; margin-bottom: 16px; }
+  .qrmain__location-recovery { min-height: 40px; padding: 4px; font-size: 14px; }
+  .qrmain__retry { min-height: 44px; margin-top: 12px; }
+
+  .qrmain__destination-page > h2,
+  .qrmain__manual-stop label { margin-top: 16px; }
+  .qrmain__mic,
+  .qrmain__manual-input,
+  .qrmain__form input,
+  .qrmain__form button { min-height: 48px; border-radius: 12px; }
+  .qrmain__mic { font-size: 17px; }
+  .qrmain__mic svg { width: 21px; height: 21px; }
+  .qrmain__manual-input, .qrmain__form input { padding-inline: 12px; font-size: 16px; }
+  .qrmain__form button { min-width: 64px; padding-inline: 12px; font-size: 15px; }
+  .qrmain__location-proof { display: none; }
+  .qrmain__manual-stop li button { min-height: 44px; font-size: 14px; }
+  .qrmain__manual-stop li:nth-child(n + 5) { display: none; }
+
+  .qrmain__report-location h1,
+  .qrmain__stop-confirm > h1 { margin-top: 8px; }
+  .qrmain__report-location .qrmain__manual-stop { margin-top: 16px; }
+  .qrmain__stop-confirm > h2 { margin-top: 20px; }
+  .qrmain__confirm-actions { margin-top: 12px; }
+  .qrmain__confirm-actions button { min-height: 48px; font-size: 16px; }
+  .qrmain__nearby { margin-top: 20px; }
+  .qrmain__nearby button { min-height: 42px; font-size: 14px; }
+  .qrmain__nearby button:nth-of-type(n + 4) { display: none; }
+  .qrmain__report-stop { margin-bottom: 10px; font-size: 14px; }
+  .qrmain__report-start > p { margin-top: 4px; }
+  .qrmain__quick-report { gap: 6px; margin-top: 16px; }
+  .qrmain__quick-report button { min-height: 52px; font-size: 14px; }
+  .qrmain__report-submit { min-height: 48px; margin-top: 10px; font-size: 16px; }
+  .qrmain__report-complete { margin-top: 48px; }
+
+  .qrmain__results { gap: 10px; }
+  .qrmain__results-title h2 { font-size: 24px; }
+  .qrmain__route { padding: 14px 0; }
+  .qrmain__recommend { margin-bottom: 8px; font-size: 14px; }
+  .qrmain__route-head { grid-template-columns: 1fr auto; align-items: end; gap: 10px; }
+  .qrmain__route-head strong { font-size: 30px; }
+  .qrmain__route-head > p { text-align: right; }
+  .qrmain__route-head > p b { font-size: 24px; }
+  .qrmain__route-head > p span { max-width: 132px; font-size: 11px; }
+  .qrmain__boarding { margin-top: 14px; padding-top: 12px; }
+  .qrmain__boarding strong { font-size: 18px; }
+  .qrmain__report { min-height: 44px; font-size: 15px; }
+}
