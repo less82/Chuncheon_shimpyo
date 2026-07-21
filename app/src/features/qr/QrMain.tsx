@@ -298,38 +298,20 @@ export default function QrMain() {
 
   if (mode === "home") {
     return (
-      <main className="qrmain qrmain--home">
+      <main className="qrmain">
         <section className="qrmain__welcome">
-          <header className="qrmain__welcome-head">
-            <span className="qrmain__brand-mark" aria-hidden="true"><BusFront /></span>
-            <span className="qrmain__brand"><strong>쉼표 정류장</strong><small>춘천 시민 이동 서비스</small></span>
-          </header>
+          <span className="qrmain__brand">쉼표 정류장</span>
           <div className="qrmain__hello">
-            <span>안녕하세요</span>
-            <h1>오늘은 무엇을<br />도와드릴까요?</h1>
-            <p>원하는 도움을 하나 골라주세요.</p>
+            <h1>무엇을 하시겠어요?</h1>
           </div>
           <div className="qrmain__choices">
-            <button className="qrmain__choice qrmain__choice--primary" type="button" onClick={openDestination}>
-              <span className="qrmain__choice-icon"><Navigation aria-hidden="true" /></span>
-              <span className="qrmain__choice-copy">
-                <small>버스를 타고 이동하려면</small>
-                <strong>가는 길 찾기</strong>
-                <span>목적지를 말하면 탈 버스를 알려드려요</span>
-              </span>
-              <span className="qrmain__choice-arrow" aria-hidden="true"><ChevronRight /></span>
+            <button type="button" onClick={openDestination}>
+              <strong>목적지로 가는 길 찾기</strong>
             </button>
-            <button className="qrmain__choice qrmain__choice--report" type="button" onClick={locateForReport}>
-              <span className="qrmain__choice-icon"><MessageCircle aria-hidden="true" /></span>
-              <span className="qrmain__choice-copy">
-                <small>시설이 불편하거나 고장 났다면</small>
-                <strong>정류장 불편 알리기</strong>
-                <span>말하거나 눌러서 간단히 알려주세요</span>
-              </span>
-              <span className="qrmain__choice-arrow" aria-hidden="true"><ChevronRight /></span>
+            <button type="button" onClick={locateForReport}>
+              <strong>정류장 불편 알리기</strong>
             </button>
           </div>
-          <footer className="qrmain__privacy"><span aria-hidden="true">✓</span> 로그인 없이 바로 이용할 수 있어요</footer>
         </section>
       </main>
     );
