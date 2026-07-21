@@ -260,3 +260,23 @@
 .home__selected > a { min-height: 38px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 10px; background: var(--brand); color: white; font-size: 13px; font-weight: 900; text-decoration: none; }
 .home__selected > button { display: grid; width: 36px; height: 36px; padding: 0; place-items: center; border: 0; border-radius: 10px; background: var(--surface-2); color: var(--ink-muted); }
 .home__selected > button svg { width: 18px; }
+
+/* 재방문 사용자는 저장한 정류장의 도착정보를 메인에서 바로 확인한다. */
+.home__favorite-list { align-items: stretch; }
+.homefav { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 15px; background: white; box-shadow: 0 3px 10px rgba(24, 35, 52, .06); }
+.home__favorite-list .homefav__stop { display: flex; width: 100%; min-height: 72px; padding: 10px 10px 7px; flex-direction: column; align-items: stretch; gap: 6px; border: 0; border-radius: 0; background: white; color: var(--ink); text-align: left; box-shadow: none; }
+.homefav__name { display: flex; min-width: 0; align-items: center; gap: 4px; overflow: hidden; font-size: 15px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.homefav__name svg { width: 16px; height: 16px; flex: 0 0 16px; color: var(--brand); }
+.homefav__arrival { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; gap: 4px; color: var(--brand); }
+.homefav__arrival[data-live="true"] { color: var(--yes); }
+.homefav__arrival svg { width: 15px; height: 15px; }
+.homefav__arrival strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.homefav__arrival small { padding: 2px 5px; border-radius: 999px; background: var(--brand-soft); color: var(--ink-muted); font-size: 9px; font-weight: 900; white-space: nowrap; }
+.homefav__arrival[data-live="true"] small { background: var(--yes-bg); color: var(--yes); }
+.homefav > a { display: flex; min-height: 34px; padding: 0 9px; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); color: var(--brand); font-size: 12px; font-weight: 900; text-decoration: none; }
+.homefav > a svg { width: 15px; }
+
+@media (max-height: 700px) {
+  .home__favorite-list .homefav__stop { min-height: 61px; padding-block: 7px 5px; }
+  .homefav > a { min-height: 30px; }
+}

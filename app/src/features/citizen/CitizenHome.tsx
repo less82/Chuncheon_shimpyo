@@ -2,24 +2,48 @@
 // 화면당 주행동 1개: "가까운 정류장 정보 보기". 검색·메뉴·온보딩 없음.
 
 import { useEffect, useState } from "react";
-import { BusFront, ChevronRight, MapPin, MessageCircle, QrCode, Share2, Star, X } from "lucide-react";
+import { BusFront, ChevronRight, Clock3, MapPin, MessageCircle, QrCode, Star, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import MapView from "../map/MapView";
-import StopCard from "./StopCard";
 import ImportOnLoad from "../share/ImportOnLoad";
-import ShareSheet from "../share/ShareSheet";
 import QrScanner from "../share/QrScanner";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
+import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import type { Stop } from "../../types/stop";
 import "./CitizenHome.css";
+
+export function FavoriteStopCard({ stop, onSelect }: { stop: Stop; onSelect: () => void }) {
+  const [arrival, setArrival] = useState<Arrival>(() => headwayFallback(stop));
+
+  useEffect(() => {
+    let alive = true;
+    setArrival(headwayFallback(stop));
+    getArrival(stop).then((value) => alive && setArrival(value));
+    return () => { alive = false; };
+  }, [stop]);
+
+  const firstRoute = arrival.byRoute?.[0];
+
+  return (
+    <article className="homefav">
+      <button type="button" className="homefav__stop" onClick={onSelect} aria-label={`${stop.name} 지도에서 보기`}>
+        <span className="homefav__name"><MapPin aria-hidden="true" />{stop.name}</span>
+        <span className="homefav__arrival" data-live={arrival.live}>
+          <Clock3 aria-hidden="true" />
+          <strong>{firstRoute?.routeNo ? `${firstRoute.routeNo}번 ` : ""}{arrival.text}</strong>
+          <small>{arrival.live ? "실시간" : "운행 간격"}</small>
+        </span>
+      </button>
+      <Link to={`/go?dest=${encodeURIComponent(stop.id)}`}>이곳으로 가기<ChevronRight aria-hidden="true" /></Link>
+    </article>
+  );
+}
 
 export default function CitizenHome() {
   const [selected, setSelected] = useState<Stop | null>(null);
   const [searchParams] = useSearchParams();
-  const [sharing, setSharing] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const loaded = useStops((s) => s.loaded);
   const stops = useStops((s) => s.stops);
   const favCount = useFavorites((s) => s.ids.length);
   const favIds = useFavorites((s) => s.ids);
@@ -48,32 +72,20 @@ export default function CitizenHome() {
           <button type="button" className="home__scan" onClick={() => setScanning(true)}>
             <QrCode aria-hidden="true" /><span>QR</span>
           </button>
-          <button type="button" className="home__share" onClick={() => setSharing(true)}>
-            <Share2 aria-hidden="true" /><span className="sr-only">즐겨찾기 공유</span>
-          </button>
         </div>
       </header>
 
       <section className="home__favorites" aria-labelledby="favorite-title">
         <div className="home__section-head">
           <div>
-            <span className="home__eyebrow"><Star aria-hidden="true" /> 자주 확인하는 정류장</span>
-            <h1 id="favorite-title">내 즐겨찾기</h1>
+            <span className="home__eyebrow"><Star aria-hidden="true" /> 매일 바로 확인</span>
+            <h1 id="favorite-title">자주 타는 정류장</h1>
           </div>
           <Link to="/favorites">전체 보기{favCount > 0 && ` ${favCount}`}<ChevronRight aria-hidden="true" /></Link>
         </div>
         {favoriteStops.length > 0 ? (
           <div className="home__favorite-list">
-            {favoriteStops.slice(0, 2).map((stop) => (
-              <button type="button" key={stop.id} onClick={() => setSelected(stop)}>
-                <span className="home__favorite-pin"><MapPin aria-hidden="true" /></span>
-                <span className="home__favorite-copy">
-                  <strong>{stop.name}</strong>
-                  <small>{stop.routes.length > 0 ? `${stop.routes.slice(0, 3).join(" · ")}번` : "노선 정보 확인 중"}</small>
-                </span>
-                <ChevronRight aria-hidden="true" />
-              </button>
-            ))}
+            {favoriteStops.slice(0, 2).map((stop) => <FavoriteStopCard key={stop.id} stop={stop} onSelect={() => setSelected(stop)} />)}
           </div>
         ) : (
           <Link className="home__favorite-empty" to="/favorites">
@@ -97,7 +109,7 @@ export default function CitizenHome() {
 
       <div className="home__map">
         <MapView onSelect={setSelected} selectedId={selected?.id} />
-        {selected && !sharing && (
+        {selected && (
           <div className="home__selected" role="status">
             <span className="home__selected-pin"><MapPin aria-hidden="true" /></span>
             <span><strong>{selected.name}</strong><small>{selected.routes.slice(0, 3).join(" · ") || "노선 확인 중"}</small></span>
@@ -107,20 +119,6 @@ export default function CitizenHome() {
         )}
       </div>
 
-      <div className="home__sheet">
-        {sharing ? (
-          <ShareSheet
-            ids={favIds.length ? favIds : selected ? [selected.id] : []}
-            onClose={() => setSharing(false)}
-          />
-        ) : selected ? (
-          <StopCard stop={selected} />
-        ) : (
-          <section className="home__hint">
-            <p>{loaded ? "지도에서 정류장을 눌러 정보를 확인하세요." : "정류장 정보를 불러오는 중…"}</p>
-          </section>
-        )}
-      </div>
     </main>
   );
 }
