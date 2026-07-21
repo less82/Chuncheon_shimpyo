@@ -9,6 +9,7 @@ import { loadRoutes } from "../../lib/loadRoutes";
 import { haversine } from "../../lib/geo";
 import { planTrip } from "../trip/planTrip";
 import { saveReport } from "../report/reportStore";
+import QrStopMap from "./QrStopMap";
 import "./QrMain.css";
 
 interface SpeechResultEvent {
@@ -47,7 +48,7 @@ type LocationSource = "gps" | "manual" | null;
 const MAX_NEARBY_STOP_DISTANCE_M = 1500;
 
 function normalized(value: string): string {
-  return value.replace(/\s+/g, "").toLowerCase();
+  return value.replace(/[“”"'.,]/g, "").replace(/대학교|대학(?=병원)/g, "대").replace(/\s+/g, "").toLowerCase();
 }
 
 function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
@@ -66,12 +67,6 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
 function clockAfter(minutes: number): string {
   return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
     .format(new Date(Date.now() + minutes * 60_000));
-}
-
-function mapEmbedUrl(stop: Stop): string {
-  const delta = 0.004;
-  const bbox = `${stop.lng - delta},${stop.lat - delta},${stop.lng + delta},${stop.lat + delta}`;
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${stop.lat},${stop.lng}`;
 }
 
 function readableDistance(distance: number | null): string {
@@ -110,7 +105,6 @@ export default function QrMain() {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [outsideServiceArea, setOutsideServiceArea] = useState(false);
-  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [stopDistance, setStopDistance] = useState<number | null>(null);
   const [locationSource, setLocationSource] = useState<LocationSource>(null);
   const [manualStopQuery, setManualStopQuery] = useState("");
@@ -125,6 +119,7 @@ export default function QrMain() {
   const [arrival, setArrival] = useState<Arrival | null>(null);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const voiceStopRequestedRef = useRef(false);
   const resultsRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -157,7 +152,6 @@ export default function QrMain() {
     setLocationError(false);
     setOutsideServiceArea(false);
     setStartId(null);
-    setLocationAccuracy(null);
     setStopDistance(null);
     setLocationSource(null);
     if (!navigator.geolocation) { setLocationError(true); return; }
@@ -168,7 +162,6 @@ export default function QrMain() {
         const distance = nearest ? Math.round(haversine({ lat: coords.latitude, lng: coords.longitude }, nearest)) : null;
         const usable = nearest && distance !== null && distance <= MAX_NEARBY_STOP_DISTANCE_M;
         setStartId(usable ? nearest.id : null);
-        setLocationAccuracy(Math.round(coords.accuracy));
         setStopDistance(distance);
         setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(Boolean(nearest && !usable));
@@ -194,7 +187,6 @@ export default function QrMain() {
     setReportIssue("");
     setOutsideServiceArea(false);
     setStartId(null);
-    setLocationAccuracy(null);
     setStopDistance(null);
     setLocationSource(null);
     if (!navigator.geolocation) {
@@ -209,7 +201,6 @@ export default function QrMain() {
         const usable = distance !== null && distance <= MAX_NEARBY_STOP_DISTANCE_M;
         setNearbyStops(candidates);
         setStartId(usable ? candidates[0]?.id ?? null : null);
-        setLocationAccuracy(Math.round(coords.accuracy));
         setStopDistance(distance);
         setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(candidates.length > 0 && !usable);
@@ -239,7 +230,6 @@ export default function QrMain() {
   const chooseManualStop = (stop: Stop) => {
     setStartId(stop.id);
     setLocationSource("manual");
-    setLocationAccuracy(null);
     setStopDistance(null);
     setLocationError(false);
     setOutsideServiceArea(false);
@@ -248,7 +238,10 @@ export default function QrMain() {
 
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
-    <input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
+    <div className="qrmain__voice-input">
+      <input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
+      <button type="button" aria-label="출발 정류장 말하기" onClick={() => startVoice("start")}><Mic aria-hidden="true" /></button>
+    </div>
     {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
   </div>;
 
@@ -265,8 +258,9 @@ export default function QrMain() {
     return () => window.cancelAnimationFrame(frame);
   }, [submitted, start, routes]);
 
-  const startVoice = () => {
+  const startVoice = (target: "start" | "destination" = "destination") => {
     if (listening) {
+      voiceStopRequestedRef.current = true;
       recognitionRef.current?.stop();
       return;
     }
@@ -282,21 +276,28 @@ export default function QrMain() {
     recognitionRef.current?.stop();
     const recognition = new Recognition();
     recognition.lang = "ko-KR";
+    voiceStopRequestedRef.current = false;
     recognition.interimResults = false;
     recognition.continuous = true;
-    let heardText = query.trim();
+    let heardText = target === "start" ? manualStopQuery.trim() : query.trim();
     let failed = false;
+    const startedAt = Date.now();
     recognition.onresult = (event) => {
       heardText = Array.from(event.results)
         .map((result) => result[0]?.transcript?.trim() ?? "")
         .filter(Boolean)
         .join(" ");
-      setQuery(heardText);
+      if (target === "start") setManualStopQuery(heardText);
+      else setQuery(heardText);
     };
     recognition.onerror = () => { failed = true; setListening(false); };
     recognition.onend = () => {
+      if (!failed && !voiceStopRequestedRef.current && Date.now() - startedAt < 5000) {
+        window.setTimeout(() => recognition.start(), 100);
+        return;
+      }
       setListening(false);
-      if (!failed && mode === "destination" && heardText) requestTrip(heardText);
+      if (!failed && target === "destination" && mode === "destination" && heardText) requestTrip(heardText);
     };
     recognitionRef.current = recognition;
     setListening(true);
@@ -367,14 +368,13 @@ export default function QrMain() {
       <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => submitted ? setSubmitted("") : setMode("home")}><ChevronLeft aria-hidden="true" /></button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {(outsideServiceArea || locationError) && <div className="qrmain__location-recovery" role="alert"><span>위치 정보를 찾을 수 없습니다. 다시 찾아볼까요?</span><button type="button" onClick={openDestination}>위치 다시 찾기</button></div>}
+        {(outsideServiceArea || locationError) && <div className="qrmain__location-recovery" role="alert"><span>위치 정보를 찾을 수 없습니다</span><button type="button" onClick={openDestination}>위치 찾기</button></div>}
         {manualStopSearch}
         {start && locationSource && <div className="qrmain__location-proof">
-          <iframe className="qrmain__map" title={`${start.name} 정류장 지도`} src={mapEmbedUrl(start)} loading="lazy" />
-          <div><span><MapPin aria-hidden="true" /> {locationSource === "gps" ? "GPS로 찾은 가장 가까운 정류장" : "직접 선택한 정류장"}</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>{locationSource === "gps" ? `현재 위치에서 약 ${stopDistance}m · GPS 오차범위 약 ${locationAccuracy}m` : "정류장 번호를 확인한 뒤 목적지를 입력하세요."}</p></div>
+          <QrStopMap stop={start} />
         </div>}
         <h2>목적지를 입력하세요</h2>
-        <button type="button" className="qrmain__mic" data-listening={listening} onClick={startVoice}>
+        <button type="button" className="qrmain__mic" data-listening={listening} onClick={() => startVoice("destination")}>
           <Mic aria-hidden="true" />
           {listening ? "듣고 있어요…" : "목적지 말하기"}
         </button>
