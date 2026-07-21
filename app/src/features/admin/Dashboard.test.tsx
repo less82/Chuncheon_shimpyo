@@ -98,6 +98,12 @@ describe("<Dashboard> — 조건 필터 탭(v1 보존)", () => {
 });
 
 describe("<Dashboard> — (a) 탭 구조", () => {
+  it("현재 대시보드에서 시안 5종으로 바로 이동할 수 있다", () => {
+    const { getByRole } = render(<Dashboard />);
+    const concepts = getByRole("navigation", { name: "대시보드 시안 비교" });
+    expect(within(concepts).getAllByRole("link")).toHaveLength(5);
+  });
+
   it("시민 앱에서 저장한 불편 제보를 기본 화면에 표시한다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify([{ id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" }]));
     const { getByText } = render(<Dashboard />);
@@ -122,6 +128,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     ]));
     const utils = render(<Dashboard />);
     fireEvent.click(utils.getByRole("button", { name: "검토 열기" }));
+    expect(utils.getByRole("dialog", { name: "제보 검토" })).toBeInTheDocument();
     const confirm = utils.getByRole("button", { name: "확인 완료 · 자료 대조로 이동" });
     expect(confirm).toBeDisabled();
     expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("received");

@@ -22,9 +22,11 @@ function QueueTable() {
 }
 
 export default function AdminConcepts() {
-  const [concept, setConcept] = useState<ConceptKey>("queue");
+  const requested = new URLSearchParams(window.location.search).get("concept") as ConceptKey | null;
+  const initialConcept = CONCEPTS.some((item) => item.key === requested) ? requested! : "queue";
+  const [concept, setConcept] = useState<ConceptKey>(initialConcept);
   return <main className="concept-page">
-    <header className="concept-head"><div><span>쉼표정류장 관리자 웹</span><h1>대시보드 구조 시안</h1></div><nav role="tablist" aria-label="대시보드 구조 시안">{CONCEPTS.map((item) => <button type="button" role="tab" aria-selected={concept === item.key} key={item.key} onClick={() => setConcept(item.key)}>{item.label}</button>)}</nav></header>
+    <header className="concept-head"><div><a href="/admin">← 운영 화면</a><span>쉼표정류장 관리자 웹</span><h1>대시보드 구조 시안 5종</h1></div><nav role="tablist" aria-label="대시보드 구조 시안">{CONCEPTS.map((item) => <button type="button" role="tab" aria-selected={concept === item.key} key={item.key} onClick={() => setConcept(item.key)}>{item.label}</button>)}</nav></header>
     <section className="concept-canvas" data-concept={concept}>
       {concept === "queue" && <><aside className="concept-nav">시민 제보<br/>시설 검증<br/>개선 검토<br/>데이터 조회</aside><div className="concept-main"><h2>처리할 업무</h2><div className="concept-steps"><b>접수 1</b><b>자료 대조 1</b><b>현장 점검 1</b><b>정보 반영 0</b></div><QueueTable /></div></>}
       {concept === "desk" && <><aside className="concept-filter"><h2>업무 조건</h2><button>신규 접수 1</button><button>자료 대조 1</button><button>현장 점검 1</button></aside><div className="concept-list"><h2>제보 목록</h2>{sampleRows.map((row) => <button key={row[0]}><b>{row[0]}</b><span>{row[1]}</span></button>)}</div><div className="concept-detail"><h2>검토 상세</h2><dl><dt>시민 원문</dt><dd>의자가 없어요</dd><dt>공식자료</dt><dd>대조 전</dd><dt>필수 확인</dt><dd>정류장 ID · 시설 분류</dd></dl></div></>}
