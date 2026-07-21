@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import CitizenHome from "./features/citizen/CitizenHome";
 import Favorites from "./features/citizen/Favorites";
 import AppReport from "./features/citizen/AppReport";
@@ -28,12 +28,14 @@ export default function App() {
         <Route path="/app" element={<CitizenHome />} />
         <Route path="/qr_main" element={<QrMain />} />
         <Route path="/app/report" element={<AppReport />} />
+        <Route path="/report" element={<Navigate to="/app/report" replace />} />
         <Route path="/design-preview" element={<DesignPreview />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/go" element={<TripView />} />
         <Route path="/print/:id" element={<PrintPoster />} />
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/admin-concepts" element={<AdminConcepts />} />
+        <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
     </BrowserRouter>
   );
