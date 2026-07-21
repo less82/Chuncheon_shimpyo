@@ -77,7 +77,7 @@ function Get-MajorDirection([string]$stopId) {
   return ($major -join ' / ') + ' 방면'
 }
 
-$fullRows = foreach ($survey in $surveyRows) {
+$candidateRows = foreach ($survey in $surveyRows) {
   $id = [string]$survey.관리번호
   $location = $locationById[$id]
   $stop = $stopById[$id]
@@ -119,12 +119,17 @@ $fullRows = foreach ($survey in $surveyRows) {
   }
 }
 
-$fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding UTF8
+$fullRows = @($candidateRows | Where-Object { $routeEntriesByStop.ContainsKey([string]$_.관리번호) })
+for ($i = 0; $i -lt $fullRows.Count; $i++) {
+  $fullRows[$i].'조사 순번(내부 작업순서)' = [string]($i + 1)
+}
+
+$fullRows | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'주요 진행방면(공식 노선순서 기반)','승차자료 정류장 ID','표본기간 한낮(11~16시) 개별 승차건수','승차자료 매칭방법','승차자료 매칭신뢰등급','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고 | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding UTF8
 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
   [int]::TryParse([string]$_.'조사 순번(내부 작업순서)', [ref]$rank) -and $rank -ge 66 -and $rank -le 110
-} | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'운행정보 연결상태','운행정보 확인조치','주요 진행방면(공식 노선순서 기반)','승차자료 정류장 ID','표본기간 한낮(11~16시) 개별 승차건수','승차자료 매칭방법','승차자료 매칭신뢰등급','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
+} | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'주요 진행방면(공식 노선순서 기반)','승차자료 정류장 ID','표본기간 한낮(11~16시) 개별 승차건수','승차자료 매칭방법','승차자료 매칭신뢰등급','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
 )
 $maengRows | Export-Csv -LiteralPath $MaengOutputCsv -NoTypeInformation -Encoding UTF8
 
@@ -156,7 +161,9 @@ if (-not $PriorityEvidenceOutputCsv) {
   $PriorityEvidenceOutputCsv = Join-Path (Split-Path -Parent $FullOutputCsv) 'roadview_survey_priority_evidence.csv'
 }
 
-$priorityEvidence = foreach ($survey in $surveyRows) {
+$activeRankById = @{}
+foreach ($row in $fullRows) { $activeRankById[[string]$row.관리번호] = [string]$row.'조사 순번(내부 작업순서)' }
+$priorityEvidence = foreach ($survey in ($surveyRows | Where-Object { $activeRankById.ContainsKey([string]$_.관리번호) })) {
   $id = [string]$survey.관리번호
   $location = $locationById[$id]
   $stop = $stopById[$id]
@@ -166,7 +173,7 @@ $priorityEvidence = foreach ($survey in $surveyRows) {
   $numericRank = 0
   $hasRank = [int]::TryParse([string]$survey.우선순위, [ref]$numericRank)
   [pscustomobject][ordered]@{
-    우선순위 = [string]$survey.우선순위
+    우선순위 = [string]$activeRankById[$id]
     '조사대상 구분' = if ($hasRank) { '승차자료 있음(순위 산정)' } else { '승차자료 없음(별도 조사)' }
     '정류장 번호' = if ($location) { [string]$location.'정류장 번호' } else { '' }
     관리번호 = $id
