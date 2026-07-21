@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { BusFront, Mic, Search } from "lucide-react";
+import { Armchair, BusFront, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Search, Umbrella } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
@@ -32,8 +32,34 @@ interface TripResult {
   option: TripOption;
 }
 
+interface RouteSummary {
+  routeNo: string;
+  waitMin: number;
+  rideMin: number;
+  totalMin: number;
+  live: boolean;
+}
+
 function normalized(value: string): string {
   return value.replace(/\s+/g, "").toLowerCase();
+}
+
+function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
+  return option.legs.reduce((sum, leg) => {
+    const route = routes.routes.find((item) =>
+      leg.routeNos.includes(item.routeNo) &&
+      item.stops.indexOf(leg.boardStopId) >= 0 &&
+      item.stops.indexOf(leg.alightStopId) > item.stops.indexOf(leg.boardStopId),
+    );
+    if (!route) return sum;
+    const count = route.stops.indexOf(leg.alightStopId) - route.stops.indexOf(leg.boardStopId);
+    return sum + Math.max(2, count * 2);
+  }, 0);
+}
+
+function clockAfter(minutes: number): string {
+  return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
+    .format(new Date(Date.now() + minutes * 60_000));
 }
 
 export function findTrips(
@@ -180,28 +206,52 @@ export default function QrMain() {
           ) : (
             results.map(({ destination, option }, index) => {
               const firstLeg = option.legs[0];
-              const routeArrivals = firstLeg.routeNos.map((routeNo) => ({
-                routeNo,
-                text: arrival?.byRoute?.find((item) => item.routeNo === routeNo)
-                  ? `${arrival.byRoute.find((item) => item.routeNo === routeNo)!.min}분 후`
-                  : arrival?.text ?? "도착정보 확인 중",
-              }));
+              const rideMin = routeRideMinutes(option, routes);
+              const routeArrivals: RouteSummary[] = firstLeg.routeNos.map((routeNo) => {
+                const liveArrival = arrival?.byRoute?.find((item) => item.routeNo === routeNo);
+                const waitMin = liveArrival?.min ?? start.headwayMin ?? 15;
+                return {
+                  routeNo,
+                  waitMin,
+                  rideMin,
+                  totalMin: option.walkMin + waitMin + rideMin,
+                  live: Boolean(liveArrival),
+                };
+              }).filter((item) => item.waitMin >= option.walkMin + 1)
+                .sort((a, b) => a.totalMin - b.totalMin)
+                .slice(0, 3);
               return (
-                <article className="qrmain__route" key={`${destination.id}-${index}`}>
-                  <div>
-                    <strong>{destination.name} 방면</strong>
-                    <span>{option.directBus ? "직행" : `${option.transferStopId ? "1회 환승" : "환승"}`}</span>
-                  </div>
-                  {routeArrivals.map((item) => (
-                    <p key={item.routeNo}>
-                      <BusFront aria-hidden="true" />
-                      <b>{item.routeNo}번</b>
-                      <em>{item.text}</em>
-                    </p>
+                <div className="qrmain__result-set" key={`${destination.id}-${index}`}>
+                  {routeArrivals.map((item, routeIndex) => (
+                    <article className="qrmain__route" data-best={index === 0 && routeIndex === 0} key={item.routeNo}>
+                      {index === 0 && routeIndex === 0 && <span className="qrmain__recommend">가장 빨리 도착해요</span>}
+                      <div className="qrmain__route-head">
+                        <span className="qrmain__bus-icon"><BusFront aria-hidden="true" /></span>
+                        <div><strong>{item.routeNo}번</strong><small>{option.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
+                        <p><b>총 약 {item.totalMin}분</b><span>{clockAfter(item.totalMin)} 도착 예상</span></p>
+                      </div>
+                      <div className="qrmain__timing">
+                        <p><Clock3 aria-hidden="true" /><span>버스</span><b>{item.waitMin}분 후</b></p>
+                        <p><MapPin aria-hidden="true" /><span>타는 곳까지</span><b>도보 {option.walkMin}분</b></p>
+                      </div>
+                      <div className="qrmain__boarding">
+                        <span>버스를 탈 곳</span>
+                        <strong>{start.name} <small>{start.stopNo ? `#${start.stopNo}` : ""}</small></strong>
+                        <p>{destination.name} 방면 · {item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</p>
+                      </div>
+                      <div className="qrmain__facilities" aria-label="정류장 편의시설">
+                        <span data-state={start.facilities.seat.status}><Armchair aria-hidden="true" /> 의자 {start.facilities.seat.status === "yes" ? "있음" : "미확인"}</span>
+                        <span data-state={start.facilities.shade.status}><Umbrella aria-hidden="true" /> 그늘 {start.facilities.shade.status === "yes" ? "있음" : "미확인"}</span>
+                      </div>
+                      <button type="button" className="qrmain__place">버스를 탈 곳 보기 <ChevronRight aria-hidden="true" /></button>
+                    </article>
                   ))}
-                </article>
+                </div>
               );
             })
+          )}
+          {results.length > 0 && (
+            <button type="button" className="qrmain__report"><MessageCircle aria-hidden="true" /> 이 정류장에서 불편한 점 알리기</button>
           )}
         </section>
       )}

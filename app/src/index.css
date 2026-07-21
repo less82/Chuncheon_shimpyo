@@ -28,6 +28,7 @@ body {
 
 /* 모든 제품 화면은 같은 모바일 기기 영역을 사용한다. */
 body .home,
+body .qrmain,
 body .tripview,
 body .favpage,
 body .poster,
@@ -50,6 +51,7 @@ body .dash {
 
 @media (min-width: 601px) {
   body .home,
+  body .qrmain,
   body .tripview,
   body .favpage,
   body .poster,
