@@ -28,7 +28,7 @@
 .dash-sidebar .dash-title { color: white; font-size: 26px; }
 .dash-kicker { display: block; margin-bottom: 5px; color: #96a6bb; font-size: 13px; font-weight: 900; letter-spacing: .08em; }
 .dash-source { margin-top: auto; color: #aeb9c8; font-size: 14px; line-height: 1.5; }
-.dash-workspace { min-width: 0; height: 100%; padding: 30px clamp(26px, 3.5vw, 54px) 60px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: #f4f6f8; }
+.dash-workspace { min-width: 0; height: 100%; padding: 30px clamp(20px, 3.5vw, 54px) 60px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: #f4f6f8; container-type: inline-size; container-name: dashboard-workspace; }
 .dash-workspace::-webkit-scrollbar, .dash-tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .dash-presets { grid-template-columns: 1fr; }
 
@@ -69,6 +69,26 @@
   color: var(--brand-strong);
 }
 @media (max-width: 900px) { .report-summary { grid-template-columns: 1fr; } .report-flow { grid-template-columns: 1fr 1fr; } }
+
+/* The workspace can become narrow while the browser itself is still wide
+   because the navigation occupies part of the available width. */
+@container dashboard-workspace (max-width: 760px) {
+  .report-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-summary { grid-template-columns: 110px minmax(0, 1fr); }
+  .dash-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-head { align-items: flex-start; gap: 12px; }
+  .dash-today { text-align: right; }
+}
+
+@container dashboard-workspace (max-width: 520px) {
+  .report-flow,
+  .dash-presets,
+  .report-summary { grid-template-columns: 1fr; }
+  .dash-head { display: grid; }
+  .dash-today { text-align: left; }
+  .dash-resultbar { align-items: stretch; }
+  .dash-csv { width: 100%; }
+}
 
 .dash-section {
   margin-bottom: var(--sp-6);
@@ -368,7 +388,41 @@
   color: var(--brand-strong);
   background: white;
 }
-@media (max-width: 900px) { .dash { padding: 10px; } .dash-browser { width: min(calc(100vw - 20px), calc((100dvh - 20px) * 16 / 9)); border-width: 5px; border-radius: 14px; } .dash-shell { grid-template-columns: 210px minmax(0, 1fr); } .dash-sidebar { padding: 22px 14px; } .dash-tab { padding-inline: 10px; } .dash-source { display: none; } }
+@media (max-width: 1100px) {
+  .dash { padding: 10px; }
+  .dash-browser { width: min(calc(100vw - 20px), calc((100dvh - 20px) * 16 / 9)); border-width: 5px; border-radius: 14px; }
+  .dash-shell { grid-template-columns: clamp(172px, 22vw, 210px) minmax(0, 1fr); }
+  .dash-sidebar { padding: 22px 14px; }
+  .dash-sidebar .dash-title { font-size: 22px; }
+  .dash-tab { padding-inline: 10px; font-size: 14px; }
+  .dash-source { display: none; }
+}
+
+@media (max-width: 720px) {
+  .dash { min-height: 100dvh; height: auto; padding: 0; place-items: stretch; overflow: auto; }
+  .dash-browser { width: 100%; min-height: 100dvh; height: auto; aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+  .dash-shell { display: flex; width: 100%; min-width: 0; min-height: 100dvh; height: auto; flex-direction: column; overflow-x: hidden; overflow-y: visible; }
+  .dash-sidebar { width: 100%; min-width: 0; min-height: auto; padding: 16px; }
+  .dash-sidebar > div:first-child { display: flex; align-items: baseline; gap: 10px; }
+  .dash-sidebar .dash-kicker { margin: 0; font-size: 11px; }
+  .dash-sidebar .dash-title { margin: 0; font-size: 20px; }
+  .dash-tabs { display: flex; width: 100%; max-width: 100%; min-width: 0; gap: 6px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; }
+  .dash-tabs::-webkit-scrollbar { display: none; }
+  .dash-tab { flex: 0 0 auto; min-height: 42px; padding: 0 14px; white-space: nowrap; }
+  .dash-workspace { width: 100%; min-width: 0; height: auto; min-height: 0; padding: 20px 16px 40px; overflow-x: hidden; overflow-y: visible; }
+  .dash-head { margin-bottom: 18px; padding-bottom: 14px; }
+  .dash-head h2 { font-size: 21px; }
+}
+
+@media (max-width: 430px) {
+  .dash-workspace { padding-inline: 12px; }
+  .report-flow { grid-template-columns: 1fr; }
+  .report-flow > div { min-width: 0; }
+  .report-summary, .report-summary > *, .report-empty { min-width: 0; }
+  .report-summary p, .report-empty h2, .report-empty p { overflow-wrap: anywhere; }
+  .dash-toggles, .dash-percent { gap: 8px; }
+  .dash-pill { padding-inline: 12px; font-size: 13px; }
+}
 
 /* ---- 배지 ---- */
 .dash-badge {
