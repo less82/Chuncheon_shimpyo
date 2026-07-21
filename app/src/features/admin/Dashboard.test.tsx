@@ -126,6 +126,27 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     expect(queryByText("처리 상태")).toBeNull();
   });
 
+  it("제보가 5건을 넘으면 스크롤 대신 페이지를 나눠 표시한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify(Array.from({ length: 7 }, (_, index) => ({
+      id: `r${index + 1}`,
+      stopId: `25000000${index + 1}`,
+      stopNo: `${1001 + index}`,
+      stopName: `정류장 ${index + 1}`,
+      issue: `제보 ${index + 1}`,
+      createdAt: `2026-07-21T08:0${index}:00.000Z`,
+      status: "received",
+    }))));
+    const utils = render(<Dashboard />);
+
+    expect(utils.getByRole("navigation", { name: "제보 목록 페이지" })).toBeInTheDocument();
+    expect(utils.getByText("제보 7")).toBeInTheDocument();
+    expect(utils.queryByText("제보 1")).toBeNull();
+
+    fireEvent.click(utils.getByRole("button", { name: "다음" }));
+    expect(utils.getByText("제보 1")).toBeInTheDocument();
+    expect(utils.queryByText("제보 7")).toBeNull();
+  });
+
   it("정보 반영 완료 건은 검토가 아니라 처리 기록을 연다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify([
       { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "resolved" },
@@ -133,7 +154,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
     expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
     fireEvent.click(utils.getByRole("button", { name: "처리 기록 보기" }));
-    expect(utils.getByText("사람의 확인을 거쳐 시민 정보에 반영된 건입니다.")).toBeInTheDocument();
+    expect(utils.getByText("담당자 확인과 정보 반영이 완료되었습니다.")).toBeInTheDocument();
   });
 
   it("검토 열기만으로 상태가 바뀌지 않고 필수 확인 후에만 다음 단계로 이동한다", () => {

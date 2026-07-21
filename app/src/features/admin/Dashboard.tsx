@@ -36,12 +36,22 @@ const REPORT_STATUS = {
 };
 
 function ReportsTab({ reports }: { reports: CitizenReport[] }) {
+  const PAGE_SIZE = 5;
   const [statusFilter, setStatusFilter] = useState<CitizenReport["status"] | null>(null);
+  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checks, setChecks] = useState<[boolean, boolean]>([false, false]);
   const statuses = Object.keys(REPORT_STATUS) as CitizenReport["status"][];
   const counts = (Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status) => reports.filter((report) => report.status === status).length);
   const visibleReports = statusFilter ? reports.filter((report) => report.status === statusFilter) : reports;
+  const orderedReports = [...visibleReports].reverse();
+  const totalPages = Math.max(1, Math.ceil(orderedReports.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageReports = orderedReports.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageNumbers = Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+    const start = Math.min(Math.max(1, currentPage - 2), Math.max(1, totalPages - 4));
+    return start + index;
+  });
   const currentLabel = statusFilter ? REPORT_STATUS[statusFilter].label : "전체 제보";
   const selected = reports.find((report) => report.id === selectedId) ?? null;
   const reviewItems: Record<CitizenReport["status"], [string, string] | null> = {
@@ -74,24 +84,18 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   }
 
   return <section className="dash-section report-panel">
-    <div className="report-section-head"><div><h3>처리 현황 · 단계별 목록</h3></div></div>
-    <div className="report-flow" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => setStatusFilter((current) => current === status ? null : status)}><span>{index + 1}</span><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
-    <div className="report-list-head"><div><span className="dash-kicker">업무 목록</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleReports.length}</strong><span>건</span></div>{statusFilter && <button type="button" onClick={() => setStatusFilter(null)}>전체 보기</button>}</div></div>
+    <div className="report-section-head"><div><span className="dash-kicker">업무 현황</span><h3>처리 단계별 제보</h3></div></div>
+    <div className="report-flow" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setStatusFilter((current) => current === status ? null : status); setPage(1); }}><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
+    <div className="report-list-head"><div><span className="dash-kicker">업무 목록</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleReports.length}</strong><span>건</span></div>{statusFilter && <button type="button" onClick={() => { setStatusFilter(null); setPage(1); }}>전체 보기</button>}</div></div>
     <div className="report-workbench"><div className="report-queue">
         {visibleReports.length === 0 ? <div className="report-empty"><h2>{statusFilter ? `${currentLabel} 업무가 없습니다` : "아직 접수된 제보가 없습니다"}</h2><p>{statusFilter ? "다른 처리 단계를 선택해 확인하세요." : "시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다."}</p></div> :
-          <div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table" data-filtered={statusFilter ? "true" : "false"}><thead><tr><th>접수시각</th><th>정류장</th><th>제보 내용</th>{!statusFilter && <th>처리 상태</th>}<th>업무</th></tr></thead><tbody>{[...visibleReports].reverse().map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="제보 내용"><strong>{report.issue}</strong><span className="dash-stopid">분류 후보 · 시설 불편</span></td>{!statusFilter && <td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td>}<td data-label="업무"><button className="report-action" type="button" onClick={() => openReview(report.id)}>{report.status === "resolved" ? "처리 기록 보기" : "검토 열기"}</button></td></tr>; })}</tbody></table></div>}
+          <><div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table" data-filtered={statusFilter ? "true" : "false"}><thead><tr><th>접수시각</th><th>정류장</th><th>제보 내용</th>{!statusFilter && <th>처리 상태</th>}<th>업무</th></tr></thead><tbody>{pageReports.map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="제보 내용"><strong>{report.issue}</strong><span className="dash-stopid">분류 후보 · 시설 불편</span></td>{!statusFilter && <td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td>}<td data-label="업무"><button className="report-action" type="button" onClick={() => openReview(report.id)}>{report.status === "resolved" ? "처리 기록 보기" : "검토 열기"}</button></td></tr>; })}</tbody></table></div>
+          {totalPages > 1 && <nav className="report-pagination" aria-label="제보 목록 페이지"><button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>이전</button>{pageNumbers.map((pageNumber) => <button type="button" key={pageNumber} aria-current={pageNumber === currentPage ? "page" : undefined} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}<button type="button" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>다음</button></nav>}</>}
       </div></div>
       {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" role="dialog" aria-modal="true" aria-label="제보 검토">
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div><button type="button" onClick={() => setSelectedId(null)} aria-label="검토 팝업 닫기">×</button></header>
-          <dl className="report-evidence">
-            <div><dt>시민 원문</dt><dd>{selected.issue}</dd></div>
-            {selected.photoDataUrl && <div><dt>첨부 사진</dt><dd><img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} /></dd></div>}
-            <div><dt>정류장 근거</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div>
-            <div><dt>AI 분류</dt><dd>시설 불편 후보 · 담당자 확정 전</dd></div>
-            <div><dt>공식자료 대조</dt><dd>{selected.status === "received" ? "아직 대조하지 않음" : "담당자 확인 단계 통과"}</dd></div>
-          </dl>
-          {requiredChecks ? <fieldset className="report-checks"><legend>필수 확인</legend>{requiredChecks.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={(event) => setChecks((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value) as [boolean, boolean])}/><span>{label}</span></label>)}</fieldset> : <p className="report-complete">사람의 확인을 거쳐 시민 정보에 반영된 건입니다.</p>}
-          {selectedState?.next && <button className="report-confirm" type="button" disabled={!checks.every(Boolean)} onClick={advanceSelected}>{selectedState.action}</button>}
+          <div className="report-review-body"><section className="report-case"><span className="report-label">시민 제보</span><p className="report-quote">“{selected.issue}”</p>{selected.photoDataUrl && <img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} />}</section><section className="report-facts"><h4>판단 근거</h4><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>AI 분류</dt><dd>시설 불편 후보 <small>담당자 확정 전</small></dd></div><div><dt>공식자료</dt><dd>{selected.status === "received" ? "대조 전" : "담당자 확인 통과"}</dd></div></dl></section></div>
+          <footer className="report-review-footer">{requiredChecks ? <fieldset className="report-checks"><legend>다음 단계 전 확인</legend>{requiredChecks.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={(event) => setChecks((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value) as [boolean, boolean])}/><span>{label}</span></label>)}</fieldset> : <p className="report-complete">담당자 확인과 정보 반영이 완료되었습니다.</p>}{selectedState?.next && <button className="report-confirm" type="button" disabled={!checks.every(Boolean)} onClick={advanceSelected}>{selectedState.action}</button>}</footer>
       </aside></div>}
   </section>;
 }
