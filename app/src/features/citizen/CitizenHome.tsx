@@ -64,7 +64,7 @@ export default function CitizenHome() {
         </div>
         {favoriteStops.length > 0 ? (
           <div className="home__favorite-list">
-            {favoriteStops.slice(0, 3).map((stop) => (
+            {favoriteStops.slice(0, 2).map((stop) => (
               <button type="button" key={stop.id} onClick={() => setSelected(stop)}>
                 <span className="home__favorite-pin"><MapPin aria-hidden="true" /></span>
                 <span className="home__favorite-copy">

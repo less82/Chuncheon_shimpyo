@@ -173,8 +173,8 @@
 }
 
 /* 앱 메인: 즐겨찾기를 지도보다 먼저 보여 주는 생활형 대시보드 */
-.home { background: #f5f6f8; overflow-y: auto; }
-.home__bar { flex-wrap: nowrap; gap: 8px; padding: 14px 18px; background: rgba(255, 255, 255, .96); }
+.home { height: 100svh; min-height: 0; background: #f5f6f8; overflow: hidden; }
+.home__bar { position: relative; flex: 0 0 64px; flex-wrap: nowrap; gap: 8px; padding: 8px 16px; background: rgba(255, 255, 255, .96); }
 .home__brand { min-width: 0; min-height: 48px; gap: 10px; padding: 0; color: var(--ink); justify-content: flex-start; }
 .home__brand-icon { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border-radius: 13px; background: var(--brand); color: white; }
 .home__brand > span:last-child { display: flex; min-width: 0; flex-direction: column; line-height: 1.15; }
@@ -186,35 +186,53 @@
 .home__scan { flex-direction: column; border: 0; background: var(--brand-soft); color: var(--brand); }
 .home__share { border: 1px solid var(--border); background: white; }
 
-.home__favorites { padding: 24px 18px 14px; background: var(--surface); }
+.home__favorites { flex: 0 0 auto; padding: 14px 16px 10px; background: var(--surface); }
 .home__section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
 .home__eyebrow { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; color: var(--brand); font-size: 13px; font-weight: 900; }
 .home__eyebrow svg { width: 15px; height: 15px; fill: currentColor; }
-.home__section-head h1 { font-size: 28px; letter-spacing: -.8px; }
+.home__section-head h1 { font-size: 24px; letter-spacing: -.8px; }
 .home__section-head > a { display: flex; min-height: 44px; align-items: center; color: var(--ink-muted); font-size: 14px; font-weight: 800; text-decoration: none; }
 .home__section-head > a svg { width: 18px; }
-.home__favorite-list { display: grid; gap: 9px; margin-top: 16px; }
+.home__favorite-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 .home__favorite-list button,
-.home__favorite-empty { display: grid; grid-template-columns: 42px minmax(0, 1fr) 20px; width: 100%; min-height: 70px; padding: 11px 12px; align-items: center; gap: 11px; border: 1px solid var(--border); border-radius: 16px; background: #f8f9fb; color: var(--ink); text-align: left; text-decoration: none; cursor: pointer; }
-.home__favorite-pin { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; background: var(--brand-soft); color: var(--brand); }
+.home__favorite-empty { display: grid; grid-template-columns: 36px minmax(0, 1fr) 18px; width: 100%; min-height: 58px; padding: 8px 10px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 14px; background: #f8f9fb; color: var(--ink); text-align: left; text-decoration: none; cursor: pointer; }
+.home__favorite-pin { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; background: var(--brand-soft); color: var(--brand); }
 .home__favorite-pin svg { width: 21px; }
 .home__favorite-copy,
 .home__favorite-empty > span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; }
 .home__favorite-copy strong,
-.home__favorite-empty strong { overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+.home__favorite-empty strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
 .home__favorite-copy small,
-.home__favorite-empty small { margin-top: 4px; overflow: hidden; color: var(--ink-muted); font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.home__favorite-empty small { margin-top: 2px; overflow: hidden; color: var(--ink-muted); font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .home__favorite-list button > svg,
 .home__favorite-empty > svg { width: 20px; color: var(--ink-muted); }
-.home__favorite-empty { margin-top: 16px; }
-.home__route-action { padding: 14px 18px 22px; background: var(--surface); }
-.home__route-action > a { display: grid; grid-template-columns: 48px 1fr 24px; min-height: 76px; padding: 14px 16px; align-items: center; gap: 13px; border-radius: 19px; background: var(--brand); color: white; text-decoration: none; box-shadow: 0 8px 20px rgba(24, 35, 52, .18); }
+.home__favorite-empty { margin-top: 10px; }
+.home__route-action { flex: 0 0 auto; padding: 8px 16px 12px; background: var(--surface); }
+.home__route-action > a { display: grid; grid-template-columns: 40px 1fr 22px; min-height: 58px; padding: 9px 13px; align-items: center; gap: 10px; border-radius: 16px; background: var(--brand); color: white; text-decoration: none; box-shadow: 0 6px 16px rgba(24, 35, 52, .16); }
 .home__route-action > a > svg:first-child { width: 28px; height: 28px; justify-self: center; }
 .home__route-action span { display: flex; flex-direction: column; }
 .home__route-action small { color: rgba(255,255,255,.72); font-size: 12px; font-weight: 700; }
-.home__route-action strong { margin-top: 2px; font-size: 19px; }
+.home__route-action strong { margin-top: 1px; font-size: 17px; }
 .home__route-action > a > svg:last-child { width: 22px; }
-.home__map-head { display: flex; padding: 19px 18px 12px; align-items: baseline; justify-content: space-between; background: #f5f6f8; }
-.home__map-head span { color: var(--ink); font-size: 20px; font-weight: 900; }
+.home__map-head { display: flex; flex: 0 0 38px; padding: 9px 16px 6px; align-items: baseline; justify-content: space-between; background: #f5f6f8; }
+.home__map-head span { color: var(--ink); font-size: 17px; font-weight: 900; }
 .home__map-head small { color: var(--ink-muted); font-size: 12px; font-weight: 700; }
-.home__map { height: 360px; min-height: 320px; }
+.home__map { flex: 1 1 auto; height: auto; min-height: 190px; }
+.home__sheet { position: absolute; right: 0; bottom: 0; left: 0; z-index: 650; max-height: calc(100svh - 64px); overflow: hidden; }
+.home__sheet:has(.home__hint) { display: none; }
+
+@media (max-height: 700px) {
+  .home__bar { flex-basis: 58px; padding-block: 5px; }
+  .home__brand small,
+  .home__eyebrow,
+  .home__route-action small,
+  .home__map-head small { display: none; }
+  .home__favorites { padding-block: 9px 7px; }
+  .home__section-head h1 { font-size: 21px; }
+  .home__favorite-list { margin-top: 7px; }
+  .home__favorite-list button,
+  .home__favorite-empty { min-height: 52px; }
+  .home__route-action { padding-block: 6px 8px; }
+  .home__route-action > a { min-height: 52px; }
+  .home__map-head { flex-basis: 32px; padding-block: 6px 4px; }
+}
