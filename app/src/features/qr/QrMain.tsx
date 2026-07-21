@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Armchair, BusFront, ChevronLeft, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Navigation, Search, Umbrella } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -97,12 +96,10 @@ export function findTrips(
 }
 
 export default function QrMain() {
-  const [params] = useSearchParams();
   const stops = useStops((state) => state.stops);
   const loaded = useStops((state) => state.loaded);
-  const qrStopId = params.get("from");
   const [mode, setMode] = useState<QrMode>("home");
-  const [startId, setStartId] = useState<string | null>(qrStopId);
+  const [startId, setStartId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
@@ -148,7 +145,9 @@ export default function QrMain() {
   const openDestination = () => {
     setMode("destination");
     setLocationError(false);
-    if (startId || qrStopId) return;
+    setStartId(null);
+    setLocationAccuracy(null);
+    setStopDistance(null);
     if (!navigator.geolocation) { setLocationError(true); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -177,6 +176,9 @@ export default function QrMain() {
     setReportConfirmed(false);
     setReportDone(false);
     setReportIssue("");
+    setStartId(null);
+    setLocationAccuracy(null);
+    setStopDistance(null);
     if (!navigator.geolocation) {
       setLocationError(true);
       return;
@@ -202,7 +204,7 @@ export default function QrMain() {
 
   const requestTrip = (destination: string) => {
     if (!destination) return;
-    if (startId || qrStopId) setSubmitted(destination);
+    if (startId && locationAccuracy !== null && stopDistance !== null) setSubmitted(destination);
     else openDestination();
   };
 
@@ -316,9 +318,9 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {start && <div className="qrmain__location-proof">
+        {start && locationAccuracy !== null && stopDistance !== null && <div className="qrmain__location-proof">
           <iframe className="qrmain__map" title={`${start.name} 주변 지도`} src={mapEmbedUrl(start)} loading="lazy" />
-          <div><span><MapPin aria-hidden="true" /> GPS로 찾은 가장 가까운 정류장</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>현재 위치에서 약 {stopDistance ?? "-"}m · GPS 오차범위 약 {locationAccuracy ?? "-"}m</p></div>
+          <div><span><MapPin aria-hidden="true" /> GPS로 찾은 가장 가까운 정류장</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>현재 위치에서 약 {stopDistance}m · GPS 오차범위 약 {locationAccuracy}m</p></div>
         </div>}
         <h2>어디로 가세요?</h2>
         <p>마이크를 누르고 목적지를 말씀해 주세요.</p>
