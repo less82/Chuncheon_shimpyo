@@ -27,6 +27,7 @@
 | `unresolved` | 직접 연결 근거가 없거나 후보가 둘 이상이라 미확정 |
 
 `inferred`는 현장조사와 분석을 위한 임시 연결이며 공식 대응표를 받으면 `direct`로 교체한다.
+TAGO 노선번호와 전·후 인접 정류장이 다른 후보보다 유일하게 일치한 경우도 `inferred`로 기록하고 신뢰도는 `medium`을 넘기지 않는다.
 
 ## 수요 값
 
@@ -41,3 +42,10 @@ node pipeline\build_stop_id_mapping.mjs
 ```
 
 수동 추정 결과는 `data/stop_id_mapping_overrides.csv`에만 기록한다. 생성된 CSV를 직접 고치지 않는다.
+TAGO 노선순서 교차매칭 결과는 `data/stop_id_route_mapping_overrides.csv`, 판정 근거는 `data/stop_id_route_match_audit.csv`에서 관리한다.
+
+## 조사표 표시 형식
+
+- `카카오맵 표시 방면`은 바깥 괄호를 제거하고 `정류장명 방면` 형식으로 통일한다.
+- 카카오맵에서 방면을 확인하지 못한 경우 공식 노선순서 값을 복사하지 않고 빈칸으로 둔다.
+- 공식 노선순서 기반 진행방면은 별도 열에 유지해 카카오맵 표시값과 섞지 않는다.

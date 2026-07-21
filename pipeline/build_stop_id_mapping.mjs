@@ -9,6 +9,7 @@ const paths = {
   location: path.join(data, '강원특별자치도 춘천시_버스정류장 위치정보_20260326.csv'),
   boarding: path.join(data, '강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'),
   overrides: path.join(data, 'stop_id_mapping_overrides.csv'),
+  routeOverrides: path.join(data, 'stop_id_route_mapping_overrides.csv'),
   output: path.join(data, 'stop_id_mapping.csv'),
 };
 
@@ -58,7 +59,7 @@ function joined(values) {
 const master = readCsv(paths.master);
 const locations = readCsv(paths.location, 'euc-kr');
 const boarding = readCsv(paths.boarding, 'euc-kr');
-const overrides = readCsv(paths.overrides);
+const overrides = [...readCsv(paths.routeOverrides), ...readCsv(paths.overrides)];
 const locationByNo = new Map(locations.map((row) => [row['정류장 번호'], row]));
 const overrideById = new Map(overrides.map((row) => [row.boarding_stop_id, row]));
 
