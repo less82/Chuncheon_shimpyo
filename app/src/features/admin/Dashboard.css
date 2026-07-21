@@ -78,6 +78,10 @@
 .report-table th:nth-child(3) { width: 25%; }
 .report-table th:nth-child(4) { width: 16%; }
 .report-table th:nth-child(5) { width: 21%; }
+.report-table[data-filtered="true"] th:nth-child(1) { width: 18%; }
+.report-table[data-filtered="true"] th:nth-child(2) { width: 22%; }
+.report-table[data-filtered="true"] th:nth-child(3) { width: 38%; }
+.report-table[data-filtered="true"] th:nth-child(4) { width: 22%; }
 .report-table th, .report-table td { overflow-wrap: anywhere; }
 .report-status { display: inline-flex; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--warning-bg); color: var(--warning); font-size: var(--fs-sm); font-weight: 900; }
 .report-status[data-status="resolved"] { background: var(--yes-bg); color: var(--yes); }
@@ -160,6 +164,7 @@
   .report-table td { display: block; min-width: 0; padding: 0; }
   .report-table td::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--ink-muted); font-size: 11px; font-weight: 800; }
   .report-table td:nth-child(3), .report-table td:nth-child(5) { grid-column: 1 / -1; }
+  .report-table td:last-child { grid-column: 1 / -1; }
   .report-action { width: auto; min-width: 132px; }
   .report-flow > button::after { display: none !important; }
   .report-modal-backdrop { padding: 12px; }

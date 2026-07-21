@@ -53,6 +53,15 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   const selectedState = selected ? REPORT_STATUS[selected.status] : null;
   const requiredChecks = selected ? reviewItems[selected.status] : null;
 
+  useEffect(() => {
+    if (!selectedId) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedId(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [selectedId]);
+
   function openReview(id: string) {
     setSelectedId(id);
     setChecks([false, false]);
@@ -65,12 +74,12 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   }
 
   return <section className="dash-section report-panel">
-    <div className="report-section-head"><div><h3>처리 단계</h3></div></div>
+    <div className="report-section-head"><div><h3>처리 현황 · 단계별 목록</h3></div></div>
     <div className="report-flow" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => setStatusFilter((current) => current === status ? null : status)}><span>{index + 1}</span><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
     <div className="report-list-head"><div><span className="dash-kicker">업무 목록</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleReports.length}</strong><span>건</span></div>{statusFilter && <button type="button" onClick={() => setStatusFilter(null)}>전체 보기</button>}</div></div>
     <div className="report-workbench"><div className="report-queue">
         {visibleReports.length === 0 ? <div className="report-empty"><h2>{statusFilter ? `${currentLabel} 업무가 없습니다` : "아직 접수된 제보가 없습니다"}</h2><p>{statusFilter ? "다른 처리 단계를 선택해 확인하세요." : "시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다."}</p></div> :
-          <div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table"><thead><tr><th>접수시각</th><th>정류장</th><th>AI 구조화 결과</th><th>현재 단계</th><th>검토</th></tr></thead><tbody>{[...visibleReports].reverse().map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="AI 구조화 결과"><strong>{report.issue}</strong><span className="dash-stopid">분류 후보 · 시설 불편</span></td><td data-label="현재 단계"><span className="report-status" data-status={report.status}>{state.label}</span></td><td data-label="검토"><button className="report-action" type="button" onClick={() => openReview(report.id)}>검토 열기</button></td></tr>; })}</tbody></table></div>}
+          <div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table" data-filtered={statusFilter ? "true" : "false"}><thead><tr><th>접수시각</th><th>정류장</th><th>제보 내용</th>{!statusFilter && <th>처리 상태</th>}<th>업무</th></tr></thead><tbody>{[...visibleReports].reverse().map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="제보 내용"><strong>{report.issue}</strong><span className="dash-stopid">분류 후보 · 시설 불편</span></td>{!statusFilter && <td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td>}<td data-label="업무"><button className="report-action" type="button" onClick={() => openReview(report.id)}>{report.status === "resolved" ? "처리 기록 보기" : "검토 열기"}</button></td></tr>; })}</tbody></table></div>}
       </div></div>
       {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" role="dialog" aria-modal="true" aria-label="제보 검토">
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div><button type="button" onClick={() => setSelectedId(null)} aria-label="검토 팝업 닫기">×</button></header>
