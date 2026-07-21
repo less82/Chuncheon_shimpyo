@@ -146,6 +146,24 @@ def load_shade() -> pd.DataFrame:
     return out
 
 
+def load_bit() -> pd.DataFrame:
+    """버스정보안내단말기(BIT) 현황 = 도착안내기(sign) 근거.
+
+    정류장번호(4자리)로 마스터 stopNo와 정확 매칭한다(공간매칭 아님).
+    원본 부재 시 빈 DataFrame(정직성: 도착안내기 전부 unknown 유지).
+
+    반환 컬럼: 정류장번호(str)
+    """
+    path = _find("*버스정보안내단말기*.csv")
+    if path is None:
+        return pd.DataFrame({"정류장번호": pd.Series(dtype=str)})
+    df = pd.read_csv(path, encoding="cp949", dtype=str)
+    col = "정류장 번호" if "정류장 번호" in df.columns else "정류장번호"
+    out = pd.DataFrame({"정류장번호": df[col].astype(str).str.strip()})
+    out = out[out["정류장번호"] != ""].reset_index(drop=True)
+    return out
+
+
 def load_lights() -> pd.DataFrame:
     """가로등(조명 근거). 원본이 없을 수 있다.
 

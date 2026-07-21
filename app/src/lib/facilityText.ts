@@ -56,6 +56,7 @@ export function sourceBadge(info: FacilityInfo): string {
     const when = info.capturedAt ?? "";
     return when ? `로드뷰 확인 (촬영 ${when})` : "로드뷰 확인";
   }
+  if (info.source === "sign_registry") return "버스정보단말기(BIT) 기준";
   const registry = REGISTRY_LABEL[info.source];
   if (registry) return `${registry}대장 기준`;
   return "";

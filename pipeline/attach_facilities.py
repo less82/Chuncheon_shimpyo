@@ -66,6 +66,23 @@ def attach_lights(master, lights, radius=50):
     return _attach_points(master, pts, radius, "light", "light_registry")
 
 
+def attach_sign(master, bit):
+    """BIT 정류장번호와 stopNo 정확 매칭 시 sign=yes/sign_registry.
+
+    공간매칭이 아니라 4자리 정류장번호 정확 일치(양방향 정류장은 같은 번호를
+    공유하므로 set으로 처리). 원본 부재/미매칭이면 기존 상태(unknown) 유지 —
+    다른 시설과 동일하게 어떤 경로에서도 'no'를 만들지 않는다.
+    """
+    nos = {str(n).strip() for n in bit["정류장번호"] if str(n).strip()}
+    if not nos:
+        return master  # 소스 부재 -> 전부 unknown 유지 (절대 no 아님)
+    for stop in master:
+        if str(stop.get("stopNo", "")).strip() in nos:
+            stop["facilities"]["sign"] = {"status": "yes", "source": "sign_registry"}
+        # else: 기존 unknown 유지. 'no'를 만들지 않는다.
+    return master
+
+
 def attach_shade(master, shade, geocode_cache: dict, radius=30):
     """그늘막 주소를 geocode_cache에서 좌표로 조회 -> 30m 이내면 shade=yes.
 

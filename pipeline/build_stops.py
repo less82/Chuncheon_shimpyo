@@ -12,11 +12,12 @@ import json
 import os
 
 from attach_demand import attach_demand
-from attach_facilities import attach_lights, attach_seats, attach_shade
+from attach_facilities import attach_lights, attach_seats, attach_shade, attach_sign
 from build_master import build_master
 from build_routes import build_routes
 from loaders import (
     load_bench,
+    load_bit,
     load_boarding,
     load_lights,
     load_locations,  # noqa: F401  (마스터 내부에서 사용)
@@ -90,18 +91,28 @@ def build() -> dict:
     except Exception as e:
         print(f"[5] 그늘 단계 건너뜀(비치명적): {e}")
 
-    # --- Stage 6: 로드뷰 오버레이(조사 파일 있을 때만) ---
+    # --- Stage 6: 도착안내기(BIT 정류장번호 정확매칭) ---
+    try:
+        bit = load_bit()
+        attach_sign(master, bit)
+        n = sum(1 for s in master if s["facilities"]["sign"]["status"] == "yes")
+        note = "" if len(bit) else " (BIT 원본 부재 → 전부 unknown)"
+        print(f"[6] 도착안내기 yes(BIT 번호매칭): {n}{note}")
+    except Exception as e:
+        print(f"[6] 도착안내기 단계 건너뜀(비치명적): {e}")
+
+    # --- Stage 7: 로드뷰 오버레이(조사 파일 있을 때만, 최우선) ---
     if os.path.exists(_ROADVIEW_INPUT):
         try:
             import pandas as pd
 
             survey = pd.read_csv(_ROADVIEW_INPUT, encoding="utf-8-sig", dtype=str)
             apply_roadview(master, survey)
-            print(f"[6] 로드뷰 오버레이 적용: {_ROADVIEW_INPUT}")
+            print(f"[7] 로드뷰 오버레이 적용: {_ROADVIEW_INPUT}")
         except Exception as e:
-            print(f"[6] 로드뷰 단계 건너뜀(비치명적): {e}")
+            print(f"[7] 로드뷰 단계 건너뜀(비치명적): {e}")
     else:
-        print("[6] 로드뷰 조사 파일 없음 → 오버레이 생략(정상)")
+        print("[7] 로드뷰 조사 파일 없음 → 오버레이 생략(정상)")
 
     # --- 배차 캐시 ---
     for s in master:

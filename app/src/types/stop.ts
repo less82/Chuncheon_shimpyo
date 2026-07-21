@@ -9,6 +9,7 @@ export type Source =
   | "bench_registry" // 춘천시 벤치 대장
   | "shade_registry" // 폭염대비 그늘막 대장
   | "light_registry" // 가로등 대장
+  | "sign_registry" // 버스정보안내단말기(BIT) 현황 (도착안내기)
   | "none"; // 근거 없음 (status는 반드시 unknown)
 
 export interface FacilityInfo {
