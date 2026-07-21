@@ -9,11 +9,11 @@
 .qrmain__choices button { min-height: 112px; padding: 20px; border: 2px solid var(--brand); border-radius: var(--radius-lg); background: var(--brand); color: white; text-align: center; cursor: pointer; }
 .qrmain__choices button:last-child { background: white; color: var(--brand); }
 .qrmain__choices strong { font-size: 24px; line-height: 1.35; word-break: keep-all; }
-.qrmain__back { display: inline-flex; min-height: 48px; margin: 0 0 var(--sp-3); align-items: center; gap: 3px; border: 0; background: transparent; color: var(--ink-body); font-size: 16px; font-weight: 900; cursor: pointer; }
-.qrmain__back svg { width: 20px; }
-.qrmain__back--icon { width: 48px; padding: 0; justify-content: center; }
+.qrmain:has(.qrmain__back) { padding-top: calc(env(safe-area-inset-top, 0px) + 72px); }
+.qrmain__back { position: fixed; z-index: 100; top: calc(env(safe-area-inset-top, 0px) + 4px); left: max(12px, calc(50% - 207px)); display: inline-flex; width: 48px; height: 48px; margin: 0; padding: 0; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: white; color: var(--ink); cursor: pointer; }
+.qrmain__back svg { width: 24px; height: 24px; stroke-width: 2.25; }
+.qrmain__back--icon { width: 48px; }
 .qrmain__error { display: grid; min-height: 100%; margin: 0; padding: 28px 22px 36px; align-content: start; justify-items: start; border-radius: 0; background: transparent; box-shadow: none; text-align: left; }
-.qrmain__error .qrmain__back { margin: 0 0 56px; }
 .qrmain__error .qrmain__locate-icon { width: 52px; height: 52px; margin: 0 0 24px; color: var(--brand); }
 .qrmain__error h1 { max-width: 310px; margin-bottom: 12px; font-size: 29px; line-height: 1.25; letter-spacing: -.7px; word-break: keep-all; }
 .qrmain__error > p { max-width: 310px; color: var(--ink-body); font-size: 17px; line-height: 1.65; word-break: keep-all; }
