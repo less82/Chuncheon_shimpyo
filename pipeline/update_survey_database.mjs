@@ -21,7 +21,10 @@ function parseCsv(text) {
 }
 const read = (file, encoding = 'utf-8') => parseCsv(new TextDecoder(encoding).decode(fs.readFileSync(file)));
 const quote = (v) => /[",\r\n]/.test(String(v ?? '')) ? `"${String(v ?? '').replaceAll('"', '""')}"` : String(v ?? '');
-function write(file, rows, fields) { fs.writeFileSync(file, `\uFEFF${fields.join(',')}\r\n${rows.map((r) => fields.map((f) => quote(r[f])).join(',')).join('\r\n')}\r\n`); }
+function write(file, rows, fields) {
+  const body = rows.map((r) => fields.map((f) => quote(r[f])).join(',')).join('\r\n');
+  fs.writeFileSync(file, `\uFEFF${fields.join(',')}\r\n${body}${body ? '\r\n' : ''}`);
+}
 function name(v) { return String(v ?? '').split('(')[0].replace(/\s+/g, '').replace(/아파트/g, 'A').toLowerCase(); }
 function setAdd(map, key, value) { if (!key || !value) return; if (!map.has(key)) map.set(key, new Set()); map.get(key).add(value); }
 function overlap(a = new Set(), b = new Set()) { let n = 0; for (const v of a) if (b.has(v)) n += 1; return n; }
@@ -38,7 +41,9 @@ function env(name) {
 
 const survey = read(input);
 for (const row of survey) {
-  if (['TAGO 노선번호·노선순서 인접 정류장 교차매칭', 'tago_route_number_and_adjacent_stop_unique'].includes(row['승차자료 매칭방법'])) {
+  if (['TAGO 노선번호·노선순서 인접 정류장 교차매칭', 'tago_route_number_and_adjacent_stop_unique',
+    '노선배열 연속구간·복수노선 1:1 교차매칭', 'route_sequence_unique_cross_validation',
+    '전체 경유노선 집합 완전일치·1:1 교차매칭', 'exact_route_set_unique_cross_validation'].includes(row['승차자료 매칭방법'])) {
     row['승차자료 정류장 ID'] = ''; row['표본기간 한낮(11~16시) 개별 승차건수'] = '';
     row['승차자료 매칭방법'] = '매칭 보류'; row['승차자료 매칭신뢰등급'] = '보류';
   }
@@ -62,76 +67,73 @@ write(path.join(dataDir, 'TAGO_춘천시_버스노선_조회_20260721.csv'), tag
   end_stop: r.endnodenm, first_time: r.startvehicletime, last_time: r.endvehicletime, lookup_date: '2026-07-21',
 })), ['route_id','route_no','route_type','start_stop','end_stop','first_time','last_time','lookup_date']);
 
-const currentRouteNos = new Map(), currentNext = new Map(), currentPrev = new Map();
 const currentGroups = Map.groupBy(currentRoutes, (r) => r.노선);
-for (const [routeId, rows] of currentGroups) {
-  const ordered = rows.sort((a, b) => Number(a.정류장순서) - Number(b.정류장순서)); const routeNo = routeNoById.get(routeId);
-  for (let i = 0; i < ordered.length; i += 1) { const id = ordered[i].정류장; setAdd(currentRouteNos, id, routeNo); setAdd(currentPrev, id, name(ordered[i - 1]?.정류장명)); setAdd(currentNext, id, name(ordered[i + 1]?.정류장명)); }
-}
-
-const boardingRouteNos = new Map(), boardingNext = new Map(), boardingPrev = new Map();
 const boardingGroups = Map.groupBy(boarding, (r) => `${r.수집일자}|${r.노선아이디}|${r.이용시간대}`);
-for (const rows of boardingGroups.values()) {
-  for (let i = 0; i < rows.length; i += 1) { const id = rows[i].정류장아이디; setAdd(boardingRouteNos, id, rows[i].노선번호); setAdd(boardingPrev, id, name(rows[i - 1]?.정류장명)); setAdd(boardingNext, id, name(rows[i + 1]?.정류장명)); }
-}
 const candidatesByName = new Map();
 for (const r of master) { const n = name(r.정류장명); if (!candidatesByName.has(n)) candidatesByName.set(n, new Set()); candidatesByName.get(n).add(r.정류장아이디); }
 const mappingByManagement = new Map(mapping
-  .filter((r) => r.management_id && r.match_method !== 'tago_route_number_and_adjacent_stop_unique')
+  .filter((r) => r.management_id && !['tago_route_number_and_adjacent_stop_unique', 'route_sequence_unique_cross_validation', 'exact_route_set_unique_cross_validation'].includes(r.match_method))
   .map((r) => [r.management_id, r]));
 const middayById = new Map(mapping.map((r) => [r.boarding_stop_id, r.midday_boardings]));
+
+function historicalRouteNo(value) {
+  const text = String(value ?? '').trim();
+  const matches = [...text.matchAll(/\(([^)]+)\)/g)];
+  return matches.at(-1)?.[1]?.trim() || text;
+}
+const currentRouteSets = new Map();
+for (const [routeId, rows] of currentGroups) {
+  const comparableNo = historicalRouteNo(routeNoById.get(routeId));
+  if (!comparableNo) continue;
+  for (const row of rows) setAdd(currentRouteSets, row.정류장, comparableNo);
+}
+const boardingRouteSets = new Map();
+for (const row of boarding) setAdd(boardingRouteSets, row.정류장아이디, row.노선번호);
+const signature = (values = new Set()) => [...values].sort((a, b) => a.localeCompare(b, 'ko')).join('|');
+
+const optionsByManagement = new Map();
+for (const row of survey) {
+  const options = [...(candidatesByName.get(name(row['정류장명(카카오맵 표시명)'])) ?? [])].map((boardingId) => {
+    const currentRoutesForStop = currentRouteSets.get(row.관리번호) ?? new Set();
+    const boardingRoutesForStop = boardingRouteSets.get(boardingId) ?? new Set();
+    return { boardingId, currentRouteCount: currentRoutesForStop.size, boardingRouteCount: boardingRoutesForStop.size,
+      qualifies: currentRoutesForStop.size > 0 && signature(currentRoutesForStop) === signature(boardingRoutesForStop) };
+  }).filter((option) => option.qualifies);
+  optionsByManagement.set(row.관리번호, options);
+}
+const managementsByBoarding = new Map();
+for (const [managementId, options] of optionsByManagement) for (const option of options) setAdd(managementsByBoarding, option.boardingId, managementId);
 
 const audit = [];
 for (const row of survey) {
   row['카카오맵 표시 방면'] = direction(row['카카오맵 표시 방면']);
   const direct = mappingByManagement.get(row.관리번호);
   if (direct) {
-    row['승차자료 정류장 ID'] = direct.boarding_stop_id; row['표본기간 한낮(11~16시) 개별 승차건수'] = direct.midday_boardings;
+    row['승차자료 정류장 ID'] = direct.boarding_stop_id; row['표본기간 한낮(11~16시) 개별 승차건수'] = Number(direct.midday_boardings) > 0 ? direct.midday_boardings : '';
     row['승차자료 매칭방법'] = direct.match_method; row['승차자료 매칭신뢰등급'] = direct.confidence;
     continue;
   }
   const candidates = [...(candidatesByName.get(name(row['정류장명(카카오맵 표시명)'])) ?? [])];
-  const scored = candidates.map((id) => {
-    const route = overlap(currentRouteNos.get(row.관리번호), boardingRouteNos.get(id));
-    const prev = overlap(currentPrev.get(row.관리번호), boardingPrev.get(id));
-    const next = overlap(currentNext.get(row.관리번호), boardingNext.get(id));
-    return { id, score: route + (prev * 3) + (next * 3), route, prev, next };
-  }).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
-  const best = scored[0], second = scored[1];
-  const unambiguous = best && best.score > 0 && best.score >= (second?.score ?? 0) + 3 && (best.prev + best.next > 0);
+  const options = optionsByManagement.get(row.관리번호) ?? [];
+  const best = options.length === 1 && managementsByBoarding.get(options[0].boardingId)?.size === 1 ? options[0] : null;
+  const unambiguous = Boolean(best);
   if (unambiguous) {
-    row['승차자료 정류장 ID'] = best.id; row['표본기간 한낮(11~16시) 개별 승차건수'] = middayById.get(best.id) ?? '';
-    row['승차자료 매칭방법'] = 'TAGO 노선번호·노선순서 인접 정류장 교차매칭'; row['승차자료 매칭신뢰등급'] = 'medium';
+    row['승차자료 정류장 ID'] = best.boardingId; row['표본기간 한낮(11~16시) 개별 승차건수'] = Number(middayById.get(best.boardingId)) > 0 ? middayById.get(best.boardingId) : '';
+    row['승차자료 매칭방법'] = '전체 경유노선 집합 완전일치·1:1 교차매칭'; row['승차자료 매칭신뢰등급'] = 'high';
   }
   audit.push({ stop_no: row['정류장 번호'], management_id: row.관리번호, stop_name: row['정류장명(카카오맵 표시명)'],
-    candidate_count: candidates.length, selected_boarding_stop_id: unambiguous ? best.id : '', best_score: best?.score ?? '',
-    second_score: second?.score ?? '', route_overlap: best?.route ?? '', previous_stop_overlap: best?.prev ?? '', next_stop_overlap: best?.next ?? '',
-    decision: unambiguous ? 'matched' : 'unresolved', lookup_date: '2026-07-21' });
-}
-
-// A settlement stop ID represents one physical boarding point. If multiple
-// current stops select the same ID, retain it only when one score is uniquely
-// stronger; otherwise roll every conflicting proposal back to unresolved.
-const autoRows = survey.filter((r) => r['승차자료 매칭방법'] === 'TAGO 노선번호·노선순서 인접 정류장 교차매칭');
-for (const conflicts of Map.groupBy(autoRows, (r) => r['승차자료 정류장 ID']).values()) {
-  if (conflicts.length < 2) continue;
-  const ranked = conflicts.map((row) => ({ row, audit: audit.find((a) => a.management_id === row.관리번호) }))
-    .sort((a, b) => Number(b.audit?.best_score ?? 0) - Number(a.audit?.best_score ?? 0));
-  const keep = Number(ranked[0].audit?.best_score ?? 0) >= Number(ranked[1].audit?.best_score ?? 0) + 3 ? ranked[0].row : null;
-  for (const { row, audit: record } of ranked) {
-    if (row === keep) continue;
-    row['승차자료 정류장 ID'] = ''; row['표본기간 한낮(11~16시) 개별 승차건수'] = '';
-    row['승차자료 매칭방법'] = '매칭 보류'; row['승차자료 매칭신뢰등급'] = '보류';
-    if (record) { record.selected_boarding_stop_id = ''; record.decision = 'unresolved_duplicate_candidate'; }
-  }
+    name_candidate_count: candidates.length, strict_candidate_count: options.length, selected_boarding_stop_id: best?.boardingId ?? '',
+    current_route_count: best?.currentRouteCount ?? '', boarding_route_count: best?.boardingRouteCount ?? '',
+    decision: unambiguous ? 'matched_strict_unique' : options.length > 1 ? 'unresolved_multiple_strict_candidates' :
+      options.length === 1 ? 'unresolved_boarding_id_not_unique' : candidates.length ? 'unresolved_route_set_not_equal' : 'unresolved_no_name_candidate', lookup_date: '2026-07-21' });
 }
 
 const fields = Object.keys(survey[0]);
 write(output, survey, fields);
 write(path.join(dataDir, 'stop_id_route_mapping_overrides.csv'), survey
-  .filter((r) => r['승차자료 매칭방법'] === 'TAGO 노선번호·노선순서 인접 정류장 교차매칭')
+  .filter((r) => r['승차자료 매칭방법'] === '전체 경유노선 집합 완전일치·1:1 교차매칭')
   .map((r) => ({ boarding_stop_id: r['승차자료 정류장 ID'], stop_no: r['정류장 번호'], match_status: 'inferred',
-    match_method: 'tago_route_number_and_adjacent_stop_unique', confidence: 'medium' })),
+    match_method: 'exact_route_set_unique_cross_validation', confidence: 'high' })),
 ['boarding_stop_id','stop_no','match_status','match_method','confidence']);
-write(path.join(dataDir, 'stop_id_route_match_audit.csv'), audit, ['stop_no','management_id','stop_name','candidate_count','selected_boarding_stop_id','best_score','second_score','route_overlap','previous_stop_overlap','next_stop_overlap','decision','lookup_date']);
-console.log(JSON.stringify({ rows: survey.length, mapped: survey.filter((r) => r['승차자료 정류장 ID']).length, newlyMatched: audit.filter((r) => r.decision === 'matched').length, unresolved: survey.filter((r) => !r['승차자료 정류장 ID']).length }));
+write(path.join(dataDir, 'stop_id_route_match_audit.csv'), audit, ['stop_no','management_id','stop_name','name_candidate_count','strict_candidate_count','selected_boarding_stop_id','current_route_count','boarding_route_count','decision','lookup_date']);
+console.log(JSON.stringify({ rows: survey.length, mapped: survey.filter((r) => r['승차자료 정류장 ID']).length, newlyMatched: audit.filter((r) => r.decision === 'matched_strict_unique').length, unresolved: survey.filter((r) => !r['승차자료 정류장 ID']).length }));

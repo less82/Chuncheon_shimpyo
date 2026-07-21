@@ -27,12 +27,13 @@
 | `unresolved` | 직접 연결 근거가 없거나 후보가 둘 이상이라 미확정 |
 
 `inferred`는 현장조사와 분석을 위한 임시 연결이며 공식 대응표를 받으면 `direct`로 교체한다.
-TAGO 노선번호와 전·후 인접 정류장이 다른 후보보다 유일하게 일치한 경우도 `inferred`로 기록하고 신뢰도는 `medium`을 넘기지 않는다.
+승하차 원본 CSV의 행 배치는 노선 정차순서가 아니므로 전·후 행을 인접 정류장 근거로 사용하지 않는다.
+노선정보를 이용한 자동 연결은 정류장명과 전체 경유노선 집합이 완전히 같고, 승차 ID와 관리번호가 양쪽 모두 1:1로 유일할 때만 허용한다.
 
 ## 수요 값
 
 - `midday_boardings`는 승하차 원본에서 같은 `boarding_stop_id`의 11~16시 승차건수를 합산한다.
-- 승차 원본에 해당 ID의 11~16시 행이 없으면 빈칸으로 둔다.
+- 승차 원본에 해당 ID의 11~16시 행이 없거나 합계가 `0`이면 조사표와 내부 연결표에서는 빈칸으로 둔다. 원본의 `0`은 원본 CSV에 그대로 보존한다.
 - 서로 다른 승차 ID는 정류장명이 같아도 합산하지 않는다.
 
 ## 재생성
@@ -42,7 +43,7 @@ node pipeline\build_stop_id_mapping.mjs
 ```
 
 수동 추정 결과는 `data/stop_id_mapping_overrides.csv`에만 기록한다. 생성된 CSV를 직접 고치지 않는다.
-TAGO 노선순서 교차매칭 결과는 `data/stop_id_route_mapping_overrides.csv`, 판정 근거는 `data/stop_id_route_match_audit.csv`에서 관리한다.
+TAGO 경유노선 집합 교차검사 결과는 `data/stop_id_route_mapping_overrides.csv`, 판정 근거는 `data/stop_id_route_match_audit.csv`에서 관리한다.
 
 ## 조사표 표시 형식
 

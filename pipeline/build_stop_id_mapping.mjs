@@ -103,7 +103,7 @@ const result = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map
     current_stop_name: location?.정류장명 ?? '',
     longitude: location?.경도 ?? '',
     latitude: location?.위도 ?? '',
-    midday_boardings: midday.has(id) ? midday.get(id) : '',
+    midday_boardings: (midday.get(id) ?? 0) > 0 ? midday.get(id) : '',
     match_status: status,
     match_method: method,
     confidence,
