@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { BusFront, ChevronLeft, Clock3, MapPin, MessageCircle, Mic, Navigation } from "lucide-react";
+import { ChevronLeft, MapPin, Mic, Navigation } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -66,6 +66,12 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
 function clockAfter(minutes: number): string {
   return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
     .format(new Date(Date.now() + minutes * 60_000));
+}
+
+function mapEmbedUrl(stop: Stop): string {
+  const delta = 0.004;
+  const bbox = `${stop.lng - delta},${stop.lat - delta},${stop.lng + delta},${stop.lat + delta}`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${stop.lat},${stop.lng}`;
 }
 
 function readableDistance(distance: number | null): string {
@@ -240,19 +246,9 @@ export default function QrMain() {
     setManualStopQuery("");
   };
 
-  const submitManualStop = (event: FormEvent) => {
-    event.preventDefault();
-    const exact = manualMatches.find((stop) => stop.stopNo === manualStopQuery.trim());
-    const match = exact ?? manualMatches[0];
-    if (match) chooseManualStop(match);
-  };
-
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
-    <form className="qrmain__form" onSubmit={submitManualStop}>
-      <input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
-      <button type="submit">찾기</button>
-    </form>
+    <input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
     {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
   </div>;
 
@@ -270,6 +266,10 @@ export default function QrMain() {
   }, [submitted, start, routes]);
 
   const startVoice = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
     const speechWindow = window as typeof window & {
       SpeechRecognition?: SpeechRecognitionCtor;
       webkitSpeechRecognition?: SpeechRecognitionCtor;
@@ -283,14 +283,21 @@ export default function QrMain() {
     const recognition = new Recognition();
     recognition.lang = "ko-KR";
     recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.continuous = true;
+    let heardText = query.trim();
+    let failed = false;
     recognition.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript?.trim() ?? "";
-      setQuery(transcript);
-      if (mode === "destination") requestTrip(transcript);
+      heardText = Array.from(event.results)
+        .map((result) => result[0]?.transcript?.trim() ?? "")
+        .filter(Boolean)
+        .join(" ");
+      setQuery(heardText);
     };
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+    recognition.onerror = () => { failed = true; setListening(false); };
+    recognition.onend = () => {
+      setListening(false);
+      if (!failed && mode === "destination" && heardText) requestTrip(heardText);
+    };
     recognitionRef.current = recognition;
     setListening(true);
     recognition.start();
@@ -336,10 +343,10 @@ export default function QrMain() {
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
     </section></main>;
-    if (reportDone) return <main className="qrmain"><section className="qrmain__ask qrmain__report-complete"><span className="qrmain__report-icon"><MessageCircle aria-hidden="true" /></span><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>처음 화면으로</button></section></main>;
+    if (reportDone) return <main className="qrmain"><section className="qrmain__ask qrmain__report-complete"><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>처음 화면으로</button></section></main>;
     return <main className="qrmain"><section className="qrmain__ask qrmain__report-start">
       <button className="qrmain__back" type="button" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /> 정류장 다시 확인</button>
-      <span className="qrmain__report-icon"><MessageCircle aria-hidden="true" /></span><span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
+      <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
       <div className="qrmain__quick-report">{["의자가 없어요", "그늘이 없어요", "안내 화면이 꺼졌어요", "조명이 어두워요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
       <button type="button" className="qrmain__report-submit" disabled={!reportIssue} onClick={() => { saveReport(start, reportIssue); setReportDone(true); }}>불편 사항 보내기</button>
@@ -357,12 +364,13 @@ export default function QrMain() {
 
   return (
     <main className="qrmain">
-      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
+      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => submitted ? setSubmitted("") : setMode("home")}><ChevronLeft aria-hidden="true" /></button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
         {(outsideServiceArea || locationError) && <div className="qrmain__location-recovery" role="alert"><span>위치 정보를 찾을 수 없습니다. 다시 찾아볼까요?</span><button type="button" onClick={openDestination}>위치 다시 찾기</button></div>}
-        {(outsideServiceArea || locationError) && manualStopSearch}
+        {manualStopSearch}
         {start && locationSource && <div className="qrmain__location-proof">
+          <iframe className="qrmain__map" title={`${start.name} 정류장 지도`} src={mapEmbedUrl(start)} loading="lazy" />
           <div><span><MapPin aria-hidden="true" /> {locationSource === "gps" ? "GPS로 찾은 가장 가까운 정류장" : "직접 선택한 정류장"}</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>{locationSource === "gps" ? `현재 위치에서 약 ${stopDistance}m · GPS 오차범위 약 ${locationAccuracy}m` : "정류장 번호를 확인한 뒤 목적지를 입력하세요."}</p></div>
         </div>}
         <h2>목적지를 입력하세요</h2>
@@ -383,7 +391,7 @@ export default function QrMain() {
 
       {submitted && start && (
         <section className="qrmain__results qrmain__results-page" aria-live="polite" ref={resultsRef}>
-          <div className="qrmain__results-title"><button type="button" onClick={() => setSubmitted("")}><ChevronLeft aria-hidden="true" /> 목적지 다시 입력</button><h2>{submitted}까지 가는 버스</h2></div>
+          <div className="qrmain__results-title"><span>목적지</span><h2>{submitted}</h2></div>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
           ) : results.length === 0 ? (
@@ -413,22 +421,16 @@ export default function QrMain() {
                 <div className="qrmain__result-set" key={`${destination.id}-${index}`}>
                   {routeArrivals.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={index === 0 && routeIndex === 0} key={item.routeNo}>
-                      {index === 0 && routeIndex === 0 && <span className="qrmain__recommend">가장 빨리 도착해요</span>}
-                      <p className="qrmain__instruction">이 버스를 타세요</p>
+                      <p className="qrmain__recommend">가장 빠른 버스</p>
                       <div className="qrmain__route-head">
-                        <span className="qrmain__bus-icon"><BusFront aria-hidden="true" /></span>
                         <div><strong>{item.routeNo}번</strong><small>{option.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
-                        <p><b>총 약 {item.totalMin}분</b><span>{clockAfter(item.totalMin)} 도착 예상</span></p>
-                      </div>
-                      <div className="qrmain__timing">
-                        <p><Clock3 aria-hidden="true" /><span>버스</span><b>{item.waitMin}분 후</b></p>
-                        <p><MapPin aria-hidden="true" /><span>타는 곳까지</span><b>도보 {option.walkMin}분</b></p>
+                        <p><b>{item.waitMin}분 후</b><span>총 약 {item.totalMin}분 · {clockAfter(item.totalMin)} 도착</span></p>
                       </div>
                       <div className="qrmain__boarding">
                         <span>버스를 탈 곳</span>
                         <strong>{start.name} <small>{start.stopNo ? `#${start.stopNo}` : ""}</small></strong>
-                        <p><b>{item.directionName} 방면</b> · 다음 정류장 기준 방향</p>
-                        <p>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</p>
+                        <p><b>{item.directionName} 방면</b> · 도보 {option.walkMin}분</p>
+                        <small>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
                       </div>
                     </article>
                   ))}
@@ -437,7 +439,7 @@ export default function QrMain() {
             })
           )}
           {results.length > 0 && (
-            <button type="button" className="qrmain__report" onClick={locateForReport}><MessageCircle aria-hidden="true" /> 이 정류장에서 불편한 점 알리기</button>
+            <button type="button" className="qrmain__report" onClick={locateForReport}>정류장 불편 신고</button>
           )}
         </section>
       )}
