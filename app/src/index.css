@@ -38,7 +38,8 @@ body .poster {
   background: var(--surface);
 }
 
-body .home { height: min(844px, 100svh); }
+body .home,
+body .qrmain { height: min(844px, 100svh); }
 body .tripview,
 body .favpage,
 body .poster {
