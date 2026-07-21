@@ -8,8 +8,7 @@ param(
   [string]$BasisOutputCsv = '',
   [string]$PriorityEvidenceOutputCsv = '',
   [string]$StopIdMappingCsv = '',
-  [string]$OperationalAuditCsv = '',
-  [string]$OperationalVerificationOutputCsv = ''
+  [string]$OperationalAuditCsv = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -78,7 +77,7 @@ function Get-MajorDirection([string]$stopId) {
   return ($major -join ' / ') + ' 방면'
 }
 
-$candidateRows = foreach ($survey in $surveyRows) {
+$fullRows = foreach ($survey in $surveyRows) {
   $id = [string]$survey.관리번호
   $location = $locationById[$id]
   $stop = $stopById[$id]
@@ -120,49 +119,7 @@ $candidateRows = foreach ($survey in $surveyRows) {
   }
 }
 
-# 현재 운행 조사표에는 춘천시 노선정보로 운행이 확인되는 정류장만 둔다.
-# 위치 원본에만 남아 있거나 TAGO·지도 대조가 필요한 항목은 검증대장으로 분리한다.
-$fullRows = @($candidateRows | Where-Object { $routeEntriesByStop.ContainsKey([string]$_.관리번호) })
-for ($i = 0; $i -lt $fullRows.Count; $i++) {
-  $fullRows[$i].'조사 순번(내부 작업순서)' = [string]($i + 1)
-}
-
 $fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding UTF8
-
-if (-not $OperationalVerificationOutputCsv) {
-  $OperationalVerificationOutputCsv = Join-Path (Split-Path -Parent $FullOutputCsv) '춘천시_버스정류장_운행정보_검증대장.csv'
-}
-$verificationRows = @($operationalAuditByManagementId.Values | Sort-Object { [int]$_.'정류장 번호' } | ForEach-Object {
-  [pscustomobject][ordered]@{
-    '정류장 번호' = [string]$_.'정류장 번호'
-    관리번호 = [string]$_.관리번호
-    정류장명 = [string]$_.정류장명
-    경도 = [string]$_.경도
-    위도 = [string]$_.위도
-    '춘천시 위치정보' = [string]$_.춘천시위치정보
-    '춘천시 노선정보 건수' = [string]$_.춘천시노선정보
-    'TAGO 정류소 확인' = [string]$_.TAGO
-    'OSM 지도 정류장 객체' = [string]$_.지도객체
-    '최근접 동일명 활성 관리번호' = [string]$_.'최근접_동일명_활성관리번호'
-    '최근접 동일명 활성 정류장 거리(m)' = [string]$_.'최근접_동일명_거리m'
-    '검증 분류' = [string]$_.종합분류
-    '현재 운영판정' = '운행 미확인·활성 조사표 제외'
-    '후속 조치' = if ([string]$_.종합분류 -like '동일명 활성 정류장*') {
-      '변경이력 확인 후 중복·이전·폐지 중 최종 판정'
-    } elseif ([string]$_.종합분류 -like '지도상 정류장 객체*') {
-      '현장 시설과 운행 여부 확인 후 복원 여부 판정'
-    } else {
-      '현장 및 행정 변경이력 확인 후 최종 판정'
-    }
-    '카카오 지도 확인 URL' = [string]$_.카카오지도URL
-    '카카오 로드뷰 확인 URL' = [string]$_.카카오로드뷰URL
-    '최종 판정' = ''
-    '판정 근거·변경이력' = ''
-    '확인일' = ''
-    확인자 = ''
-  }
-})
-$verificationRows | Export-Csv -LiteralPath $OperationalVerificationOutputCsv -NoTypeInformation -Encoding UTF8
 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
@@ -186,7 +143,7 @@ $columnBasis = @(
   [pscustomobject]@{ 열='표본기간 한낮(11~16시) 개별 승차건수'; 구분='승차 ID별 집계'; 공식출처='강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'; 원본필드='수집일자, 정류장아이디, 이용시간대, 승차건수'; 처리='2025-06-25~28의 11~16시 승차건수를 승차 정류장 ID별로 합산'; 비고='관리번호 매칭이 보류된 행은 빈칸' }
   [pscustomobject]@{ 열='승차자료 매칭방법·신뢰등급'; 구분='공식자료 및 좌표 기반 연결'; 공식출처='국토교통부 버스정류장 API, 춘천시 위치정보'; 원본필드='정류장 ID, ARS 번호, 읍면동, 관리번호, 정류장 번호, 좌표'; 처리='ARS 직접 일치, 단일 후보, 읍면동 1:1만 연결'; 비고='근거가 부족한 경우 합산하거나 임의 배정하지 않고 보류' }
   [pscustomobject]@{ 열='주요 진행방면(공식 노선순서 기반)'; 구분='공식자료 기반 파생'; 공식출처='강원특별자치도 춘천시_버스정류장 노선정보_20260326.csv'; 원본필드='노선, 정류장순서, 정류장, 정류장명'; 처리='해당 관리번호 뒤에 가장 자주 등장하는 다음 정류장 최대 2곳을 방면으로 표시'; 비고='춘천시 원본의 공식 상행·하행 필드가 아니라 노선순서 기반 파생값' }
-  [pscustomobject]@{ 열='운행정보 연결상태·확인조치'; 구분='교차검증 상태'; 공식출처='춘천시 위치·노선정보, TAGO 정류소정보, OpenStreetMap 지도 객체'; 원본필드='관리번호/정류소ID 존재 여부, 좌표, 지도 정류장 객체'; 처리='현재 운행 조사표에는 춘천시 노선정보 연결 정류장만 유지하고, 미연결 37건은 별도 검증대장으로 분리'; 비고='지도 객체는 시설 존재 참고값이며 운행 근거가 아님. 카카오 링크는 수기 확인용' }
+  [pscustomobject]@{ 열='운행정보 연결상태·확인조치'; 구분='교차검증 상태'; 공식출처='춘천시 위치·노선정보, TAGO 정류소정보, OpenStreetMap 지도 객체'; 원본필드='관리번호/정류소ID 존재 여부, 좌표, 지도 정류장 객체'; 처리='노선 미연결 37건을 TAGO·OSM·50m 이내 동일명 활성 정류장과 대조해 3개 상태로 분류'; 비고='카카오 지도·로드뷰 링크는 수기 확인용이며, 미연결만으로 폐지·비활성 확정 금지' }
   [pscustomobject]@{ 열='조사 순번(내부 작업순서)'; 구분='프로젝트 내부값'; 공식출처='없음'; 원본필드='없음'; 처리='기존 대상 선정 결과의 작업 순서를 보존'; 비고='개별 정류장 위험도나 공식 행정 우선순위로 사용하지 않음' }
   [pscustomobject]@{ 열='정류장 위치 확인 URL(카카오맵)'; 구분='편의용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오맵 위치 링크 형식으로 변환'; 비고='춘천시 원본 필드가 아닌 조사 참고 링크' }
   [pscustomobject]@{ 열='정류장 주변 확인 URL(카카오 로드뷰)'; 구분='조사용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오 로드뷰 링크 형식으로 변환'; 비고='가장 가까운 파노라마로 이동할 수 있음' }
@@ -199,9 +156,7 @@ if (-not $PriorityEvidenceOutputCsv) {
   $PriorityEvidenceOutputCsv = Join-Path (Split-Path -Parent $FullOutputCsv) 'roadview_survey_priority_evidence.csv'
 }
 
-$activeManagementIds = @{}
-foreach ($row in $fullRows) { $activeManagementIds[[string]$row.관리번호] = [string]$row.'조사 순번(내부 작업순서)' }
-$priorityEvidence = foreach ($survey in ($surveyRows | Where-Object { $activeManagementIds.ContainsKey([string]$_.관리번호) })) {
+$priorityEvidence = foreach ($survey in $surveyRows) {
   $id = [string]$survey.관리번호
   $location = $locationById[$id]
   $stop = $stopById[$id]
@@ -211,7 +166,7 @@ $priorityEvidence = foreach ($survey in ($surveyRows | Where-Object { $activeMan
   $numericRank = 0
   $hasRank = [int]::TryParse([string]$survey.우선순위, [ref]$numericRank)
   [pscustomobject][ordered]@{
-    우선순위 = [string]$activeManagementIds[$id]
+    우선순위 = [string]$survey.우선순위
     '조사대상 구분' = if ($hasRank) { '승차자료 있음(순위 산정)' } else { '승차자료 없음(별도 조사)' }
     '정류장 번호' = if ($location) { [string]$location.'정류장 번호' } else { '' }
     관리번호 = $id
@@ -238,5 +193,3 @@ Write-Output "FULL_OUTPUT=$FullOutputCsv"
 Write-Output "MAENG_OUTPUT=$MaengOutputCsv"
 Write-Output "BASIS_OUTPUT=$BasisOutputCsv"
 Write-Output "PRIORITY_EVIDENCE_OUTPUT=$PriorityEvidenceOutputCsv"
-Write-Output "VERIFICATION_ROWS=$($verificationRows.Count)"
-Write-Output "VERIFICATION_OUTPUT=$OperationalVerificationOutputCsv"
