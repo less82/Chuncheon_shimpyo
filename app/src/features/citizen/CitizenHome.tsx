@@ -2,7 +2,7 @@
 // 화면당 주행동 1개: "가까운 정류장 정보 보기". 검색·메뉴·온보딩 없음.
 
 import { useEffect, useState } from "react";
-import { BusFront, ChevronRight, MapPin, QrCode, Share2, Star } from "lucide-react";
+import { BusFront, ChevronRight, MapPin, MessageCircle, QrCode, Share2, Star, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import MapView from "../map/MapView";
 import StopCard from "./StopCard";
@@ -84,14 +84,27 @@ export default function CitizenHome() {
         )}
       </section>
 
-      <div className="home__route-action">
-        <Link to="/go"><BusFront aria-hidden="true" /><span><small>목적지를 검색하고</small><strong>버스로 가는 길 찾기</strong></span><ChevronRight aria-hidden="true" /></Link>
+      <div className="home__main-actions" aria-label="주요 기능">
+        <Link className="home__main-action home__main-action--route" to="/go">
+          <BusFront aria-hidden="true" /><span><small>목적지로</small><strong>길찾기</strong></span><ChevronRight aria-hidden="true" />
+        </Link>
+        <Link className="home__main-action home__main-action--report" to="/report">
+          <MessageCircle aria-hidden="true" /><span><small>고장·불편</small><strong>알리기</strong></span><ChevronRight aria-hidden="true" />
+        </Link>
       </div>
 
       <div className="home__map-head"><span>주변 정류장</span><small>지도의 정류장을 눌러보세요</small></div>
 
       <div className="home__map">
         <MapView onSelect={setSelected} selectedId={selected?.id} />
+        {selected && !sharing && (
+          <div className="home__selected" role="status">
+            <span className="home__selected-pin"><MapPin aria-hidden="true" /></span>
+            <span><strong>{selected.name}</strong><small>{selected.routes.slice(0, 3).join(" · ") || "노선 확인 중"}</small></span>
+            <Link to={`/go?dest=${encodeURIComponent(selected.id)}`}>길찾기</Link>
+            <button type="button" onClick={() => setSelected(null)} aria-label="선택한 정류장 닫기"><X aria-hidden="true" /></button>
+          </div>
+        )}
       </div>
 
       <div className="home__sheet">

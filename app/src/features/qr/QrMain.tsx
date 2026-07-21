@@ -102,10 +102,11 @@ export function findTrips(
     .slice(0, 8);
 }
 
-export default function QrMain() {
+export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode }) {
   const stops = useStops((state) => state.stops);
   const loaded = useStops((state) => state.loaded);
-  const [mode, setMode] = useState<QrMode>("home");
+  const [mode, setMode] = useState<QrMode>(initialMode);
+  const initialActionStarted = useRef(false);
   const [startId, setStartId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
@@ -242,6 +243,12 @@ export default function QrMain() {
     setManualStopQuery("");
     setShowStartSearch(false);
   };
+
+  useEffect(() => {
+    if (initialMode !== "report" || initialActionStarted.current || !loaded) return;
+    initialActionStarted.current = true;
+    locateForReport();
+  }, [initialMode, loaded]);
 
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
@@ -386,18 +393,15 @@ export default function QrMain() {
           <QrStopMap stop={start} />
         </div>}
         <h2>목적지를 입력하세요</h2>
-        <button type="button" className="qrmain__mic" data-listening={listeningTarget === "destination"} onClick={() => startVoice("destination")}>
-          <Mic aria-hidden="true" />
-          {listeningTarget === "destination" ? "듣는 중 · 누르면 완료" : "목적지 말하기"}
-        </button>
-        <form className="qrmain__form" onSubmit={submit}>
+        <form className="qrmain__voice-input" onSubmit={submit}>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="예: 한림대학교"
             aria-label="목적지"
+            enterKeyHint="search"
           />
-          <button type="submit">찾기</button>
+          <button type="button" data-listening={listeningTarget === "destination"} aria-label={listeningTarget === "destination" ? "목적지 듣는 중, 누르면 완료" : "목적지 말하기"} onClick={() => startVoice("destination")}><Mic aria-hidden="true" /></button>
         </form>
       </section>}
 

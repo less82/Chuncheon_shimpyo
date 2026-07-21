@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/" element={<CitizenHome />} />
         <Route path="/app" element={<CitizenHome />} />
         <Route path="/qr_main" element={<QrMain />} />
+        <Route path="/report" element={<QrMain initialMode="report" />} />
         <Route path="/design-preview" element={<DesignPreview />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/go" element={<TripView />} />
