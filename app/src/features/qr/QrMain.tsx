@@ -9,6 +9,7 @@ import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { haversine } from "../../lib/geo";
 import { planTrip } from "../trip/planTrip";
+import { saveReport } from "../report/reportStore";
 import "./QrMain.css";
 
 interface SpeechResultEvent {
@@ -63,13 +64,6 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
 function clockAfter(minutes: number): string {
   return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
     .format(new Date(Date.now() + minutes * 60_000));
-}
-
-function saveReport(stop: Stop, issue: string): void {
-  const key = "shimpyo:reports";
-  const previous = JSON.parse(localStorage.getItem(key) ?? "[]") as unknown[];
-  previous.push({ id: crypto.randomUUID(), stopId: stop.id, stopNo: stop.stopNo, stopName: stop.name, issue, createdAt: new Date().toISOString(), status: "received" });
-  localStorage.setItem(key, JSON.stringify(previous));
 }
 
 export function findTrips(

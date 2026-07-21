@@ -44,6 +44,7 @@ const stops: Stop[] = [
 ];
 
 beforeEach(() => {
+  localStorage.clear();
   useStops.setState({
     stops,
     cityCenter: { lat: 37.88, lng: 127.73 },
@@ -97,6 +98,13 @@ describe("<Dashboard> — 조건 필터 탭(v1 보존)", () => {
 });
 
 describe("<Dashboard> — (a) 탭 구조", () => {
+  it("시민 앱에서 저장한 불편 제보를 기본 화면에 표시한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([{ id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" }]));
+    const { getByText } = render(<Dashboard />);
+    expect(getByText("의자가 없어요")).toBeInTheDocument();
+    expect(getByText("#1001 · 250000001")).toBeInTheDocument();
+  });
+
   it("1단계/2단계/조건 필터 탭이 모두 존재한다", () => {
     const { getByRole } = render(<Dashboard />);
     expect(getByRole("tab", { name: "1단계 조사 검토 순서" })).toBeInTheDocument();
@@ -104,8 +112,9 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     expect(getByRole("tab", { name: "조건 필터" })).toBeInTheDocument();
   });
 
-  it("1단계 탭(기본)에서 수요 미확인 조사 후보 섹션이 노출된다", () => {
-    const { getByText } = render(<Dashboard />);
+  it("1단계 탭에서 수요 미확인 조사 후보 섹션이 노출된다", () => {
+    const { getByText, getByRole } = render(<Dashboard />);
+    fireEvent.click(getByRole("tab", { name: "1단계 조사 검토 순서" }));
     expect(getByText("수요 미확인 조사 후보 — 순위 없음")).toBeInTheDocument();
   });
 
@@ -161,6 +170,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
 describe("<Dashboard> — (b) 프리셋 + 정책 시나리오 비교", () => {
   it("프리셋 3버튼과 각 rationale이 표시된다", () => {
     const { getByRole, getByText } = render(<Dashboard />);
+    fireEvent.click(getByRole("tab", { name: "1단계 조사 검토 순서" }));
     expect(getByRole("button", { name: "폭염 대응형" })).toBeInTheDocument();
     expect(getByRole("button", { name: "고령자 이동지원형" })).toBeInTheDocument();
     expect(getByRole("button", { name: "이용량 중심형" })).toBeInTheDocument();
@@ -169,7 +179,8 @@ describe("<Dashboard> — (b) 프리셋 + 정책 시나리오 비교", () => {
   });
 
   it("정책 시나리오 비교 표가 노출된다", () => {
-    const { getByText } = render(<Dashboard />);
+    const { getByText, getByRole } = render(<Dashboard />);
+    fireEvent.click(getByRole("tab", { name: "1단계 조사 검토 순서" }));
     expect(getByText("정책 시나리오 비교")).toBeInTheDocument();
   });
 
@@ -181,13 +192,15 @@ describe("<Dashboard> — (b) 프리셋 + 정책 시나리오 비교", () => {
 
 describe("<Dashboard> — (c) 실측값 병기 + 표본 배지", () => {
   it("1단계 표에 한낮 승차 실측값이 병기되고 지수는 별도 열", () => {
-    const { getAllByText } = render(<Dashboard />);
+    const { getAllByText, getByRole } = render(<Dashboard />);
+    fireEvent.click(getByRole("tab", { name: "1단계 조사 검토 순서" }));
     expect(getAllByText("한낮 승차*").length).toBeGreaterThan(0);
     expect(getAllByText("지수(보조)").length).toBeGreaterThan(0);
   });
 
   it("'2025.6 4일 표본, 양방향 합산' 배지가 상시 노출된다", () => {
-    const { getByText } = render(<Dashboard />);
+    const { getByText, getByRole } = render(<Dashboard />);
+    fireEvent.click(getByRole("tab", { name: "1단계 조사 검토 순서" }));
     expect(getByText("2025.6 4일 표본, 양방향 합산")).toBeInTheDocument();
   });
 });
