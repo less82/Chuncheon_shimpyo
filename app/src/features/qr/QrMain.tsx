@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Armchair, BusFront, ChevronLeft, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Navigation, Search, Umbrella } from "lucide-react";
+import { Armchair, BusFront, ChevronLeft, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Navigation, Umbrella } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -110,6 +110,7 @@ export default function QrMain() {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [outsideServiceArea, setOutsideServiceArea] = useState(false);
+  const [showLocationNotice, setShowLocationNotice] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [stopDistance, setStopDistance] = useState<number | null>(null);
   const [locationSource, setLocationSource] = useState<LocationSource>(null);
@@ -151,6 +152,13 @@ export default function QrMain() {
     () => (start && routes ? findTrips(submitted, start, stops, routes) : []),
     [submitted, start, stops, routes],
   );
+
+  useEffect(() => {
+    if (!outsideServiceArea && !locationError) return;
+    setShowLocationNotice(true);
+    const timer = window.setTimeout(() => setShowLocationNotice(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [outsideServiceArea, locationError]);
 
   const openDestination = () => {
     setMode("destination");
@@ -247,7 +255,7 @@ export default function QrMain() {
   };
 
   const manualStopSearch = <div className="qrmain__manual-stop">
-    <label htmlFor="manual-stop">정류장을 직접 찾을 수도 있어요</label>
+    <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
     <div><input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 4자리 번호" /></div>
     {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
   </div>;
@@ -357,14 +365,13 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {(outsideServiceArea || locationError) && <div className="qrmain__location-error" role="alert"><b>{outsideServiceArea ? "주변 정류장을 찾지 못했어요." : "현재 위치를 확인하지 못했어요."}</b><span>{outsideServiceArea ? `가장 가까운 춘천 정류장도 ${readableDistance(stopDistance)} 떨어져 있어 길찾기를 중단했습니다.` : "위치 권한을 허용하거나 정류장을 직접 찾아주세요."}</span><button type="button" onClick={openDestination}>위치 다시 확인하기</button></div>}
+        {showLocationNotice && <div className="qrmain__location-notice" role="status">{outsideServiceArea ? "주변 정류장을 찾지 못했어요" : "현재 위치를 확인하지 못했어요"}</div>}
         {(outsideServiceArea || locationError) && manualStopSearch}
         {start && locationSource && <div className="qrmain__location-proof">
           <iframe className="qrmain__map" title={`${start.name} 주변 지도`} src={mapEmbedUrl(start)} loading="lazy" />
           <div><span><MapPin aria-hidden="true" /> {locationSource === "gps" ? "GPS로 찾은 가장 가까운 정류장" : "직접 선택한 정류장"}</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>{locationSource === "gps" ? `현재 위치에서 약 ${stopDistance}m · GPS 오차범위 약 ${locationAccuracy}m` : "지도와 정류장 번호를 확인한 뒤 목적지를 입력하세요."}</p></div>
         </div>}
-        <h2>어디로 가세요?</h2>
-        <p>마이크를 누르고 목적지를 말씀해 주세요.</p>
+        <h2>목적지를 입력하세요</h2>
         <button type="button" className="qrmain__mic" data-listening={listening} onClick={startVoice}>
           <Mic aria-hidden="true" />
           {listening ? "듣고 있어요…" : "목적지 말하기"}
@@ -376,9 +383,8 @@ export default function QrMain() {
             placeholder="예: 한림대학교"
             aria-label="목적지"
           />
-          <button type="submit"><Search aria-hidden="true" /> 찾기</button>
+          <button type="submit">찾기</button>
         </form>
-        {locationError && <div className="qrmain__location-error" role="alert"><b>위치를 확인하지 못했어요.</b><span>휴대폰의 위치 사용을 허용한 뒤 다시 눌러주세요.</span><button type="button" onClick={() => requestTrip(query.trim())}>위치 다시 확인하기</button></div>}
       </section>}
 
       {submitted && start && (
