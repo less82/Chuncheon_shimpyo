@@ -58,9 +58,8 @@
 .qrmain button:active { background-color: var(--brand-strong); color: white; }
 
 /* 홈 */
-.qrmain__welcome { min-height: 100%; padding-top: 32px; }
-.qrmain__brand { display: block; color: var(--brand); font-size: 18px; font-weight: 900; }
-.qrmain__hello { margin-top: 64px; }
+.qrmain__welcome { min-height: 100%; padding-top: 96px; text-align: center; }
+.qrmain__hello { margin-top: 0; }
 .qrmain__hello h1 { font-size: 36px; line-height: 1.2; letter-spacing: -1.2px; }
 .qrmain__choices { display: grid; gap: 16px; margin-top: 40px; }
 .qrmain__choices button { min-height: 96px; padding: 16px; border: 2px solid var(--brand); border-radius: 16px; background: var(--brand); color: white; cursor: pointer; }

@@ -311,7 +311,6 @@ export default function QrMain() {
     return (
       <main className="qrmain">
         <section className="qrmain__welcome">
-          <span className="qrmain__brand">쉼표 정류장</span>
           <div className="qrmain__hello">
             <h1>무엇을 하시겠어요?</h1>
           </div>
