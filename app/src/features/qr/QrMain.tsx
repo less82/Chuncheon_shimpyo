@@ -97,11 +97,10 @@ export function findTrips(
     .slice(0, 8);
 }
 
-export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode }) {
+export default function QrMain() {
   const stops = useStops((state) => state.stops);
   const loaded = useStops((state) => state.loaded);
-  const [mode, setMode] = useState<QrMode>(initialMode);
-  const initialActionStarted = useRef(false);
+  const [mode, setMode] = useState<QrMode>("home");
   const [startId, setStartId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
@@ -230,12 +229,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
     setOutsideServiceArea(false);
     setManualStopQuery("");
   };
-
-  useEffect(() => {
-    if (initialMode !== "report" || initialActionStarted.current || !loaded) return;
-    initialActionStarted.current = true;
-    locateForReport();
-  }, [initialMode, loaded]);
 
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>

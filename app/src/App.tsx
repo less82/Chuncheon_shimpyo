@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CitizenHome from "./features/citizen/CitizenHome";
 import Favorites from "./features/citizen/Favorites";
+import AppReport from "./features/citizen/AppReport";
 import TripView from "./features/trip/TripView";
 import PrintPoster from "./features/print/PrintPoster";
 import Dashboard from "./features/admin/Dashboard";
@@ -26,7 +27,7 @@ export default function App() {
         <Route path="/" element={<CitizenHome />} />
         <Route path="/app" element={<CitizenHome />} />
         <Route path="/qr_main" element={<QrMain />} />
-        <Route path="/report" element={<QrMain initialMode="report" />} />
+        <Route path="/app/report" element={<AppReport />} />
         <Route path="/design-preview" element={<DesignPreview />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/go" element={<TripView />} />

@@ -88,7 +88,7 @@ export default function CitizenHome() {
         <Link className="home__main-action home__main-action--route" to="/go">
           <BusFront aria-hidden="true" /><span><small>목적지로</small><strong>길찾기</strong></span><ChevronRight aria-hidden="true" />
         </Link>
-        <Link className="home__main-action home__main-action--report" to="/report">
+        <Link className="home__main-action home__main-action--report" to="/app/report">
           <MessageCircle aria-hidden="true" /><span><small>고장·불편</small><strong>알리기</strong></span><ChevronRight aria-hidden="true" />
         </Link>
       </div>
