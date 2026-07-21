@@ -26,17 +26,16 @@
 .qrmain__quick-report button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: white; }
 .qrmain__report-submit { width: 100%; min-height: 60px; margin-top: var(--sp-4); border: 0; border-radius: var(--radius); background: var(--brand); color: white; font-size: 18px; font-weight: 900; }
 .qrmain__report-submit:disabled { background: var(--border-strong); cursor: not-allowed; }
-.qrmain__stop-confirm { text-align: center; }
-.qrmain__stop-confirm > p { color: var(--ink-muted); }
-.qrmain__stop-confirm > h1 { margin: var(--sp-2) 0; font-size: 34px; }
+.qrmain__report-location, .qrmain__stop-confirm { margin: 0; padding: 8px 4px 32px; background: transparent; text-align: left; }
+.qrmain__report-location h1, .qrmain__stop-confirm > h1 { margin: 20px 0 8px; font-size: 28px; line-height: 1.3; letter-spacing: -.6px; word-break: keep-all; }
 .qrmain__stop-confirm > strong { color: var(--brand); }
-.qrmain__stop-confirm > h2 { margin-top: var(--sp-6); font-size: 24px; }
+.qrmain__stop-confirm > h2 { margin: 28px 0 0; font-size: 28px; line-height: 1.3; }
 .qrmain__confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-3); }
 .qrmain__confirm-actions button { min-height: 60px; border: 2px solid var(--brand); border-radius: var(--radius); background: white; color: var(--brand); font-size: 18px; font-weight: 900; }
 .qrmain__confirm-actions button:first-child { background: var(--brand); color: white; }
 .qrmain__nearby { display: grid; gap: var(--sp-2); margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--border); text-align: left; }
 .qrmain__nearby span { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
-.qrmain__nearby button { min-height: 48px; padding: 0 var(--sp-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--ink); text-align: left; font-weight: 800; }
+.qrmain__nearby button { min-height: 48px; padding: 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: white; color: var(--ink); text-align: left; font-weight: 800; }
 .qrmain__report-complete { margin-top: 18vh; text-align: center; }
 .qrmain__consent { margin-top: 12vh; }
 .qrmain__consent h1 { margin-bottom: var(--sp-3); font-size: 32px; }
@@ -53,13 +52,13 @@
 .qrmain__voice-input button[data-listening="true"] { background: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
 .qrmain__form { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); }
 .qrmain__form input { min-width: 0; min-height: 60px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); font-size: 18px; }
-.qrmain input:focus { border-color: var(--brand); outline: 3px solid var(--brand-soft); outline-offset: 1px; }
+.qrmain input:focus { border-color: var(--brand); outline: 2px solid var(--brand); outline-offset: 1px; }
 .qrmain button:active { background-color: var(--brand-strong); color: white; }
 .qrmain__form button { min-width: 78px; min-height: 60px; padding: 0 18px; border: 0; border-radius: var(--radius); background: var(--ink); color: white; font-size: 17px; font-weight: 900; }
 .qrmain__located { display: inline-flex; align-items: center; gap: 5px; margin-bottom: var(--sp-3); padding: 7px 10px; border-radius: var(--radius-pill); background: var(--yes-bg); color: var(--yes); font-size: 14px; font-weight: 900; }
 .qrmain__located svg { width: 17px; }
 .qrmain__destination-page { position: relative; display: grid; gap: 16px; margin: 0; padding: 8px 4px 32px; border-radius: 0; background: transparent; box-shadow: none; }
-.qrmain__destination-page > h2, .qrmain__manual-stop label { margin: 20px 0 0; color: var(--ink); font-size: 28px; line-height: 1.3; font-weight: 900; letter-spacing: -.6px; word-break: keep-all; }
+.qrmain__destination-page > h2, .qrmain__manual-stop label { margin: 20px 0 0; color: var(--ink); font-size: 26px; line-height: 1.3; font-weight: 900; letter-spacing: -.6px; word-break: keep-all; }
 .qrmain__location-proof { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-2); }
 .qrmain__location-proof .qrmain__map { height: 190px; margin: 0; border-radius: var(--radius-lg); }
 .qrmain__location-recovery { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%; padding: 8px 0; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.35; }

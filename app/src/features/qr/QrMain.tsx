@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ChevronLeft, MapPin, Mic, Navigation } from "lucide-react";
+import { ChevronLeft, Mic, Navigation } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -74,11 +74,6 @@ function clockAfter(minutes: number): string {
     .format(new Date(Date.now() + minutes * 60_000));
 }
 
-function readableDistance(distance: number | null): string {
-  if (distance === null) return "거리를 확인할 수 없는 곳";
-  return distance >= 1000 ? `약 ${(distance / 1000).toFixed(1)}km` : `약 ${distance}m`;
-}
-
 export function findTrips(
   query: string,
   start: Stop,
@@ -111,7 +106,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [outsideServiceArea, setOutsideServiceArea] = useState(false);
-  const [stopDistance, setStopDistance] = useState<number | null>(null);
   const [locationSource, setLocationSource] = useState<LocationSource>(null);
   const [manualStopQuery, setManualStopQuery] = useState("");
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
@@ -159,7 +153,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
     setLocationError(false);
     setOutsideServiceArea(false);
     setStartId(null);
-    setStopDistance(null);
     setLocationSource(null);
     if (!navigator.geolocation) { setLocationError(true); return; }
     setLocating(true);
@@ -169,7 +162,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
         const distance = nearest ? Math.round(haversine({ lat: coords.latitude, lng: coords.longitude }, nearest)) : null;
         const usable = nearest && distance !== null && distance <= MAX_NEARBY_STOP_DISTANCE_M;
         setStartId(usable ? nearest.id : null);
-        setStopDistance(distance);
         setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(Boolean(nearest && !usable));
         setLocationError(!nearest);
@@ -194,7 +186,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
     setReportIssue("");
     setOutsideServiceArea(false);
     setStartId(null);
-    setStopDistance(null);
     setLocationSource(null);
     if (!navigator.geolocation) {
       setLocationError(true);
@@ -208,7 +199,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
         const usable = distance !== null && distance <= MAX_NEARBY_STOP_DISTANCE_M;
         setNearbyStops(candidates);
         setStartId(usable ? candidates[0]?.id ?? null : null);
-        setStopDistance(distance);
         setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(candidates.length > 0 && !usable);
         setLocationError(candidates.length === 0);
@@ -237,7 +227,6 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
   const chooseManualStop = (stop: Stop) => {
     setStartId(stop.id);
     setLocationSource("manual");
-    setStopDistance(null);
     setLocationError(false);
     setOutsideServiceArea(false);
     setManualStopQuery("");
@@ -349,22 +338,22 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
 
   if (mode === "report") {
     if (locating) return <main className="qrmain"><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
-    if (locationError || outsideServiceArea || !start) return <main className="qrmain"><section className="qrmain__error">
-      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
-      <Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>{outsideServiceArea ? "주변 정류장을 찾지 못했어요" : "현재 위치가 필요해요"}</h1><p>{outsideServiceArea ? `가장 가까운 춘천 정류장도 ${readableDistance(stopDistance)} 떨어져 있어 신고 대상으로 선택하지 않았어요.` : "불편한 정류장을 확인하려면 위치 사용을 허용해 주세요."}</p><button type="button" className="qrmain__retry" onClick={locateForReport}>위치 다시 확인하기</button>
+    if (locationError || outsideServiceArea || !start) return <main className="qrmain"><section className="qrmain__report-location">
+      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
+      <h1>주변 정류장을 찾지 못했습니다</h1>
+      <button type="button" className="qrmain__retry" onClick={locateForReport}>위치 다시 확인하기</button>
       {manualStopSearch}
     </section></main>;
-    if (!reportConfirmed) return <main className="qrmain"><section className="qrmain__ask qrmain__stop-confirm">
-      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
-      <span className="qrmain__report-icon"><MapPin aria-hidden="true" /></span>
-      <p>현재 위치에서 가장 가까운 정류장이에요.</p><h1>{start.name}</h1><strong>{start.stopNo ? `정류장 번호 ${start.stopNo}` : "정류장 번호 확인 중"}</strong>
+    if (!reportConfirmed) return <main className="qrmain"><section className="qrmain__stop-confirm">
+      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
+      <h1>{start.name}</h1><strong>{start.stopNo ? `정류장 번호 ${start.stopNo}` : "정류장 번호 확인 중"}</strong>
       <h2>이 정류장이 맞나요?</h2>
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
     </section></main>;
-    if (reportDone) return <main className="qrmain"><section className="qrmain__ask qrmain__report-complete"><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>처음 화면으로</button></section></main>;
+    if (reportDone) return <main className="qrmain"><section className="qrmain__ask qrmain__report-complete"><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>확인</button></section></main>;
     return <main className="qrmain"><section className="qrmain__ask qrmain__report-start">
-      <button className="qrmain__back" type="button" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /> 정류장 다시 확인</button>
+      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /></button>
       <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
       <div className="qrmain__quick-report">{["의자가 없어요", "그늘이 없어요", "안내 화면이 꺼졌어요", "조명이 어두워요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
@@ -374,7 +363,7 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
 
   if (locating) {
     return <main className="qrmain"><section className="qrmain__error">
-      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
+      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
       <Navigation aria-hidden="true" className="qrmain__locate-icon" />
       <h1>가까운 정류장을 찾고 있어요</h1>
       <p>위치를 확인한 뒤 목적지를 여쭤볼게요.</p>
