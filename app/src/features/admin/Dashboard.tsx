@@ -58,11 +58,6 @@ export default function Dashboard() {
   return (
     <main className="dash">
       <div className="dash-browser">
-      <div className="dash-browserbar" aria-hidden="true">
-        <div className="dash-window-controls"><span /><span /><span /></div>
-        <div className="dash-address"><span>🔒</span> localhost:5173/admin</div>
-        <div className="dash-browser-actions">⋯</div>
-      </div>
       <div className="dash-shell">
       <aside className="dash-sidebar">
         <div><span className="dash-kicker">춘천시 교통행정</span><h1 className="dash-title">쉼표정류장</h1></div>
