@@ -74,6 +74,28 @@ function clockAfter(minutes: number): string {
     .format(new Date(Date.now() + minutes * 60_000));
 }
 
+function resizeReportPhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("사진을 읽지 못했습니다."));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("사진을 열지 못했습니다."));
+      image.onload = () => {
+        const maxSide = 1280;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.75));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export function findTrips(
   query: string,
   start: Stop,
@@ -110,6 +132,7 @@ export default function QrMain() {
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
+  const [reportPhoto, setReportPhoto] = useState("");
   const [reportDone, setReportDone] = useState(false);
   const start = stops.find((stop) => stop.id === startId) ?? null;
   const [query, setQuery] = useState("");
@@ -182,6 +205,7 @@ export default function QrMain() {
     setReportConfirmed(false);
     setReportDone(false);
     setReportIssue("");
+    setReportPhoto("");
     setOutsideServiceArea(false);
     setStartId(null);
     setLocationSource(null);
@@ -228,6 +252,18 @@ export default function QrMain() {
     setLocationError(false);
     setOutsideServiceArea(false);
     setManualStopQuery("");
+  };
+
+  const reportCurrentStop = () => {
+    if (!start) return;
+    setMode("report");
+    setReportConfirmed(true);
+    setReportDone(false);
+    setReportIssue("");
+    setReportPhoto("");
+    setLocationError(false);
+    setOutsideServiceArea(false);
+    setLocating(false);
   };
 
   const manualStopSearch = <div className="qrmain__manual-stop">
@@ -346,7 +382,17 @@ export default function QrMain() {
       <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
       <div className="qrmain__quick-report">{["의자가 없어요", "그늘이 없어요", "안내 화면이 꺼졌어요", "조명이 어두워요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
-      <button type="button" className="qrmain__report-submit" disabled={!reportIssue} onClick={() => { saveReport(start, reportIssue); setReportDone(true); }}>불편 사항 보내기</button>
+      <label className="qrmain__photo-input">
+        <span>{reportPhoto ? "사진 다시 찍기" : "사진 찍어 첨부하기"}</span>
+        <input type="file" accept="image/*" capture="environment" onChange={async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          try { setReportPhoto(await resizeReportPhoto(file)); }
+          catch { alert("사진을 불러오지 못했습니다. 다시 촬영해 주세요."); }
+        }} />
+      </label>
+      {reportPhoto && <img className="qrmain__photo-preview" src={reportPhoto} alt="민원 첨부 사진 미리보기" />}
+      <button type="button" className="qrmain__report-submit" disabled={!reportIssue} onClick={() => { saveReport(start, reportIssue, reportPhoto || undefined); setReportDone(true); }}>민원 접수하기</button>
     </section></main>;
   }
 
@@ -423,7 +469,7 @@ export default function QrMain() {
                         <p><b>{item.waitMin}분 후</b><span>총 약 {item.totalMin}분 · {clockAfter(item.totalMin)} 도착</span></p>
                       </div>
                       <div className="qrmain__boarding">
-                        <span>버스를 탈 곳</span>
+                        <span>승차 정류장</span>
                         <strong>{start.name} <small>{start.stopNo ? `#${start.stopNo}` : ""}</small></strong>
                         <p><b>{item.directionName} 방면</b> · 도보 {option.walkMin}분</p>
                         <small>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
@@ -435,7 +481,7 @@ export default function QrMain() {
             })
           )}
           {results.length > 0 && (
-            <button type="button" className="qrmain__report" onClick={locateForReport}>정류장 불편 신고</button>
+            <button type="button" className="qrmain__report" onClick={reportCurrentStop}>이 정류장 민원 접수</button>
           )}
         </section>
       )}

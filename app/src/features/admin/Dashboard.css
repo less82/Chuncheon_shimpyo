@@ -565,3 +565,4 @@
   line-height: 1.8;
   color: var(--ink-body);
 }
+.report-photo { display: block; width: min(100%, 420px); max-height: 300px; border-radius: 10px; object-fit: cover; }

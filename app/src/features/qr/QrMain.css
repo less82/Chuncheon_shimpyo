@@ -104,6 +104,9 @@
 .qrmain__quick-report { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; }
 .qrmain__quick-report button { min-height: 64px; padding: 8px; border: 2px solid var(--border); border-radius: 14px; background: white; color: var(--ink); font-size: 16px; font-weight: 900; }
 .qrmain__quick-report button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: white; }
+.qrmain__photo-input { display: flex; align-items: center; justify-content: center; min-height: 50px; margin-top: 12px; border: 2px solid var(--brand); border-radius: 14px; color: var(--brand); font-size: 16px; font-weight: 900; cursor: pointer; }
+.qrmain__photo-input input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.qrmain__photo-preview { display: block; width: 100%; max-height: 180px; margin-top: 10px; border-radius: 12px; object-fit: cover; }
 .qrmain__report-submit { width: 100%; min-height: var(--qr-control); margin-top: 16px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 18px; font-weight: 900; }
 .qrmain__report-submit:disabled { background: var(--border-strong); cursor: not-allowed; }
 .qrmain__report-complete { margin-top: 80px; }

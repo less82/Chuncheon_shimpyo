@@ -85,6 +85,7 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div><button type="button" onClick={() => setSelectedId(null)} aria-label="검토 팝업 닫기">×</button></header>
           <dl className="report-evidence">
             <div><dt>시민 원문</dt><dd>{selected.issue}</dd></div>
+            {selected.photoDataUrl && <div><dt>첨부 사진</dt><dd><img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} /></dd></div>}
             <div><dt>정류장 근거</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div>
             <div><dt>AI 분류</dt><dd>시설 불편 후보 · 담당자 확정 전</dd></div>
             <div><dt>공식자료 대조</dt><dd>{selected.status === "received" ? "아직 대조하지 않음" : "담당자 확인 단계 통과"}</dd></div>
