@@ -58,7 +58,7 @@
 .qrmain button:active { background-color: var(--brand-strong); color: white; }
 
 /* 홈 */
-.qrmain__welcome { min-height: 100%; padding-top: 96px; text-align: center; }
+.qrmain__welcome { display: flex; min-height: 100%; flex-direction: column; justify-content: center; text-align: center; }
 .qrmain__hello { margin-top: 0; }
 .qrmain__hello h1 { font-size: 36px; line-height: 1.2; letter-spacing: -1.2px; }
 .qrmain__choices { display: grid; gap: 16px; margin-top: 40px; }
