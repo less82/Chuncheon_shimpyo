@@ -1,6 +1,14 @@
 /* 행정 대시보드 — 신뢰감 있는 데이터 화면. 디자인 토큰 재사용. */
 
 .dash {
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-md: 17px;
+  --fs-lg: 21px;
+  --fs-xl: 27px;
+  --fs-2xl: 34px;
+  --touch: 38px;
+  --touch-lg: 44px;
   width: 100%;
   max-width: none;
   height: 100dvh;
@@ -17,24 +25,24 @@
 .dash-browser { width: min(1440px, calc(100vw - 48px), calc((100dvh - 48px) * 16 / 9)); aspect-ratio: 16 / 9; overflow: hidden; border: 9px solid #222a36; border-radius: 22px; background: #f4f6f8; box-shadow: 0 22px 55px rgba(24,35,52,.24); }
 .dash-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); width: 100%; height: 100%; overflow: hidden; background: #f4f6f8; }
 .dash-sidebar { position: relative; display: flex; min-height: 100%; flex-direction: column; padding: 34px 24px; background: var(--brand-strong); color: white; }
-.dash-sidebar .dash-title { color: white; font-size: 30px; }
+.dash-sidebar .dash-title { color: white; font-size: 26px; }
 .dash-kicker { display: block; margin-bottom: 5px; color: #96a6bb; font-size: 13px; font-weight: 900; letter-spacing: .08em; }
 .dash-source { margin-top: auto; color: #aeb9c8; font-size: 14px; line-height: 1.5; }
 .dash-workspace { min-width: 0; height: 100%; padding: 30px clamp(26px, 3.5vw, 54px) 60px; overflow-y: auto; background: #f4f6f8; }
 .dash-presets { grid-template-columns: 1fr; }
 
 .dash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-.dash-head h2 { font-size: 30px; }
+.dash-head h2 { font-size: 25px; }
 .dash-today { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
 .report-flow { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
-.report-flow > div { position: relative; display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: var(--sp-2); padding: var(--sp-4); border: 1px solid var(--border); border-radius: var(--radius); background: white; box-shadow: var(--shadow-card); }
-.report-flow > div > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; background: var(--brand); color: white; font-weight: 900; }
-.report-flow p { font-size: 16px; font-weight: 900; }
-.report-flow strong { font-size: 22px; }
-.report-summary { display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: var(--sp-5); margin-bottom: var(--sp-4); padding: var(--sp-5); border-radius: var(--radius-lg); background: var(--brand-strong); color: white; }
+.report-flow > div { position: relative; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: var(--sp-2); padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: white; box-shadow: var(--shadow-card); }
+.report-flow > div > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: var(--brand); color: white; font-size: 13px; font-weight: 900; }
+.report-flow p { font-size: 13px; font-weight: 900; }
+.report-flow strong { font-size: 17px; }
+.report-summary { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-4); padding: 16px 20px; border-radius: 14px; background: var(--brand-strong); color: white; }
 .report-summary div { display: flex; flex-direction: column; }
 .report-summary span { font-size: var(--fs-sm); font-weight: 800; opacity: .8; }
-.report-summary strong { font-size: 48px; line-height: 1; }
+.report-summary strong { font-size: 34px; line-height: 1; }
 .report-summary p { font-weight: 700; }
 .report-empty { padding: var(--sp-7); border: 2px dashed var(--border-strong); border-radius: var(--radius-lg); background: white; text-align: center; }
 .report-empty h2 { margin-bottom: var(--sp-2); }
@@ -218,17 +226,17 @@
 .dash-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--fs-base);
+  font-size: 13px;
   min-width: 760px;
 }
 .dash-table thead th {
   position: sticky;
   top: 0;
   text-align: left;
-  padding: var(--sp-4);
+  padding: 11px 13px;
   background: var(--brand-strong);
   color: var(--on-brand);
-  font-size: var(--fs-base);
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -259,12 +267,12 @@
   outline-offset: -3px;
 }
 .dash-table td {
-  padding: var(--sp-4);
+  padding: 11px 13px;
   vertical-align: middle;
 }
 .dash-stopname {
   display: block;
-  font-size: var(--fs-md);
+  font-size: 14px;
   font-weight: 700;
   color: var(--ink);
 }
