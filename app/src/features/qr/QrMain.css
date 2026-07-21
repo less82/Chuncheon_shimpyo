@@ -1,5 +1,30 @@
 .qrmain { width: min(430px, 100vw); min-height: 100dvh; margin: 0 auto; padding: var(--sp-4); background: #f4f6f8; color: var(--ink); }
-.qrmain__stop, .qrmain__ask, .qrmain__results, .qrmain__error { max-width: 680px; margin: 0 auto var(--sp-4); padding: var(--sp-5); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }
+.qrmain__stop, .qrmain__ask, .qrmain__results, .qrmain__error, .qrmain__welcome { max-width: 680px; margin: 0 auto var(--sp-4); padding: var(--sp-5); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); }
+.qrmain__welcome { display: flex; min-height: calc(100dvh - 32px); flex-direction: column; padding-top: var(--sp-6); }
+.qrmain__brand { align-self: flex-start; padding: 7px 12px; border-radius: var(--radius-pill); background: var(--brand-soft); color: var(--brand); font-size: 15px; font-weight: 900; }
+.qrmain__hello { margin-top: 52px; }
+.qrmain__hello span { color: var(--brand); font-size: var(--fs-lg); font-weight: 900; }
+.qrmain__hello h1 { margin-top: 4px; font-size: 36px; letter-spacing: -1.5px; }
+.qrmain__welcome > p { margin-top: var(--sp-3); color: var(--ink-muted); font-size: 18px; font-weight: 700; line-height: 1.6; }
+.qrmain__choices { display: grid; gap: var(--sp-3); margin-top: 42px; }
+.qrmain__choices button { display: grid; grid-template-columns: 58px 1fr auto; grid-template-rows: auto auto; align-items: center; gap: 2px var(--sp-3); min-height: 126px; padding: var(--sp-4); border: 2px solid var(--border); border-radius: var(--radius-lg); background: white; color: var(--ink); text-align: left; cursor: pointer; }
+.qrmain__choices button:first-child { border-color: var(--brand); background: #f7f9fc; }
+.qrmain__choices button > span { display: grid; grid-row: 1 / 3; width: 58px; height: 58px; place-items: center; border-radius: 18px; background: var(--brand); color: white; }
+.qrmain__choices button:nth-child(2) > span { background: var(--yes); }
+.qrmain__choices button > span svg { width: 29px; height: 29px; }
+.qrmain__choices strong { align-self: end; font-size: 21px; }
+.qrmain__choices small { align-self: start; color: var(--ink-muted); font-size: 14px; font-weight: 700; }
+.qrmain__choices button > svg { grid-column: 3; grid-row: 1 / 3; }
+.qrmain__welcome .qrmain__privacy { margin-top: auto; padding-top: var(--sp-5); text-align: center; font-size: 14px; }
+.qrmain__back { display: inline-flex; min-height: 48px; margin: 0 0 var(--sp-3); align-items: center; gap: 3px; border: 0; background: transparent; color: var(--ink-body); font-size: 16px; font-weight: 900; cursor: pointer; }
+.qrmain__back svg { width: 20px; }
+.qrmain__error { margin-top: 18vh; text-align: center; }
+.qrmain__error .qrmain__back { display: flex; margin-bottom: var(--sp-5); }
+.qrmain__locate-icon, .qrmain__report-icon { width: 58px; height: 58px; margin-bottom: var(--sp-4); color: var(--brand); }
+.qrmain__retry { min-height: 56px; margin-top: var(--sp-4); padding: 0 var(--sp-5); border: 0; border-radius: var(--radius); background: var(--brand); color: white; font-weight: 900; }
+.qrmain__report-start h1 { margin-bottom: var(--sp-2); font-size: var(--fs-xl); }
+.qrmain__quick-report { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.qrmain__quick-report button { min-height: 68px; padding: var(--sp-2); border: 2px solid var(--border); border-radius: var(--radius); background: white; color: var(--ink); font-size: 16px; font-weight: 900; }
 .qrmain__stop { background: var(--brand-strong); color: var(--on-brand); }
 .qrmain__stop span { font-weight: 800; opacity: .85; }
 .qrmain__stop h1 { margin: var(--sp-2) 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.05; }

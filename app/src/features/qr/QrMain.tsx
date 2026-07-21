@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Armchair, BusFront, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Search, Umbrella } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Armchair, BusFront, ChevronLeft, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Navigation, Search, Umbrella } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import type { TripOption } from "../../types/trip";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { loadRoutes } from "../../lib/loadRoutes";
+import { haversine } from "../../lib/geo";
 import { planTrip } from "../trip/planTrip";
 import "./QrMain.css";
 
@@ -39,6 +40,8 @@ interface RouteSummary {
   totalMin: number;
   live: boolean;
 }
+
+type QrMode = "home" | "destination" | "report";
 
 function normalized(value: string): string {
   return value.replace(/\s+/g, "").toLowerCase();
@@ -89,7 +92,12 @@ export default function QrMain() {
   const [params] = useSearchParams();
   const stops = useStops((state) => state.stops);
   const loaded = useStops((state) => state.loaded);
-  const start = stops.find((stop) => stop.id === params.get("from")) ?? null;
+  const qrStopId = params.get("from");
+  const [mode, setMode] = useState<QrMode>("home");
+  const [startId, setStartId] = useState<string | null>(qrStopId);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState(false);
+  const start = stops.find((stop) => stop.id === startId) ?? null;
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
@@ -127,6 +135,32 @@ export default function QrMain() {
     setSubmitted(query.trim());
   };
 
+  const openDestination = () => {
+    setMode("destination");
+    setLocationError(false);
+    if (startId || qrStopId) return;
+    if (!navigator.geolocation) {
+      setLocationError(true);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const nearest = stops
+          .map((stop) => ({ stop, distance: haversine({ lat: coords.latitude, lng: coords.longitude }, stop) }))
+          .sort((a, b) => a.distance - b.distance)[0]?.stop;
+        setStartId(nearest?.id ?? null);
+        setLocationError(!nearest);
+        setLocating(false);
+      },
+      () => {
+        setLocationError(true);
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
+    );
+  };
+
   const startVoice = () => {
     const speechWindow = window as typeof window & {
       SpeechRecognition?: SpeechRecognitionCtor;
@@ -158,20 +192,57 @@ export default function QrMain() {
     return <main className="qrmain"><p className="qrmain__state">정류장 정보를 불러오는 중…</p></main>;
   }
 
-  if (!start) {
+  if (mode === "home") {
     return (
       <main className="qrmain">
-        <section className="qrmain__error">
-          <h1>정류장 QR을 확인할 수 없습니다</h1>
-          <p>손상되었거나 오래된 QR입니다. 정류장에 부착된 QR을 다시 촬영해 주세요.</p>
-          <Link to="/">시민 메인으로 이동</Link>
+        <section className="qrmain__welcome">
+          <span className="qrmain__brand">쉼표정류장</span>
+          <div className="qrmain__hello"><span>안녕하세요!</span><h1>무엇을 도와드릴까요?</h1></div>
+          <p>복잡하게 찾지 않아도 괜찮아요.<br />원하는 도움을 눌러주세요.</p>
+          <div className="qrmain__choices">
+            <button type="button" onClick={openDestination}>
+              <span><Navigation aria-hidden="true" /></span>
+              <strong>목적지로 가는 길 찾기</strong>
+              <small>목적지를 말씀하면 탈 버스를 알려드려요</small>
+              <ChevronRight aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => setMode("report")}>
+              <span><MessageCircle aria-hidden="true" /></span>
+              <strong>정류장 불편 알리기</strong>
+              <small>기다리며 불편했던 점을 말씀해 주세요</small>
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </div>
+          <p className="qrmain__privacy">로그인 없이 바로 이용할 수 있어요</p>
         </section>
       </main>
     );
   }
 
+  if (mode === "report") {
+    return <main className="qrmain"><section className="qrmain__ask qrmain__report-start">
+      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
+      <span className="qrmain__report-icon"><MessageCircle aria-hidden="true" /></span>
+      <h1>어떤 점이 불편하셨나요?</h1>
+      <p>말씀해 주시면 정류장과 시설을 확인해 전달할게요.</p>
+      <button type="button" className="qrmain__mic" onClick={startVoice}><Mic aria-hidden="true" /> 불편한 점 말하기</button>
+      <div className="qrmain__quick-report"><button type="button">의자가 없어요</button><button type="button">그늘이 없어요</button><button type="button">안내 화면이 꺼졌어요</button><button type="button">조명이 어두워요</button></div>
+    </section></main>;
+  }
+
+  if (locating || !start) {
+    return <main className="qrmain"><section className="qrmain__error">
+      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
+      <Navigation aria-hidden="true" className="qrmain__locate-icon" />
+      <h1>{locating ? "가까운 정류장을 찾고 있어요" : "현재 위치가 필요해요"}</h1>
+      <p>{locating ? "잠시만 기다려 주세요." : "목적지로 갈 버스를 찾으려면 위치 사용을 허용해 주세요."}</p>
+      {locationError && <button type="button" className="qrmain__retry" onClick={openDestination}>위치 다시 확인하기</button>}
+    </section></main>;
+  }
+
   return (
     <main className="qrmain">
+      <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
       <header className="qrmain__stop">
         <span>현재 출발 정류장</span>
         <h1>{start.name}</h1>
