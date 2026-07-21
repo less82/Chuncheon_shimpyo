@@ -336,23 +336,21 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
   }
 
   if (mode === "report") {
-    if (locating) return <main className="qrmain"><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
-    if (locationError || outsideServiceArea || !start) return <main className="qrmain"><section className="qrmain__report-location">
-      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
+    if (locating) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
+    if (locationError || outsideServiceArea || !start) return <main className="qrmain">
+      <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__report-location">
       <h1>주변 정류장을 찾지 못했습니다</h1>
       <button type="button" className="qrmain__retry" onClick={locateForReport}>위치 다시 확인하기</button>
       {manualStopSearch}
     </section></main>;
-    if (!reportConfirmed) return <main className="qrmain"><section className="qrmain__stop-confirm">
-      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
+    if (!reportConfirmed) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__stop-confirm">
       <h1>{start.name}</h1><strong>{start.stopNo ? `정류장 번호 ${start.stopNo}` : "정류장 번호 확인 중"}</strong>
       <h2>이 정류장이 맞나요?</h2>
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
     </section></main>;
-    if (reportDone) return <main className="qrmain"><section className="qrmain__ask qrmain__report-complete"><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>확인</button></section></main>;
-    return <main className="qrmain"><section className="qrmain__ask qrmain__report-start">
-      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /></button>
+    if (reportDone) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>불편 사항을 접수했어요</h1><p><b>{start.name}</b>의 `{reportIssue}` 의견을 현장 확인 자료로 전달할게요.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>확인</button></section></main>;
+    return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-start">
       <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
       <div className="qrmain__quick-report">{["의자가 없어요", "그늘이 없어요", "안내 화면이 꺼졌어요", "조명이 어두워요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
@@ -362,7 +360,7 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
 
   if (locating) {
     return <main className="qrmain"><section className="qrmain__error">
-      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
+      <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button>
       <Navigation aria-hidden="true" className="qrmain__locate-icon" />
       <h1>가까운 정류장을 찾고 있어요</h1>
       <p>위치를 확인한 뒤 목적지를 여쭤볼게요.</p>
@@ -371,10 +369,10 @@ export default function QrMain({ initialMode = "home" }: { initialMode?: QrMode 
 
   return (
     <main className="qrmain">
-      <button className="qrmain__back qrmain__back--icon" type="button" aria-label="뒤로 가기" onClick={() => submitted ? setSubmitted("") : setMode("home")}><ChevronLeft aria-hidden="true" /></button>
+      <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => submitted ? setSubmitted("") : setMode("home")}><ChevronLeft aria-hidden="true" /></button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {(outsideServiceArea || locationError) && <div className="qrmain__location-recovery" role="alert"><span>위치 정보를 찾을 수 없습니다</span><button type="button" onClick={openDestination}>위치 찾기</button></div>}
+        {(outsideServiceArea || locationError) && <button type="button" className="qrmain__location-recovery" onClick={openDestination}>위치 정보를 찾을 수 없습니다</button>}
         {manualStopSearch}
         {start && locationSource && <div className="qrmain__location-proof">
           <QrStopMap stop={start} />

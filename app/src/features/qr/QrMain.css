@@ -9,10 +9,8 @@
 .qrmain__choices button { min-height: 112px; padding: 20px; border: 2px solid var(--brand); border-radius: var(--radius-lg); background: var(--brand); color: white; text-align: center; cursor: pointer; }
 .qrmain__choices button:last-child { background: white; color: var(--brand); }
 .qrmain__choices strong { font-size: 24px; line-height: 1.35; word-break: keep-all; }
-.qrmain:has(.qrmain__back) { padding-top: calc(env(safe-area-inset-top, 0px) + 72px); }
-.qrmain__back { position: fixed; z-index: 100; top: calc(env(safe-area-inset-top, 0px) + 4px); left: max(12px, calc(50% - 207px)); display: inline-flex; width: 48px; height: 48px; margin: 0; padding: 0; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: white; color: var(--ink); cursor: pointer; }
+.qrmain__back { position: sticky; z-index: 100; top: env(safe-area-inset-top, 0px); display: inline-flex; width: 48px; height: 56px; margin: 0 0 8px; padding: 0; align-items: center; justify-content: center; border: 0; border-radius: 0; background: white; color: var(--ink); cursor: pointer; }
 .qrmain__back svg { width: 24px; height: 24px; stroke-width: 2.25; }
-.qrmain__back--icon { width: 48px; }
 .qrmain__error { display: grid; min-height: 100%; margin: 0; padding: 28px 22px 36px; align-content: start; justify-items: start; border-radius: 0; background: transparent; box-shadow: none; text-align: left; }
 .qrmain__error .qrmain__locate-icon { width: 52px; height: 52px; margin: 0 0 24px; color: var(--brand); }
 .qrmain__error h1 { max-width: 310px; margin-bottom: 12px; font-size: 29px; line-height: 1.25; letter-spacing: -.7px; word-break: keep-all; }
@@ -63,8 +61,7 @@
 .qrmain__destination-page > h2, .qrmain__manual-stop label { margin: 20px 0 0; color: var(--ink); font-size: 26px; line-height: 1.3; font-weight: 900; letter-spacing: -.6px; word-break: keep-all; }
 .qrmain__location-proof { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-2); }
 .qrmain__location-proof .qrmain__map { height: 190px; margin: 0; border-radius: var(--radius-lg); }
-.qrmain__location-recovery { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%; padding: 8px 0; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.35; }
-.qrmain__location-recovery button { min-height: 44px; padding: 0 14px; border: 0; border-radius: var(--radius-sm); background: var(--brand); color: white; font-size: 15px; font-weight: 900; white-space: nowrap; }
+.qrmain__location-recovery { width: 100%; min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--ink); text-align: center; text-decoration: underline; text-underline-offset: 4px; font-size: 15px; font-weight: 800; line-height: 1.35; cursor: pointer; }
 .qrmain__manual-stop { display: grid; width: 100%; gap: 16px; margin: 0; padding: 0; border: 0; }
 .qrmain__manual-stop label { display: block; }
 .qrmain__manual-input { width: 100%; min-height: 60px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: white; color: var(--ink); font-size: 18px; }
