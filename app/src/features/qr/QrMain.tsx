@@ -327,7 +327,7 @@ export default function QrMain() {
       setListeningTarget(null);
     };
     recognition.onend = () => {
-      if (!failed && !voiceStopRequestedRef.current && Date.now() - startedAt < 8000) {
+      if (!failed && !voiceStopRequestedRef.current && Date.now() - startedAt < 30_000) {
         window.setTimeout(() => recognition.start(), 100);
         return;
       }
@@ -381,7 +381,7 @@ export default function QrMain() {
     return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-start">
       <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
-      <div className="qrmain__quick-report">{["의자가 없어요", "그늘이 없어요", "안내 화면이 꺼졌어요", "조명이 어두워요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
+      <div className="qrmain__quick-report">{["의자가 파손됐어요", "안내 화면이 꺼졌어요", "조명이 꺼졌어요", "승강장 시설물이 파손됐어요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
       <label className="qrmain__photo-input">
         <span>{reportPhoto ? "사진 다시 찍기" : "사진 찍어 첨부하기"}</span>
         <input type="file" accept="image/*" capture="environment" onChange={async (event) => {
@@ -411,6 +411,7 @@ export default function QrMain() {
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
         {(outsideServiceArea || locationError) && <button type="button" className="qrmain__location-recovery" onClick={openDestination}>위치 정보를 찾을 수 없습니다</button>}
         {manualStopSearch}
+        {start && locationSource && <div className="qrmain__selected-start" aria-live="polite">출발 정류장 <strong>{start.name}</strong></div>}
         {start && locationSource && <div className="qrmain__location-proof">
           <QrStopMap stop={start} />
         </div>}
@@ -458,20 +459,20 @@ export default function QrMain() {
                 };
               }).filter((item) => item.waitMin >= option.walkMin + 1)
                 .sort((a, b) => a.totalMin - b.totalMin)
-                .slice(0, 1);
+                .slice(0, 3);
               return (
                 <div className="qrmain__result-set" key={`${destination.id}-${index}`}>
                   {routeArrivals.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={index === 0 && routeIndex === 0} key={item.routeNo}>
-                      <p className="qrmain__recommend">가장 빠른 버스</p>
+                      <p className="qrmain__recommend">{routeIndex === 0 ? "가장 빠른 버스" : "다음 버스"}</p>
                       <div className="qrmain__route-head">
                         <div><strong>{item.routeNo}번</strong><small>{option.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
                         <p><b>{item.waitMin}분 후</b><span>총 약 {item.totalMin}분 · {clockAfter(item.totalMin)} 도착</span></p>
                       </div>
                       <div className="qrmain__boarding">
                         <span>승차 정류장</span>
-                        <strong>{start.name} <small>{start.stopNo ? `#${start.stopNo}` : ""}</small></strong>
-                        <p><b>{item.directionName} 방면</b> · 도보 {option.walkMin}분</p>
+                        <strong>{item.directionName} 방면</strong>
+                        <p>{start.name} · 도보 {option.walkMin}분</p>
                         <small>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
                       </div>
                     </article>

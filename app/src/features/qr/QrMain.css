@@ -48,7 +48,7 @@
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  text-align: left;
+  text-align: center;
 }
 .qrmain h1, .qrmain h2 { margin: 0; font-size: 28px; line-height: 1.3; letter-spacing: -.6px; word-break: keep-all; }
 .qrmain p { margin: 0; color: var(--ink-body); font-size: 17px; line-height: 1.55; word-break: keep-all; }
@@ -67,11 +67,11 @@
 .qrmain__choices strong { font-size: 22px; line-height: 1.35; }
 
 /* 위치 확인 상태 */
-.qrmain__error { display: grid; min-height: 100%; padding-top: 72px; align-content: start; justify-items: start; }
+.qrmain__error { display: grid; min-height: 100%; padding-top: 72px; align-content: start; justify-items: center; text-align: center; }
 .qrmain__error .qrmain__locate-icon { width: 40px; height: 40px; margin-bottom: 24px; color: var(--brand); }
 .qrmain__error h1 { margin-bottom: 12px; }
 .qrmain__location-recovery { width: 100%; min-height: 48px; padding: 8px; border: 0; background: transparent; color: var(--ink); text-align: center; text-decoration: underline; text-underline-offset: 4px; font-size: 16px; font-weight: 800; cursor: pointer; }
-.qrmain__retry { min-height: 48px; margin-top: 16px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--brand); color: white; font-size: 16px; font-weight: 900; }
+.qrmain__retry { min-height: 48px; margin: 16px auto 0; padding: 0 16px; border: 0; border-radius: 12px; background: var(--brand); color: white; font-size: 16px; font-weight: 900; }
 
 /* 출발지·목적지 입력 */
 .qrmain__destination-page, .qrmain__manual-stop { display: grid; gap: var(--qr-gap); }
@@ -87,6 +87,8 @@
 .qrmain__manual-stop li span { color: var(--brand); font-size: 14px; font-weight: 900; white-space: nowrap; }
 .qrmain__location-proof { overflow: hidden; margin-top: 8px; border-radius: 14px; }
 .qrmain__location-proof .qrmain__map { width: 100%; height: 180px; margin: 0; border: 0; }
+.qrmain__selected-start { color: var(--ink-muted); text-align: center; font-size: 15px; font-weight: 800; }
+.qrmain__selected-start strong { display: block; margin-top: 3px; color: var(--brand); font-size: 18px; }
 
 /* 신고: 위치 실패·정류장 확인·항목 선택 */
 .qrmain__report-location h1, .qrmain__stop-confirm > h1 { margin-top: 16px; }
@@ -120,12 +122,12 @@
 .qrmain__result-set { display: grid; }
 .qrmain__route { padding: 20px 0; border: 0; border-top: 2px solid var(--brand); background: transparent; }
 .qrmain__recommend { margin-bottom: 12px; color: var(--brand); font-size: 15px; font-weight: 900; }
-.qrmain__route-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px; }
+.qrmain__route-head { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 16px; }
 .qrmain__route-head strong { display: block; font-size: 36px; line-height: 1.1; }
 .qrmain__route-head small { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 14px; font-weight: 800; }
-.qrmain__route-head > p { text-align: right; }
+.qrmain__route-head > p { text-align: center; }
 .qrmain__route-head > p b { display: block; color: var(--brand); font-size: 28px; line-height: 1.15; }
-.qrmain__route-head > p span { display: block; max-width: 160px; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
+.qrmain__route-head > p span { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
 .qrmain__boarding { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
 .qrmain__boarding > span { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
 .qrmain__boarding strong { display: block; margin: 4px 0; font-size: 20px; }
@@ -139,7 +141,7 @@
   .qrmain { padding-inline: 16px; }
   .qrmain h1, .qrmain h2, .qrmain__destination-page > h2, .qrmain__manual-stop label { font-size: 26px; }
   .qrmain__route-head { grid-template-columns: 1fr; align-items: start; }
-  .qrmain__route-head > p { text-align: left; }
+  .qrmain__route-head > p { text-align: center; }
 }
 
 /* 갤럭시 폴더2급 웹 뷰포트: 320 × 533 CSS px */
@@ -152,6 +154,8 @@
     padding: 0 12px 12px;
     overflow-y: hidden;
   }
+  .qrmain:has(.qrmain__report-start),
+  .qrmain:has(.qrmain__results-page) { overflow-y: auto; }
   .qrmain__back { width: 44px; height: 44px; margin: 0 0 8px -8px; }
   .qrmain h1,
   .qrmain h2,
@@ -181,6 +185,8 @@
   .qrmain__manual-input, .qrmain__form input { padding-inline: 12px; font-size: 16px; }
   .qrmain__form button { min-width: 64px; padding-inline: 12px; font-size: 15px; }
   .qrmain__location-proof { display: none; }
+  .qrmain__selected-start { font-size: 13px; }
+  .qrmain__selected-start strong { font-size: 16px; }
   .qrmain__manual-stop li button { min-height: 44px; font-size: 14px; }
   .qrmain__manual-stop li:nth-child(n + 5) { display: none; }
 
@@ -206,7 +212,7 @@
   .qrmain__recommend { margin-bottom: 8px; font-size: 14px; }
   .qrmain__route-head { grid-template-columns: 1fr auto; align-items: end; gap: 10px; }
   .qrmain__route-head strong { font-size: 30px; }
-  .qrmain__route-head > p { text-align: right; }
+  .qrmain__route-head > p { text-align: center; }
   .qrmain__route-head > p b { font-size: 24px; }
   .qrmain__route-head > p span { max-width: 132px; font-size: 11px; }
   .qrmain__boarding { margin-top: 14px; padding-top: 12px; }

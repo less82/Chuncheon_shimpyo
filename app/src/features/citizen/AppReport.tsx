@@ -9,7 +9,7 @@ import "./AppReport.css";
 
 type Step = "locating" | "find" | "confirm" | "issue" | "done";
 const MAX_DISTANCE_M = 1500;
-const ISSUES = ["의자가 없어요", "그늘이 없어요", "안내 화면이 꺼졌어요", "조명이 어두워요"];
+const ISSUES = ["의자가 파손됐어요", "안내 화면이 꺼졌어요", "조명이 꺼졌어요", "승강장 시설물이 파손됐어요"];
 
 export default function AppReport() {
   const stops = useStops((state) => state.stops);

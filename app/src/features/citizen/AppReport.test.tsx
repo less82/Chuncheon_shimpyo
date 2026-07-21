@@ -36,10 +36,10 @@ describe("<AppReport>", () => {
     fireEvent.change(screen.getByPlaceholderText("예: 춘천역 또는 1001"), { target: { value: "1001" } });
     fireEvent.click(screen.getByRole("button", { name: /춘천역/ }));
     fireEvent.click(screen.getByRole("button", { name: "네, 맞아요" }));
-    fireEvent.click(screen.getByRole("button", { name: "의자가 없어요" }));
+    fireEvent.click(screen.getByRole("button", { name: "의자가 파손됐어요" }));
     fireEvent.click(screen.getByRole("button", { name: "불편 사항 보내기" }));
 
     expect(screen.getByText(/알려주셔서/)).toBeInTheDocument();
-    expect(localStorage.getItem(REPORT_STORAGE_KEY)).toContain("의자가 없어요");
+    expect(localStorage.getItem(REPORT_STORAGE_KEY)).toContain("의자가 파손됐어요");
   });
 });
