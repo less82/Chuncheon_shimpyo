@@ -317,10 +317,10 @@ export default function QrMain() {
           </div>
           <div className="qrmain__choices">
             <button type="button" onClick={openDestination}>
-              <strong>목적지로 가는 길 찾기</strong>
+              <strong>버스 노선 길찾기</strong>
             </button>
             <button type="button" onClick={locateForReport}>
-              <strong>정류장 불편 알리기</strong>
+              <strong>정류장 민원 접수</strong>
             </button>
           </div>
         </section>

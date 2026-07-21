@@ -76,7 +76,7 @@ export default function AppReport() {
     <main className="appreport">
       <header className="appreport__bar">
         <Link to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" />메인</Link>
-        <strong>정류장 불편 알리기</strong>
+        <strong>정류장 민원 접수</strong>
         <span aria-hidden="true" />
       </header>
 
