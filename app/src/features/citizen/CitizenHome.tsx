@@ -2,7 +2,7 @@
 // 화면당 주행동 1개: "가까운 정류장 정보 보기". 검색·메뉴·온보딩 없음.
 
 import { useEffect, useState } from "react";
-import { House, Star } from "lucide-react";
+import { BusFront, ChevronRight, MapPin, QrCode, Share2, Star } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import MapView from "../map/MapView";
 import StopCard from "./StopCard";
@@ -23,6 +23,9 @@ export default function CitizenHome() {
   const stops = useStops((s) => s.stops);
   const favCount = useFavorites((s) => s.ids.length);
   const favIds = useFavorites((s) => s.ids);
+  const favoriteStops = favIds
+    .map((id) => stops.find((stop) => stop.id === id))
+    .filter((stop): stop is Stop => Boolean(stop));
 
   useEffect(() => {
     const stopId = searchParams.get("stop");
@@ -37,45 +40,55 @@ export default function CitizenHome() {
       {scanning && <QrScanner onClose={() => setScanning(false)} />}
 
       <header className="home__bar">
-        <Link className="home__brand" to="/">
-          <House aria-hidden="true" />
-          <span className="home__title">홈으로</span>
+        <Link className="home__brand" to="/app" aria-label="쉼표 정류장 홈">
+          <span className="home__brand-icon"><BusFront aria-hidden="true" /></span>
+          <span><b>쉼표 정류장</b><small>춘천 버스 생활 도우미</small></span>
         </Link>
-        <h1 className="home__screen-title">정류장 지도</h1>
         <div className="home__actions">
-          <button
-            type="button"
-            className="home__scan"
-            onClick={() => setScanning(true)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" />
-              <path d="M7 12h10" />
-            </svg>
-            <span>QR 스캔</span>
+          <button type="button" className="home__scan" onClick={() => setScanning(true)}>
+            <QrCode aria-hidden="true" /><span>QR</span>
           </button>
-          <Link className="home__go" to="/go">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73V19a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1.27A2 2 0 0 1 4 16zm2-1h12V6H6v9zm1.5 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zm9 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" />
-            </svg>
-            <span>버스로 가기</span>
-          </Link>
-          <button
-            type="button"
-            className="home__share"
-            onClick={() => setSharing(true)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M18 16.08a2.9 2.9 0 0 0-1.95.77l-7.1-4.13c.05-.24.05-.49 0-.73l7.02-4.09A3 3 0 1 0 15 5.5c0 .24.02.47.07.7L8.05 10.3a3 3 0 1 0 0 3.4l7.09 4.14a3 3 0 1 0 2.86-2.76z" />
-            </svg>
-            <span>공유</span>
+          <button type="button" className="home__share" onClick={() => setSharing(true)}>
+            <Share2 aria-hidden="true" /><span className="sr-only">즐겨찾기 공유</span>
           </button>
-          <Link className="home__fav" to="/favorites">
-            <Star aria-hidden="true" />
-            <span>즐겨찾기{favCount > 0 ? ` ${favCount}` : ""}</span>
-          </Link>
         </div>
       </header>
+
+      <section className="home__favorites" aria-labelledby="favorite-title">
+        <div className="home__section-head">
+          <div>
+            <span className="home__eyebrow"><Star aria-hidden="true" /> 자주 확인하는 정류장</span>
+            <h1 id="favorite-title">내 즐겨찾기</h1>
+          </div>
+          <Link to="/favorites">전체 보기{favCount > 0 && ` ${favCount}`}<ChevronRight aria-hidden="true" /></Link>
+        </div>
+        {favoriteStops.length > 0 ? (
+          <div className="home__favorite-list">
+            {favoriteStops.slice(0, 3).map((stop) => (
+              <button type="button" key={stop.id} onClick={() => setSelected(stop)}>
+                <span className="home__favorite-pin"><MapPin aria-hidden="true" /></span>
+                <span className="home__favorite-copy">
+                  <strong>{stop.name}</strong>
+                  <small>{stop.routes.length > 0 ? `${stop.routes.slice(0, 3).join(" · ")}번` : "노선 정보 확인 중"}</small>
+                </span>
+                <ChevronRight aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <Link className="home__favorite-empty" to="/favorites">
+            <span className="home__favorite-pin"><Star aria-hidden="true" /></span>
+            <span><strong>저장한 정류장이 없어요</strong><small>자주 타는 정류장을 별표로 저장해 보세요.</small></span>
+            <ChevronRight aria-hidden="true" />
+          </Link>
+        )}
+      </section>
+
+      <div className="home__route-action">
+        <Link to="/go"><BusFront aria-hidden="true" /><span><small>목적지를 검색하고</small><strong>버스로 가는 길 찾기</strong></span><ChevronRight aria-hidden="true" /></Link>
+      </div>
+
+      <div className="home__map-head"><span>주변 정류장</span><small>지도의 정류장을 눌러보세요</small></div>
 
       <div className="home__map">
         <MapView onSelect={setSelected} selectedId={selected?.id} />
