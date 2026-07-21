@@ -36,13 +36,17 @@ const REPORT_STATUS = {
 };
 
 function ReportsTab({ reports }: { reports: CitizenReport[] }) {
+  const [statusFilter, setStatusFilter] = useState<CitizenReport["status"] | null>(null);
+  const statuses = Object.keys(REPORT_STATUS) as CitizenReport["status"][];
   const counts = (Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status) => reports.filter((report) => report.status === status).length);
+  const visibleReports = statusFilter ? reports.filter((report) => report.status === statusFilter) : reports;
+  const currentLabel = statusFilter ? REPORT_STATUS[statusFilter].label : "전체 제보";
   return <section className="dash-section report-panel">
-    <div className="report-section-head"><div><span className="dash-kicker">업무 흐름</span><h3>시민 신호에서 정보 반영까지</h3></div></div>
-    <div className="report-flow" aria-label="제보 처리 흐름">{(Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status, index) => <div key={status}><span>{index + 1}</span><p>{REPORT_STATUS[status].label}</p><strong>{counts[index]}건</strong></div>)}</div>
-    <div className="report-list-head"><div><span className="dash-kicker">처리 목록</span><h3>접수된 시민 제보</h3></div><div className="report-total"><strong>{reports.length}</strong><span>전체 건</span></div></div>
-    {reports.length === 0 ? <div className="report-empty"><h2>아직 접수된 제보가 없습니다</h2><p>시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다.</p></div> :
-      <div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table"><thead><tr><th>접수시각</th><th>정류장</th><th>AI 구조화 결과</th><th>처리 상태</th><th>담당자 작업</th></tr></thead><tbody>{[...reports].reverse().map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="AI 구조화 결과"><strong>{report.issue}</strong><span className="dash-stopid">시설 불편 · 시민 위치 확인</span></td><td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td><td data-label="담당자 작업">{state.next ? <button className="report-action" type="button" onClick={() => updateReportStatus(report.id, state.next!)}>{state.action}</button> : <b>처리 완료</b>}</td></tr>; })}</tbody></table></div>}
+    <div className="report-section-head"><div><span className="dash-kicker">처리 단계</span><h3>접수부터 시민 정보 반영까지</h3></div></div>
+    <div className="report-flow" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => setStatusFilter((current) => current === status ? null : status)}><span>{index + 1}</span><span className="report-flow-copy"><small>{index === 0 ? "시민 신호" : index === 1 ? "근거 확인" : index === 2 ? "담당자 실행" : "정보 갱신"}</small><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
+    <div className="report-list-head"><div><span className="dash-kicker">업무 목록</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleReports.length}</strong><span>건</span></div>{statusFilter && <button type="button" onClick={() => setStatusFilter(null)}>전체 보기</button>}</div></div>
+    {visibleReports.length === 0 ? <div className="report-empty"><h2>{statusFilter ? `${currentLabel} 업무가 없습니다` : "아직 접수된 제보가 없습니다"}</h2><p>{statusFilter ? "다른 처리 단계를 선택해 확인하세요." : "시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다."}</p></div> :
+      <div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table"><thead><tr><th>접수시각</th><th>정류장</th><th>AI 구조화 결과</th><th>현재 단계</th><th>다음 작업</th></tr></thead><tbody>{[...visibleReports].reverse().map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="AI 구조화 결과"><strong>{report.issue}</strong><span className="dash-stopid">시설 불편 · 시민 위치 확인</span></td><td data-label="현재 단계"><span className="report-status" data-status={report.status}>{state.label}</span></td><td data-label="다음 작업">{state.next ? <button className="report-action" type="button" onClick={() => updateReportStatus(report.id, state.next!)}>{state.action}</button> : <b>처리 완료</b>}</td></tr>; })}</tbody></table></div>}
   </section>;
 }
 
@@ -50,7 +54,7 @@ export default function Dashboard() {
   const stops = useStops((s) => s.stops);
   const loaded = useStops((s) => s.loaded);
   const [tab, setTab] = useState<TabKey>("reports");
-  const [layout, setLayout] = useState<LayoutKey>("workflow");
+  const [layout, setLayout] = useState<LayoutKey>("queue");
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {

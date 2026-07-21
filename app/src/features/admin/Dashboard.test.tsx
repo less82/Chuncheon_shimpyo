@@ -115,6 +115,17 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     expect(getByText("#1001 · 250000001")).toBeInTheDocument();
   });
 
+  it("처리 단계를 누르면 해당 단계의 제보만 목록에 표시한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+      { id: "r2", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "안내기가 꺼졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "reviewing" },
+    ]));
+    const { getByRole, getByText, queryByText } = render(<Dashboard />);
+    fireEvent.click(getByRole("button", { name: /신규 접수/ }));
+    expect(getByText("의자가 없어요")).toBeInTheDocument();
+    expect(queryByText("안내기가 꺼졌어요")).toBeNull();
+  });
+
   it("1단계/2단계/조건 필터 탭이 모두 존재한다", () => {
     const { getByRole } = render(<Dashboard />);
     expect(getByRole("tab", { name: "시설정보 검증 목록" })).toBeInTheDocument();
