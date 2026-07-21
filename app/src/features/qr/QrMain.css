@@ -19,10 +19,13 @@
 .qrmain__welcome .qrmain__privacy { margin-top: auto; padding-top: var(--sp-5); text-align: center; font-size: 14px; }
 .qrmain__back { display: inline-flex; min-height: 48px; margin: 0 0 var(--sp-3); align-items: center; gap: 3px; border: 0; background: transparent; color: var(--ink-body); font-size: 16px; font-weight: 900; cursor: pointer; }
 .qrmain__back svg { width: 20px; }
-.qrmain__error { margin-top: 18vh; text-align: center; }
-.qrmain__error .qrmain__back { display: flex; margin-bottom: var(--sp-5); }
-.qrmain__locate-icon, .qrmain__report-icon { width: 58px; height: 58px; margin-bottom: var(--sp-4); color: var(--brand); }
-.qrmain__retry { min-height: 56px; margin-top: var(--sp-4); padding: 0 var(--sp-5); border: 0; border-radius: var(--radius); background: var(--brand); color: white; font-weight: 900; }
+.qrmain__error { display: grid; min-height: 100%; margin: 0; padding: 28px 22px 36px; align-content: start; justify-items: start; border-radius: 0; background: transparent; box-shadow: none; text-align: left; }
+.qrmain__error .qrmain__back { margin: 0 0 56px; }
+.qrmain__error .qrmain__locate-icon { width: 52px; height: 52px; margin: 0 0 24px; color: var(--brand); }
+.qrmain__error h1 { max-width: 310px; margin-bottom: 12px; font-size: 29px; line-height: 1.25; letter-spacing: -.7px; word-break: keep-all; }
+.qrmain__error > p { max-width: 310px; color: var(--ink-body); font-size: 17px; line-height: 1.65; word-break: keep-all; }
+.qrmain__report-icon { width: 58px; height: 58px; margin-bottom: var(--sp-4); color: var(--brand); }
+.qrmain__retry { min-height: 54px; margin-top: 24px; padding: 0 20px; border: 0; border-radius: var(--radius); background: var(--brand); color: white; font-size: 16px; font-weight: 900; }
 .qrmain__report-start h1 { margin-bottom: var(--sp-2); font-size: var(--fs-xl); }
 .qrmain__report-stop { display: inline-flex; margin-bottom: var(--sp-3); padding: 7px 12px; border-radius: var(--radius-pill); background: var(--brand-soft); color: var(--brand); font-size: 15px; font-weight: 900; }
 .qrmain__quick-report { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }

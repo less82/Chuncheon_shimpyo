@@ -73,6 +73,11 @@ function mapEmbedUrl(stop: Stop): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${stop.lat},${stop.lng}`;
 }
 
+function readableDistance(distance: number | null): string {
+  if (distance === null) return "거리를 확인할 수 없는 곳";
+  return distance >= 1000 ? `약 ${(distance / 1000).toFixed(1)}km` : `약 ${distance}m`;
+}
+
 export function findTrips(
   query: string,
   start: Stop,
@@ -293,7 +298,7 @@ export default function QrMain() {
     if (locating) return <main className="qrmain"><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
     if (locationError || outsideServiceArea || !start) return <main className="qrmain"><section className="qrmain__error">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
-      <Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>{outsideServiceArea ? "주변 춘천 정류장을 찾지 못했어요" : "현재 위치가 필요해요"}</h1><p>{outsideServiceArea ? `가장 가까운 정류장도 약 ${stopDistance?.toLocaleString()}m 떨어져 있어 신고 대상으로 선택하지 않았어요.` : "불편한 정류장을 확인하려면 위치 사용을 허용해 주세요."}</p><button type="button" className="qrmain__retry" onClick={locateForReport}>위치 다시 확인하기</button>
+      <Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>{outsideServiceArea ? "주변 정류장을 찾지 못했어요" : "현재 위치가 필요해요"}</h1><p>{outsideServiceArea ? `가장 가까운 춘천 정류장도 ${readableDistance(stopDistance)} 떨어져 있어 신고 대상으로 선택하지 않았어요.` : "불편한 정류장을 확인하려면 위치 사용을 허용해 주세요."}</p><button type="button" className="qrmain__retry" onClick={locateForReport}>위치 다시 확인하기</button>
     </section></main>;
     if (!reportConfirmed) return <main className="qrmain"><section className="qrmain__ask qrmain__stop-confirm">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
@@ -328,7 +333,7 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {outsideServiceArea && <div className="qrmain__location-error" role="alert"><b>현재 위치 주변에서 춘천 정류장을 찾지 못했어요.</b><span>가장 가까운 데이터도 약 {stopDistance?.toLocaleString()}m 떨어져 있어 길찾기를 중단했습니다.</span><button type="button" onClick={openDestination}>위치 다시 확인하기</button></div>}
+        {outsideServiceArea && <div className="qrmain__location-error" role="alert"><b>주변 정류장을 찾지 못했어요.</b><span>가장 가까운 춘천 정류장도 {readableDistance(stopDistance)} 떨어져 있어 길찾기를 중단했습니다.</span><button type="button" onClick={openDestination}>위치 다시 확인하기</button></div>}
         {start && locationAccuracy !== null && stopDistance !== null && <div className="qrmain__location-proof">
           <iframe className="qrmain__map" title={`${start.name} 주변 지도`} src={mapEmbedUrl(start)} loading="lazy" />
           <div><span><MapPin aria-hidden="true" /> GPS로 찾은 가장 가까운 정류장</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>현재 위치에서 약 {stopDistance}m · GPS 오차범위 약 {locationAccuracy}m</p></div>
