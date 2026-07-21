@@ -80,11 +80,11 @@ export default function SurveyTab({ stops, loaded }: Props) {
   }, [ranked]);
 
   return (
-    <div>
-      <section className="dash-section" aria-label="조사 우선순위 프리셋">
-        <h2 className="dash-h2">시설정보 검증 목록</h2>
-        <p className="dash-sub">공식 시설정보가 미확인인 정류장을 수요와 미확인 시설 수로 정리한 현장 검증 후보입니다.</p>
+    <div className="admin-list-page survey-page">
+      <section className="dash-section admin-toolbar" aria-label="조사 우선순위 프리셋">
+        <div className="admin-section-title"><div><span className="dash-kicker">목록 조건</span><h2 className="dash-h2">검증 기준 선택</h2></div>
         <span className="dash-badge">2025.6 4일 표본, 양방향 합산</span>
+        </div>
         <PresetBar
           activeKey={presetKey}
           weights={weights}
@@ -96,7 +96,7 @@ export default function SurveyTab({ stops, loaded }: Props) {
         />
       </section>
 
-      <section className="dash-section" aria-label="정책 시나리오 비교">
+      <section className="dash-section admin-support" aria-label="정책 시나리오 비교">
         <h2 className="dash-h2">정책 시나리오 비교</h2>
         <p className="dash-sub">
           폭염 대응형 · 고령자 이동지원형 · 이용량 중심형 3개 프리셋의 상위 10위 진입 빈도와
@@ -132,13 +132,13 @@ export default function SurveyTab({ stops, loaded }: Props) {
         </div>
       </section>
 
-      <section className="dash-section">
+      <section className="dash-section admin-list-section">
         <div className="dash-resultbar">
-          <div className="dash-count">
+          <div><span className="dash-kicker">처리할 목록</span><div className="dash-count">
             {loaded
               ? `조사 검토 대상 ${ranked.length.toLocaleString()}개 정류장`
               : "데이터 불러오는 중…"}
-          </div>
+          </div></div>
           <button
             type="button"
             className="dash-csv"
@@ -203,7 +203,7 @@ export default function SurveyTab({ stops, loaded }: Props) {
         </p>
       </section>
 
-      <section className="dash-section" aria-label="수요 미확인 조사 후보">
+      <section className="dash-section admin-secondary-list" aria-label="수요 미확인 조사 후보">
         <h2 className="dash-h2">수요 미확인 조사 후보 — 순위 없음</h2>
         {noDemand.length === 0 ? (
           <p className="dash-sub">수요 미확인 정류장이 없습니다.</p>

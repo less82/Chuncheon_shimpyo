@@ -11,21 +11,12 @@ import { loadReports, REPORT_CHANGED_EVENT, REPORT_STORAGE_KEY, updateReportStat
 import "./Dashboard.css";
 
 type TabKey = "reports" | "survey" | "install" | "filter";
-type LayoutKey = "workflow" | "queue" | "split" | "control" | "minimal";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "reports", label: "시민 제보 처리" },
-  { key: "survey", label: "시설정보 검증 목록" },
-  { key: "install", label: "시설 개선 후보" },
-  { key: "filter", label: "데이터 분석" },
-];
-
-const LAYOUTS: { key: LayoutKey; label: string }[] = [
-  { key: "workflow", label: "업무 흐름형" },
-  { key: "queue", label: "목록 중심형" },
-  { key: "split", label: "분할 검토형" },
-  { key: "control", label: "관제형" },
-  { key: "minimal", label: "간결형" },
+const TABS: { key: TabKey; label: string; ariaLabel: string; step: string; description: string }[] = [
+  { key: "reports", label: "시민 제보", ariaLabel: "시민 제보 처리", step: "01", description: "신규 신호 접수" },
+  { key: "survey", label: "시설 검증", ariaLabel: "시설정보 검증 목록", step: "02", description: "근거 대조·조사" },
+  { key: "install", label: "개선 검토", ariaLabel: "시설 개선 후보", step: "03", description: "후보·예산 검토" },
+  { key: "filter", label: "데이터 조회", ariaLabel: "데이터 분석", step: "04", description: "조건별 목록 추출" },
 ];
 
 const REPORT_STATUS = {
@@ -54,7 +45,6 @@ export default function Dashboard() {
   const stops = useStops((s) => s.stops);
   const loaded = useStops((s) => s.loaded);
   const [tab, setTab] = useState<TabKey>("reports");
-  const [layout, setLayout] = useState<LayoutKey>("queue");
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {
@@ -72,22 +62,16 @@ export default function Dashboard() {
 
   return (
     <main className="dash">
-      <div className="dash-browser" data-layout={layout}>
+      <div className="dash-browser">
       <div className="dash-shell">
       <aside className="dash-sidebar">
         <div><span className="dash-kicker">춘천시 교통행정</span><h1 className="dash-title">쉼표정류장</h1></div>
         <nav className="dash-tabs" role="tablist" aria-label="관리 업무">
-          {TABS.map((t) => <button key={t.key} type="button" role="tab" id={`tab-${t.key}`} aria-selected={tab === t.key} aria-controls={`tabpanel-${t.key}`} className="dash-tab" onClick={() => setTab(t.key)}>{t.label}</button>)}
+          {TABS.map((t) => <button key={t.key} type="button" role="tab" id={`tab-${t.key}`} aria-label={t.ariaLabel} aria-selected={tab === t.key} aria-controls={`tabpanel-${t.key}`} className="dash-tab" onClick={() => setTab(t.key)}><span>{t.step}</span><span><b>{t.label}</b><small>{t.description}</small></span></button>)}
         </nav>
       </aside>
       <section className="dash-workspace">
-        <div className="layout-switcher">
-          <span>화면 구성</span>
-          <div role="tablist" aria-label="대시보드 화면 구성">
-            {LAYOUTS.map((item) => <button key={item.key} type="button" role="tab" aria-selected={layout === item.key} onClick={() => setLayout(item.key)}>{item.label}</button>)}
-          </div>
-        </div>
-        <header className="dash-head"><div><span className="dash-kicker">현재 업무</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div></header>
+        <header className="dash-head"><div><span className="dash-kicker">{TABS.find((item) => item.key === tab)?.description}</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div></header>
         <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
           {tab === "reports" && <ReportsTab reports={reports} />}
           {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}

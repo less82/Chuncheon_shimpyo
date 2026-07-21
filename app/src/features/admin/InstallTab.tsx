@@ -44,10 +44,11 @@ export default function InstallTab({ stops, loaded }: Props) {
     : undefined;
 
   return (
-    <div>
-      <section className="dash-section" aria-label="설치 검토 시설 선택">
-        <h2 className="dash-h2">2단계 설치 검토 우선순위</h2>
+    <div className="admin-list-page install-page">
+      <section className="dash-section admin-toolbar" aria-label="설치 검토 시설 선택">
+        <div className="admin-section-title"><div><span className="dash-kicker">목록 조건</span><h2 className="dash-h2">검토할 시설 선택</h2></div>
         <span className="dash-badge">2025.6 4일 표본, 양방향 합산</span>
+        </div>
         <div className="dash-toggles" role="tablist" aria-label="설치 검토 시설">
           {FACILITY_ORDER.map((f) => (
             <button
@@ -64,7 +65,7 @@ export default function InstallTab({ stops, loaded }: Props) {
         </div>
       </section>
 
-      <section className="dash-section">
+      <section className="dash-section admin-list-section">
         {!loaded ? (
           <p className="dash-sub">데이터 불러오는 중…</p>
         ) : rows.length === 0 ? (
@@ -75,10 +76,10 @@ export default function InstallTab({ stops, loaded }: Props) {
         ) : (
           <>
             <div className="dash-resultbar">
-              <div className="dash-count">
+              <div><span className="dash-kicker">처리할 목록</span><div className="dash-count">
                 {KIND_LABEL[facility]} 설치 검토 후보{" "}
                 <strong>{rows.length.toLocaleString()}</strong>곳
-              </div>
+              </div></div>
               <button
                 type="button"
                 className="dash-csv"
