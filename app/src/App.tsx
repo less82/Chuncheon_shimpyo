@@ -5,6 +5,7 @@ import Favorites from "./features/citizen/Favorites";
 import TripView from "./features/trip/TripView";
 import PrintPoster from "./features/print/PrintPoster";
 import Dashboard from "./features/admin/Dashboard";
+import AdminConcepts from "./features/admin/AdminConcepts";
 import DesignPreview from "./features/design/DesignPreview";
 import QrMain from "./features/qr/QrMain";
 import { useStops } from "./store/useStops";
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/go" element={<TripView />} />
         <Route path="/print/:id" element={<PrintPoster />} />
         <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin-concepts" element={<AdminConcepts />} />
       </Routes>
     </BrowserRouter>
   );

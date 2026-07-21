@@ -116,6 +116,22 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     expect(queryByText("안내기가 꺼졌어요")).toBeNull();
   });
 
+  it("검토 열기만으로 상태가 바뀌지 않고 필수 확인 후에만 다음 단계로 이동한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("button", { name: "검토 열기" }));
+    const confirm = utils.getByRole("button", { name: "확인 완료 · 자료 대조로 이동" });
+    expect(confirm).toBeDisabled();
+    expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("received");
+    fireEvent.click(utils.getByRole("checkbox", { name: "정류장 식별정보 확인" }));
+    fireEvent.click(utils.getByRole("checkbox", { name: "시민 원문과 AI 분류 대조" }));
+    expect(confirm).toBeEnabled();
+    fireEvent.click(confirm);
+    expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("reviewing");
+  });
+
   it("1단계/2단계/조건 필터 탭이 모두 존재한다", () => {
     const { getByRole } = render(<Dashboard />);
     expect(getByRole("tab", { name: "시설정보 검증 목록" })).toBeInTheDocument();
