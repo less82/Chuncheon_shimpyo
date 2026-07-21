@@ -69,10 +69,19 @@ export function buildSurveyPriority(
   }
 
   const middayValues = withDemand.map((s) => demandMiddayOf(s, hourWindow));
+  const demandQuantileByValue = new Map<number, number>();
+  const sortedMidday = [...middayValues].sort((a, b) => a - b);
+  for (let i = 0; i < sortedMidday.length;) {
+    let end = i + 1;
+    while (end < sortedMidday.length && sortedMidday[end] === sortedMidday[i]) end++;
+    const quantile = sortedMidday.length <= 1 ? 0 : (i + (end - i - 1) / 2) / (sortedMidday.length - 1);
+    demandQuantileByValue.set(sortedMidday[i], quantile);
+    i = end;
+  }
 
   const rows: SurveyRow[] = withDemand.map((stop, i) => {
     const demandMidday = middayValues[i];
-    const demandQ = quantileRank(middayValues, demandMidday);
+    const demandQ = demandQuantileByValue.get(demandMidday) ?? 0;
     const unknownCount = unknownCountOf(stop);
     const unknownRate = unknownCount / 4;
     const poi = poiByStopId?.get(stop.id) ?? null;

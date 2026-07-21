@@ -14,7 +14,7 @@ type TabKey = "reports" | "survey" | "install" | "filter";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "reports", label: "시민 제보 처리" },
-  { key: "survey", label: "정류장 조사 대상" },
+  { key: "survey", label: "시설정보 검증 목록" },
   { key: "install", label: "시설 개선 후보" },
   { key: "filter", label: "데이터 분석" },
 ];

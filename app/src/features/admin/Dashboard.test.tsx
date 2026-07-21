@@ -107,14 +107,14 @@ describe("<Dashboard> — (a) 탭 구조", () => {
 
   it("1단계/2단계/조건 필터 탭이 모두 존재한다", () => {
     const { getByRole } = render(<Dashboard />);
-    expect(getByRole("tab", { name: "정류장 조사 대상" })).toBeInTheDocument();
+    expect(getByRole("tab", { name: "시설정보 검증 목록" })).toBeInTheDocument();
     expect(getByRole("tab", { name: "시설 개선 후보" })).toBeInTheDocument();
     expect(getByRole("tab", { name: "데이터 분석" })).toBeInTheDocument();
   });
 
   it("1단계 탭에서 수요 미확인 조사 후보 섹션이 노출된다", () => {
     const { getByText, getByRole } = render(<Dashboard />);
-    fireEvent.click(getByRole("tab", { name: "정류장 조사 대상" }));
+    fireEvent.click(getByRole("tab", { name: "시설정보 검증 목록" }));
     expect(getByText("수요 미확인 조사 후보 — 순위 없음")).toBeInTheDocument();
   });
 
@@ -170,7 +170,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
 describe("<Dashboard> — (b) 프리셋 + 정책 시나리오 비교", () => {
   it("프리셋 3버튼과 각 rationale이 표시된다", () => {
     const { getByRole, getByText } = render(<Dashboard />);
-    fireEvent.click(getByRole("tab", { name: "정류장 조사 대상" }));
+    fireEvent.click(getByRole("tab", { name: "시설정보 검증 목록" }));
     expect(getByRole("button", { name: "폭염 대응형" })).toBeInTheDocument();
     expect(getByRole("button", { name: "고령자 이동지원형" })).toBeInTheDocument();
     expect(getByRole("button", { name: "이용량 중심형" })).toBeInTheDocument();
@@ -180,7 +180,7 @@ describe("<Dashboard> — (b) 프리셋 + 정책 시나리오 비교", () => {
 
   it("정책 시나리오 비교 표가 노출된다", () => {
     const { getByText, getByRole } = render(<Dashboard />);
-    fireEvent.click(getByRole("tab", { name: "정류장 조사 대상" }));
+    fireEvent.click(getByRole("tab", { name: "시설정보 검증 목록" }));
     expect(getByText("정책 시나리오 비교")).toBeInTheDocument();
   });
 
@@ -193,14 +193,14 @@ describe("<Dashboard> — (b) 프리셋 + 정책 시나리오 비교", () => {
 describe("<Dashboard> — (c) 실측값 병기 + 표본 배지", () => {
   it("1단계 표에 한낮 승차 실측값이 병기되고 지수는 별도 열", () => {
     const { getAllByText, getByRole } = render(<Dashboard />);
-    fireEvent.click(getByRole("tab", { name: "정류장 조사 대상" }));
+    fireEvent.click(getByRole("tab", { name: "시설정보 검증 목록" }));
     expect(getAllByText("한낮 승차*").length).toBeGreaterThan(0);
     expect(getAllByText("지수(보조)").length).toBeGreaterThan(0);
   });
 
   it("'2025.6 4일 표본, 양방향 합산' 배지가 상시 노출된다", () => {
     const { getByText, getByRole } = render(<Dashboard />);
-    fireEvent.click(getByRole("tab", { name: "정류장 조사 대상" }));
+    fireEvent.click(getByRole("tab", { name: "시설정보 검증 목록" }));
     expect(getByText("2025.6 4일 표본, 양방향 합산")).toBeInTheDocument();
   });
 });

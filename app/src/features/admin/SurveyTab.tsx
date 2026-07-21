@@ -23,6 +23,7 @@ export default function SurveyTab({ stops, loaded }: Props) {
   const [presetKey, setPresetKey] = useState<PresetKey | null>("heat");
   const [weights, setWeights] = useState<SurveyWeights>(PRESETS.heat.w);
   const [selected, setSelected] = useState<Stop | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,7 +82,8 @@ export default function SurveyTab({ stops, loaded }: Props) {
   return (
     <div>
       <section className="dash-section" aria-label="조사 우선순위 프리셋">
-        <h2 className="dash-h2">1단계 조사 검토 순서</h2>
+        <h2 className="dash-h2">시설정보 검증 목록</h2>
+        <p className="dash-sub">공식 시설정보가 미확인인 정류장을 수요와 미확인 시설 수로 정리한 현장 검증 후보입니다.</p>
         <span className="dash-badge">2025.6 4일 표본, 양방향 합산</span>
         <PresetBar
           activeKey={presetKey}
@@ -167,7 +169,7 @@ export default function SurveyTab({ stops, loaded }: Props) {
                   </td>
                 </tr>
               ) : (
-                ranked.map((row) => (
+                ranked.slice(0, visibleCount).map((row) => (
                   <tr
                     key={row.stop.id}
                     className="dash-row"
@@ -195,6 +197,7 @@ export default function SurveyTab({ stops, loaded }: Props) {
             </tbody>
           </table>
         </div>
+        {ranked.length > visibleCount && <button type="button" className="dash-more" onClick={() => setVisibleCount((count) => count + 50)}>다음 50개 보기</button>}
         <p className="dash-foot">
           * 한낮 승차량은 11~16시 <strong>양방향 합산 기준</strong> 실측 승차 건수입니다.
         </p>
@@ -206,7 +209,7 @@ export default function SurveyTab({ stops, loaded }: Props) {
           <p className="dash-sub">수요 미확인 정류장이 없습니다.</p>
         ) : (
           <ul className="dash-nodemand">
-            {noDemand.map((c) => (
+            {noDemand.slice(0, 50).map((c) => (
               <li key={c.stop.id}>
                 {c.stop.name} — 미확인 시설 {c.unknownCount} / 4
               </li>
