@@ -12,10 +12,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = if ($PSScriptRoot) { Split-Path -Parent $PSScriptRoot } else { (Get-Location).Path }
 $locationPath = Join-Path $projectRoot 'data\강원특별자치도 춘천시_버스정류장 위치정보_20260326.csv'
+$routePath = Join-Path $projectRoot 'data\강원특별자치도 춘천시_버스정류장 노선정보_20260326.csv'
 $stopsPath = Join-Path $projectRoot 'app\public\data\stops.json'
 
 $surveyRows = @(Import-Csv -LiteralPath $InputCsv -Encoding UTF8)
 $locations = @(Import-Csv -LiteralPath $locationPath -Encoding Default)
+$routeRows = @(Import-Csv -LiteralPath $routePath -Encoding Default)
 $stops = @((Get-Content -LiteralPath $stopsPath -Raw -Encoding UTF8 | ConvertFrom-Json).stops)
 
 $locationById = @{}
@@ -28,6 +30,37 @@ foreach ($stop in $stops) {
   $stopById[[string]$stop.id] = $stop
 }
 
+$routeGroups = @{}
+foreach ($group in ($routeRows | Group-Object 노선)) {
+  $routeGroups[[string]$group.Name] = @($group.Group | Sort-Object { [int]$_.정류장순서 })
+}
+
+$routeEntriesByStop = @{}
+foreach ($row in $routeRows) {
+  $id = [string]$row.정류장
+  if (-not $routeEntriesByStop.ContainsKey($id)) {
+    $routeEntriesByStop[$id] = [System.Collections.Generic.List[object]]::new()
+  }
+  $routeEntriesByStop[$id].Add($row)
+}
+
+function Get-MajorDirection([string]$stopId) {
+  if (-not $routeEntriesByStop.ContainsKey($stopId)) { return '공식 노선정보 없음' }
+  $nextNames = [System.Collections.Generic.List[string]]::new()
+  foreach ($entry in $routeEntriesByStop[$stopId]) {
+    $ordered = @($routeGroups[[string]$entry.노선])
+    for ($i = 0; $i -lt $ordered.Count - 1; $i++) {
+      if ([string]$ordered[$i].정류장 -eq $stopId -and [string]$ordered[$i].정류장순서 -eq [string]$entry.정류장순서) {
+        $nextNames.Add([string]$ordered[$i + 1].정류장명)
+        break
+      }
+    }
+  }
+  if ($nextNames.Count -eq 0) { return '회차·종점' }
+  $major = @($nextNames | Group-Object | Sort-Object @{ Expression = 'Count'; Descending = $true }, @{ Expression = 'Name'; Descending = $false } | Select-Object -First 2 -ExpandProperty Name)
+  return ($major -join ' / ') + ' 방면'
+}
+
 $fullRows = foreach ($survey in $surveyRows) {
   $id = [string]$survey.관리번호
   $location = $locationById[$id]
@@ -35,6 +68,7 @@ $fullRows = foreach ($survey in $surveyRows) {
   $lat = if ($location) { [string]$location.위도 } elseif ($stop) { [string]$stop.lat } else { '' }
   $lng = if ($location) { [string]$location.경도 } elseif ($stop) { [string]$stop.lng } else { '' }
   $name = if ($location) { [string]$location.정류장명 } else { [string]$survey.정류장명 }
+  $majorDirection = Get-MajorDirection $id
   $pinLabel = [uri]::EscapeDataString("${name} 정류장")
   $pinUrl = if ($lat -and $lng) { "https://map.kakao.com/link/map/${pinLabel},${lat},${lng}" } else { '' }
   $isNumericRank = 0
@@ -48,6 +82,7 @@ $fullRows = foreach ($survey in $surveyRows) {
     '정류장명(영어)' = if ($location) { [string]$location.'정류장명(영어)' } else { '' }
     경도 = $lng
     위도 = $lat
+    '주요 진행방면(공식 노선순서 기반)' = $majorDirection
     '표본기간 한낮(11~16시) 승차건수(동명 정류장 합산)' = [string]$survey.한낮승차
     '정류장 위치 확인 URL(카카오맵)' = $pinUrl
     '정류장 주변 확인 URL(카카오 로드뷰)' = [string]$survey.로드뷰URL
@@ -66,7 +101,7 @@ $fullRows | Export-Csv -LiteralPath $FullOutputCsv -NoTypeInformation -Encoding 
 $maengRows = @($fullRows | Where-Object {
   $rank = 0
   [int]::TryParse([string]$_.'조사 순번(내부 작업순서)', [ref]$rank) -and $rank -ge 66 -and $rank -le 110
-} | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'표본기간 한낮(11~16시) 승차건수(동명 정류장 합산)','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
+} | Select-Object '조사 순번(내부 작업순서)','정류장 번호',관리번호,정류장명,'정류장명(영어)',경도,위도,'주요 진행방면(공식 노선순서 기반)','표본기간 한낮(11~16시) 승차건수(동명 정류장 합산)','정류장 위치 확인 URL(카카오맵)','정류장 주변 확인 URL(카카오 로드뷰)',그늘,의자,조명,도착안내기,'촬영시점(YYYY.MM)',조사자,비고
 )
 $maengRows | Export-Csv -LiteralPath $MaengOutputCsv -NoTypeInformation -Encoding UTF8
 
@@ -83,6 +118,7 @@ $columnBasis = @(
   [pscustomobject]@{ 열='경도'; 구분='공식 원본'; 공식출처='춘천시 버스정류장 위치정보'; 원본필드='경도'; 처리='원문 그대로'; 비고='' }
   [pscustomobject]@{ 열='데이터기준일'; 구분='출처 근거표에서만 관리'; 공식출처='춘천시 버스정류장 위치정보'; 원본필드='데이터기준일'; 처리='조사 작업표에서는 제외'; 비고='사용한 위치 원본은 2026-03-26 기준' }
   [pscustomobject]@{ 열='표본기간 한낮(11~16시) 승차건수(동명 정류장 합산)'; 구분='프로젝트 집계'; 공식출처='강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'; 원본필드='수집일자, 정류장명, 이용시간대, 승차건수'; 처리='2025-06-25~28의 11~16시 승차건수를 동명 정류장 단위로 합산'; 비고='방향별 값이 아니며 일평균·연간 수요로 해석하지 않음' }
+  [pscustomobject]@{ 열='주요 진행방면(공식 노선순서 기반)'; 구분='공식자료 기반 파생'; 공식출처='강원특별자치도 춘천시_버스정류장 노선정보_20260326.csv'; 원본필드='노선, 정류장순서, 정류장, 정류장명'; 처리='해당 관리번호 뒤에 가장 자주 등장하는 다음 정류장 최대 2곳을 방면으로 표시'; 비고='춘천시 원본의 공식 상행·하행 필드가 아니라 노선순서 기반 파생값' }
   [pscustomobject]@{ 열='조사 순번(내부 작업순서)'; 구분='프로젝트 내부값'; 공식출처='없음'; 원본필드='없음'; 처리='기존 대상 선정 결과의 작업 순서를 보존'; 비고='개별 정류장 위험도나 공식 행정 우선순위로 사용하지 않음' }
   [pscustomobject]@{ 열='정류장 위치 확인 URL(카카오맵)'; 구분='편의용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오맵 위치 링크 형식으로 변환'; 비고='춘천시 원본 필드가 아닌 조사 참고 링크' }
   [pscustomobject]@{ 열='정류장 주변 확인 URL(카카오 로드뷰)'; 구분='조사용 파생'; 공식출처='춘천시 위치정보의 위도·경도'; 원본필드='위도, 경도'; 처리='좌표를 카카오 로드뷰 링크 형식으로 변환'; 비고='가장 가까운 파노라마로 이동할 수 있음' }
@@ -121,6 +157,7 @@ $priorityEvidence = foreach ($survey in $surveyRows) {
     '연결 한계' = '승차자료 정류장아이디와 위치정보 관리번호의 공식 대응표가 없어 동명 정류장은 양방향 합산'
     '승차자료 출처' = '강원특별자치도 춘천시_버스노선별 시간대별 승하차 인원_20251209.csv'
     '위치정보 출처' = '강원특별자치도 춘천시_버스정류장 위치정보_20260326.csv'
+    '노령인구 데이터 활용 주의' = '행정경계 인접 정류장에 읍면동 전체 노령인구를 직접 부여하지 않음; 향후 좌표 주변 격자·생활권 단위 자료 사용'
   }
 }
 $priorityEvidence | Export-Csv -LiteralPath $PriorityEvidenceOutputCsv -NoTypeInformation -Encoding UTF8
