@@ -7,6 +7,7 @@ import { useStops } from "../../store/useStops";
 import FilterTab from "./FilterTab";
 import SurveyTab from "./SurveyTab";
 import InstallTab from "./InstallTab";
+import DashboardConceptPreview, { type DashboardConceptKey } from "./DashboardConceptPreview";
 import { loadReports, REPORT_CHANGED_EVENT, REPORT_STORAGE_KEY, updateReportStatus, type CitizenReport } from "../report/reportStore";
 import "./Dashboard.css";
 
@@ -89,6 +90,7 @@ export default function Dashboard() {
   const stops = useStops((s) => s.stops);
   const loaded = useStops((s) => s.loaded);
   const [tab, setTab] = useState<TabKey>("reports");
+  const [concept, setConcept] = useState<DashboardConceptKey | null>(null);
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {
@@ -115,14 +117,16 @@ export default function Dashboard() {
         </nav>
       </aside>
       <section className="dash-workspace">
-        <nav className="dash-concept-tabs" aria-label="대시보드 시안 비교"><span>시안 비교</span>{CONCEPT_LINKS.map(([key, label]) => <a key={key} href={`/admin-concepts?concept=${key}`}>{label}</a>)}</nav>
-        <header className="dash-head"><div><span className="dash-kicker">{TABS.find((item) => item.key === tab)?.description}</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div></header>
-        <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-          {tab === "reports" && <ReportsTab reports={reports} />}
-          {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}
-          {tab === "install" && <InstallTab stops={stops} loaded={loaded} />}
-          {tab === "filter" && <FilterTab stops={stops} loaded={loaded} />}
-        </div>
+        <nav className="dash-concept-tabs" aria-label="대시보드 시안 비교"><button type="button" aria-pressed={concept === null} onClick={() => setConcept(null)}>운영 화면</button>{CONCEPT_LINKS.map(([key, label]) => <button type="button" key={key} aria-pressed={concept === key} onClick={() => setConcept(key)}>{label}</button>)}</nav>
+        {concept ? <DashboardConceptPreview concept={concept} reports={reports}/> : <>
+          <header className="dash-head"><div><span className="dash-kicker">{TABS.find((item) => item.key === tab)?.description}</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div></header>
+          <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
+            {tab === "reports" && <ReportsTab reports={reports} />}
+            {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}
+            {tab === "install" && <InstallTab stops={stops} loaded={loaded} />}
+            {tab === "filter" && <FilterTab stops={stops} loaded={loaded} />}
+          </div>
+        </>}
       </section>
       </div>
       </div>

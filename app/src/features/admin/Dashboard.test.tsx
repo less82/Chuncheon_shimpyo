@@ -98,10 +98,13 @@ describe("<Dashboard> — 조건 필터 탭(v1 보존)", () => {
 });
 
 describe("<Dashboard> — (a) 탭 구조", () => {
-  it("현재 대시보드에서 시안 5종으로 바로 이동할 수 있다", () => {
+  it("현재 대시보드 안에서 시안 5종을 전환한다", () => {
     const { getByRole } = render(<Dashboard />);
     const concepts = getByRole("navigation", { name: "대시보드 시안 비교" });
-    expect(within(concepts).getAllByRole("link")).toHaveLength(5);
+    expect(within(concepts).getAllByRole("button")).toHaveLength(6);
+    fireEvent.click(within(concepts).getByRole("button", { name: "C. 단계 보드형" }));
+    expect(getByRole("heading", { name: "처리 단계 보드" })).toBeInTheDocument();
+    expect(window.location.pathname).not.toContain("admin-concepts");
   });
 
   it("시민 앱에서 저장한 불편 제보를 기본 화면에 표시한다", () => {
