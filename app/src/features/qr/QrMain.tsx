@@ -43,6 +43,7 @@ interface RouteSummary {
 }
 
 type QrMode = "home" | "destination" | "report";
+type LocationSource = "gps" | "manual" | null;
 const MAX_NEARBY_STOP_DISTANCE_M = 1500;
 
 function normalized(value: string): string {
@@ -111,6 +112,8 @@ export default function QrMain() {
   const [outsideServiceArea, setOutsideServiceArea] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [stopDistance, setStopDistance] = useState<number | null>(null);
+  const [locationSource, setLocationSource] = useState<LocationSource>(null);
+  const [manualStopQuery, setManualStopQuery] = useState("");
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
@@ -156,6 +159,7 @@ export default function QrMain() {
     setStartId(null);
     setLocationAccuracy(null);
     setStopDistance(null);
+    setLocationSource(null);
     if (!navigator.geolocation) { setLocationError(true); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -166,6 +170,7 @@ export default function QrMain() {
         setStartId(usable ? nearest.id : null);
         setLocationAccuracy(Math.round(coords.accuracy));
         setStopDistance(distance);
+        setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(Boolean(nearest && !usable));
         setLocationError(!nearest);
         setLocating(false);
@@ -191,6 +196,7 @@ export default function QrMain() {
     setStartId(null);
     setLocationAccuracy(null);
     setStopDistance(null);
+    setLocationSource(null);
     if (!navigator.geolocation) {
       setLocationError(true);
       return;
@@ -205,6 +211,7 @@ export default function QrMain() {
         setStartId(usable ? candidates[0]?.id ?? null : null);
         setLocationAccuracy(Math.round(coords.accuracy));
         setStopDistance(distance);
+        setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(candidates.length > 0 && !usable);
         setLocationError(candidates.length === 0);
         setLocating(false);
@@ -219,9 +226,31 @@ export default function QrMain() {
 
   const requestTrip = (destination: string) => {
     if (!destination) return;
-    if (startId && locationAccuracy !== null && stopDistance !== null) setSubmitted(destination);
+    if (startId && locationSource) setSubmitted(destination);
     else openDestination();
   };
+
+  const manualMatches = useMemo(() => {
+    const needle = normalized(manualStopQuery);
+    if (!needle) return [];
+    return stops.filter((stop) => normalized(stop.name).includes(needle) || stop.stopNo.includes(needle)).slice(0, 6);
+  }, [manualStopQuery, stops]);
+
+  const chooseManualStop = (stop: Stop) => {
+    setStartId(stop.id);
+    setLocationSource("manual");
+    setLocationAccuracy(null);
+    setStopDistance(null);
+    setLocationError(false);
+    setOutsideServiceArea(false);
+    setManualStopQuery("");
+  };
+
+  const manualStopSearch = <div className="qrmain__manual-stop">
+    <label htmlFor="manual-stop">정류장을 직접 찾을 수도 있어요</label>
+    <div><input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 4자리 번호" /></div>
+    {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
+  </div>;
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
@@ -299,6 +328,7 @@ export default function QrMain() {
     if (locationError || outsideServiceArea || !start) return <main className="qrmain"><section className="qrmain__error">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
       <Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>{outsideServiceArea ? "주변 정류장을 찾지 못했어요" : "현재 위치가 필요해요"}</h1><p>{outsideServiceArea ? `가장 가까운 춘천 정류장도 ${readableDistance(stopDistance)} 떨어져 있어 신고 대상으로 선택하지 않았어요.` : "불편한 정류장을 확인하려면 위치 사용을 허용해 주세요."}</p><button type="button" className="qrmain__retry" onClick={locateForReport}>위치 다시 확인하기</button>
+      {manualStopSearch}
     </section></main>;
     if (!reportConfirmed) return <main className="qrmain"><section className="qrmain__ask qrmain__stop-confirm">
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
@@ -333,10 +363,11 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {outsideServiceArea && <div className="qrmain__location-error" role="alert"><b>주변 정류장을 찾지 못했어요.</b><span>가장 가까운 춘천 정류장도 {readableDistance(stopDistance)} 떨어져 있어 길찾기를 중단했습니다.</span><button type="button" onClick={openDestination}>위치 다시 확인하기</button></div>}
-        {start && locationAccuracy !== null && stopDistance !== null && <div className="qrmain__location-proof">
+        {(outsideServiceArea || locationError) && <div className="qrmain__location-error" role="alert"><b>{outsideServiceArea ? "주변 정류장을 찾지 못했어요." : "현재 위치를 확인하지 못했어요."}</b><span>{outsideServiceArea ? `가장 가까운 춘천 정류장도 ${readableDistance(stopDistance)} 떨어져 있어 길찾기를 중단했습니다.` : "위치 권한을 허용하거나 정류장을 직접 찾아주세요."}</span><button type="button" onClick={openDestination}>위치 다시 확인하기</button></div>}
+        {(outsideServiceArea || locationError) && manualStopSearch}
+        {start && locationSource && <div className="qrmain__location-proof">
           <iframe className="qrmain__map" title={`${start.name} 주변 지도`} src={mapEmbedUrl(start)} loading="lazy" />
-          <div><span><MapPin aria-hidden="true" /> GPS로 찾은 가장 가까운 정류장</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>현재 위치에서 약 {stopDistance}m · GPS 오차범위 약 {locationAccuracy}m</p></div>
+          <div><span><MapPin aria-hidden="true" /> {locationSource === "gps" ? "GPS로 찾은 가장 가까운 정류장" : "직접 선택한 정류장"}</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>{locationSource === "gps" ? `현재 위치에서 약 ${stopDistance}m · GPS 오차범위 약 ${locationAccuracy}m` : "지도와 정류장 번호를 확인한 뒤 목적지를 입력하세요."}</p></div>
         </div>}
         <h2>어디로 가세요?</h2>
         <p>마이크를 누르고 목적지를 말씀해 주세요.</p>
