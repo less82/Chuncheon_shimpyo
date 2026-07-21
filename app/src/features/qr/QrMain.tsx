@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Armchair, BusFront, ChevronLeft, ChevronRight, Clock3, MapPin, MessageCircle, Mic, Navigation, Umbrella } from "lucide-react";
+import { BusFront, ChevronLeft, Clock3, MapPin, MessageCircle, Mic, Navigation } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -68,12 +68,6 @@ function clockAfter(minutes: number): string {
     .format(new Date(Date.now() + minutes * 60_000));
 }
 
-function mapEmbedUrl(stop: Stop): string {
-  const delta = 0.004;
-  const bbox = `${stop.lng - delta},${stop.lat - delta},${stop.lng + delta},${stop.lat + delta}`;
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${stop.lat},${stop.lng}`;
-}
-
 function readableDistance(distance: number | null): string {
   if (distance === null) return "거리를 확인할 수 없는 곳";
   return distance >= 1000 ? `약 ${(distance / 1000).toFixed(1)}km` : `약 ${distance}m`;
@@ -110,7 +104,6 @@ export default function QrMain() {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [outsideServiceArea, setOutsideServiceArea] = useState(false);
-  const [showLocationNotice, setShowLocationNotice] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [stopDistance, setStopDistance] = useState<number | null>(null);
   const [locationSource, setLocationSource] = useState<LocationSource>(null);
@@ -152,13 +145,6 @@ export default function QrMain() {
     () => (start && routes ? findTrips(submitted, start, stops, routes) : []),
     [submitted, start, stops, routes],
   );
-
-  useEffect(() => {
-    if (!outsideServiceArea && !locationError) return;
-    setShowLocationNotice(true);
-    const timer = window.setTimeout(() => setShowLocationNotice(false), 2000);
-    return () => window.clearTimeout(timer);
-  }, [outsideServiceArea, locationError]);
 
   const openDestination = () => {
     setMode("destination");
@@ -254,9 +240,19 @@ export default function QrMain() {
     setManualStopQuery("");
   };
 
+  const submitManualStop = (event: FormEvent) => {
+    event.preventDefault();
+    const exact = manualMatches.find((stop) => stop.stopNo === manualStopQuery.trim());
+    const match = exact ?? manualMatches[0];
+    if (match) chooseManualStop(match);
+  };
+
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
-    <div><input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 4자리 번호" /></div>
+    <form className="qrmain__form" onSubmit={submitManualStop}>
+      <input id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
+      <button type="submit">찾기</button>
+    </form>
     {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
   </div>;
 
@@ -336,7 +332,6 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
       <span className="qrmain__report-icon"><MapPin aria-hidden="true" /></span>
       <p>현재 위치에서 가장 가까운 정류장이에요.</p><h1>{start.name}</h1><strong>{start.stopNo ? `정류장 번호 ${start.stopNo}` : "정류장 번호 확인 중"}</strong>
-      <iframe className="qrmain__map" title={`${start.name} 정류장 지도`} src={mapEmbedUrl(start)} loading="lazy" />
       <h2>이 정류장이 맞나요?</h2>
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
@@ -365,11 +360,10 @@ export default function QrMain() {
       <button className="qrmain__back" type="button" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /> 처음으로</button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
-        {showLocationNotice && <div className="qrmain__location-notice" role="status">{outsideServiceArea ? "주변 정류장을 찾지 못했어요" : "현재 위치를 확인하지 못했어요"}</div>}
+        {(outsideServiceArea || locationError) && <div className="qrmain__location-recovery" role="alert"><span>위치 정보를 찾을 수 없습니다. 다시 찾아볼까요?</span><button type="button" onClick={openDestination}>위치 다시 찾기</button></div>}
         {(outsideServiceArea || locationError) && manualStopSearch}
         {start && locationSource && <div className="qrmain__location-proof">
-          <iframe className="qrmain__map" title={`${start.name} 주변 지도`} src={mapEmbedUrl(start)} loading="lazy" />
-          <div><span><MapPin aria-hidden="true" /> {locationSource === "gps" ? "GPS로 찾은 가장 가까운 정류장" : "직접 선택한 정류장"}</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>{locationSource === "gps" ? `현재 위치에서 약 ${stopDistance}m · GPS 오차범위 약 ${locationAccuracy}m` : "지도와 정류장 번호를 확인한 뒤 목적지를 입력하세요."}</p></div>
+          <div><span><MapPin aria-hidden="true" /> {locationSource === "gps" ? "GPS로 찾은 가장 가까운 정류장" : "직접 선택한 정류장"}</span><strong>{start.name} {start.stopNo && <small>#{start.stopNo}</small>}</strong><p>{locationSource === "gps" ? `현재 위치에서 약 ${stopDistance}m · GPS 오차범위 약 ${locationAccuracy}m` : "정류장 번호를 확인한 뒤 목적지를 입력하세요."}</p></div>
         </div>}
         <h2>목적지를 입력하세요</h2>
         <button type="button" className="qrmain__mic" data-listening={listening} onClick={startVoice}>
@@ -395,7 +389,7 @@ export default function QrMain() {
           ) : results.length === 0 ? (
             <p className="qrmain__state">“{submitted}”까지 가는 노선을 찾지 못했습니다. 정류장 이름을 다시 말씀해 주세요.</p>
           ) : (
-            results.map(({ destination, option }, index) => {
+            results.slice(0, 1).map(({ destination, option }, index) => {
               const firstLeg = option.legs[0];
               const rideMin = routeRideMinutes(option, routes);
               const routeArrivals: RouteSummary[] = firstLeg.routeNos.map((routeNo) => {
@@ -414,7 +408,7 @@ export default function QrMain() {
                 };
               }).filter((item) => item.waitMin >= option.walkMin + 1)
                 .sort((a, b) => a.totalMin - b.totalMin)
-                .slice(0, 3);
+                .slice(0, 1);
               return (
                 <div className="qrmain__result-set" key={`${destination.id}-${index}`}>
                   {routeArrivals.map((item, routeIndex) => (
@@ -436,12 +430,6 @@ export default function QrMain() {
                         <p><b>{item.directionName} 방면</b> · 다음 정류장 기준 방향</p>
                         <p>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</p>
                       </div>
-                      <iframe className="qrmain__map" title={`${start.name} 승차 위치 지도`} src={mapEmbedUrl(start)} loading="lazy" />
-                      <div className="qrmain__facilities" aria-label="정류장 편의시설">
-                        <span data-state={start.facilities.seat.status}><Armchair aria-hidden="true" /> 의자 {start.facilities.seat.status === "yes" ? "있음" : "미확인"}</span>
-                        <span data-state={start.facilities.shade.status}><Umbrella aria-hidden="true" /> 그늘 {start.facilities.shade.status === "yes" ? "있음" : "미확인"}</span>
-                      </div>
-                      <button type="button" className="qrmain__place" onClick={() => window.open(`https://map.kakao.com/link/map/${encodeURIComponent(start.name)},${start.lat},${start.lng}`, "_blank", "noopener,noreferrer")}>버스를 탈 곳 보기 <ChevronRight aria-hidden="true" /></button>
                     </article>
                   ))}
                 </div>
