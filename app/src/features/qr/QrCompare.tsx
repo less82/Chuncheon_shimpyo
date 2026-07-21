@@ -34,7 +34,7 @@ export default function QrCompare() {
             <div className="qrcompare__device" style={{ width: screen.width + 16, height: screen.height + 16 }}>
               <iframe
                 title={`${screen.title} QR 화면`}
-                src="/qr_main"
+                src="/qr_main?single=1"
                 width={screen.width}
                 height={screen.height}
               />
