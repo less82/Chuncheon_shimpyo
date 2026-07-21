@@ -71,6 +71,9 @@ function Get-MajorDirection([string]$stopId) {
 
 $fullRows = foreach ($survey in $surveyRows) {
   $id = [string]$survey.관리번호
+  # 위치 마스터에는 있으나 공식 노선정보에 없고 TAGO 전수점검에서도
+  # 확인되지 않은 비활성 후보는 현황조사 대상에서 제외한다.
+  if (-not $routeEntriesByStop.ContainsKey($id)) { continue }
   $location = $locationById[$id]
   $stop = $stopById[$id]
   $lat = if ($location) { [string]$location.위도 } elseif ($stop) { [string]$stop.lat } else { '' }
