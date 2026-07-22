@@ -48,10 +48,13 @@
 .tripview__field-control { display: grid; grid-template-columns: 1fr; gap: clamp(7px, 2vw, 10px); }
 .tripview__field-control input { min-width: 0; height: clamp(50px, calc(20px + 6dvh), 58px); padding: 0 clamp(12px, 4vw, 16px); border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: clamp(14px, calc(2px + 4vw), 18px); font-weight: 700; }
 .tripview__field-control input:focus { border-color: var(--brand); }
+.tripview__choice-stage { display: grid; gap: clamp(10px, 2dvh, 14px); }
+.tripview__choice-prompt { margin: 0; color: var(--ink); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
 .tripview__choices { display: grid; gap: clamp(8px, 1.5dvh, 12px); }
-.tripview__choices button { display: grid; grid-template-columns: 30px 1fr; min-height: clamp(58px, calc(22px + 7dvh), 70px); padding: 8px 16px; align-items: center; border: 2px solid var(--border-strong); border-radius: 15px; background: var(--surface); color: var(--ink); text-align: left; }
-.tripview__choices button svg { color: var(--brand); }
+.tripview__choices button { min-height: clamp(58px, calc(22px + 7dvh), 70px); padding: 8px 16px; border: 2px solid var(--border-strong); border-radius: 15px; background: var(--surface); color: var(--ink); text-align: center; }
 .tripview__choices button strong { font-size: clamp(18px, calc(5px + 4vw), 21px); }
+.tripview__choice-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tripview__choice-actions button { min-height: clamp(46px, calc(18px + 6dvh), 54px); border: 2px solid var(--brand); border-radius: 15px; background: var(--surface); color: var(--brand); font: inherit; font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
 .tripview__voice { display: flex; width: 100%; min-height: clamp(46px, calc(18px + 6dvh), 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: white; font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
 .tripview__voice:focus, .tripview__voice:focus-visible { outline: none; box-shadow: none; }
 .tripview__voice[data-listening="true"] { border-color: hsl(0 32% 22%); background: hsl(0 32% 22%); }
@@ -265,5 +268,8 @@
   font-weight: 700;
   color: var(--brand-strong);
 }
-.tripcard__save { width: 100%; min-height: 48px; margin-top: 12px; border: 0; border-radius: 14px; background: var(--brand); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.tripcard__favorite { display: grid; gap: 6px; margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border); text-align: center; }
+.tripcard__favorite strong { font-size: var(--fs-md); color: var(--ink); }
+.tripcard__favorite span { font-size: var(--fs-base); font-weight: 700; color: var(--ink-body); }
+.tripcard__save { width: 100%; min-height: 48px; margin-top: 6px; border: 0; border-radius: 14px; background: var(--brand); color: white; font: inherit; font-weight: 800; cursor: pointer; }
 .tripcard__save:disabled { background: var(--border-strong); color: var(--ink-muted); cursor: default; }

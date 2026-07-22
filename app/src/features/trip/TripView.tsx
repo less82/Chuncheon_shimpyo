@@ -3,13 +3,12 @@
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, MapPin, Star } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import type { LatLng } from "../../lib/geo";
 import { useStops } from "../../store/useStops";
-import { useFavorites } from "../../store/useFavorites";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { planTrip } from "./planTrip";
 import { sortByComfort, type SortMode } from "./comfortSort";
@@ -44,19 +43,8 @@ export default function TripView() {
   const navigate = useNavigate();
   const stops = useStops((s) => s.stops);
   const cityCenter = useStops((s) => s.cityCenter);
-  const favIds = useFavorites((s) => s.ids);
-
-  const favStops = useMemo(
-    () =>
-      favIds
-        .map((id) => stops.find((s) => s.id === id))
-        .filter((s): s is Stop => Boolean(s)),
-    [favIds, stops],
-  );
-
   const requestedDestId = searchParams.get("dest");
   const requestedBoardId = searchParams.get("board");
-  const [destId, setDestId] = useState<string | null>(requestedDestId);
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
   const [sortMode, setSortMode] = useState<SortMode>("comfort");
@@ -67,6 +55,7 @@ export default function TripView() {
   const [voiceField, setVoiceField] = useState<"board" | "dest" | null>(null);
   const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
   const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
+  const inputRefs = useRef<Record<"board" | "dest", HTMLInputElement | null>>({ board: null, dest: null });
   const stopQuery = queries[activeField];
 
   const stopMatches = useMemo(() => {
@@ -158,7 +147,7 @@ export default function TripView() {
     );
   }, [cityCenter]);
 
-  const destStop = stops.find((s) => s.id === destId) ?? null;
+  const destStop = stops.find((s) => s.id === requestedDestId) ?? null;
 
   const options = useMemo(() => {
     if (!destStop || !routes) return [];
@@ -196,6 +185,16 @@ export default function TripView() {
     if (picked.board) openArrivals(picked.board, stop);
   };
 
+  const resetChoice = (field: "board" | "dest", retryWithVoice: boolean) => {
+    setPicked((value) => ({ ...value, [field]: null }));
+    setQueries((value) => ({ ...value, [field]: "" }));
+    setActiveField(field);
+    setVoiceMessage("");
+    setVoiceField(null);
+    if (retryWithVoice) listen(field);
+    else requestAnimationFrame(() => inputRefs.current[field]?.focus());
+  };
+
   if (!requestedBoardId) return (
     <main className="tripview tripview--find">
       <header className="tripview__bar">
@@ -208,12 +207,19 @@ export default function TripView() {
           const showChoices = activeField === field && !picked[field] && queries[field].replace(/\s+/g, "").length >= 2 && visibleMatches.length > 0;
           const choices = visibleMatches.filter((stop) => stop.name !== picked[field === "board" ? "dest" : "board"]?.name);
           return <div className="tripview__field" key={field} data-active={activeField === field}>
-            {showChoices ? <div className="tripview__choices">
-              {choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseStop(field, stop)}><MapPin aria-hidden="true" /><strong>{stop.name}</strong></button>)}
+            {showChoices ? <div className="tripview__choice-stage">
+              <p className="tripview__choice-prompt">{field === "board" ? "출발 정류장을 선택해주세요" : "목적지 정류장을 선택해주세요"}</p>
+              <div className="tripview__choices">
+                {choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseStop(field, stop)}><strong>{stop.name}</strong></button>)}
+              </div>
+              <div className="tripview__choice-actions">
+                <button type="button" onClick={() => resetChoice(field, true)}>다시 말하기</button>
+                <button type="button" onClick={() => resetChoice(field, false)}>직접 쓰기</button>
+              </div>
             </div> : <>
               <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
               <div className="tripview__field-control">
-                <input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
+                <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
                 <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
               </div>
               {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
@@ -223,6 +229,8 @@ export default function TripView() {
       </section>
     </main>
   );
+
+  if (!requestedDestId || !destStop) return <Navigate to="/go" replace />;
 
   return (
     <main className="tripview">
@@ -235,41 +243,7 @@ export default function TripView() {
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
 
-      {!destStop && favStops.length === 0 ? (
-        <section className="tripview__empty">
-          <p className="tripview__empty-title">
-            먼저 자주 가는 곳을 별표로 저장하세요.
-          </p>
-          <p className="tripview__empty-sub">
-            저장한 곳이 여기 목적지 단추로 나와요. 누르기만 하면 가는 버스를
-            찾아드려요.
-          </p>
-          <Link className="tripview__cta" to="/app">
-            지도에서 목적지 별표하기
-          </Link>
-        </section>
-      ) : (
-        <>
-          {!requestedDestId && <section className="tripview__dests" aria-label="목적지 고르기">
-            <p className="tripview__dests-label">어디로 가세요?</p>
-            <div className="tripview__dest-list">
-              {favStops.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  className="tripview__dest"
-                  aria-pressed={s.id === destId}
-                  onClick={() => setDestId(s.id)}
-                >
-                  <Star className="tripview__dest-star" aria-hidden="true" />
-                  {s.name}
-                </button>
-              ))}
-            </div>
-          </section>}
-
-          {destStop && (
-            <section
+      <section
               className="tripview__sort"
               aria-label="정렬 기준 선택"
             >
@@ -294,13 +268,12 @@ export default function TripView() {
                   가까운 순
                 </button>
               </div>
-            </section>
-          )}
+      </section>
 
-          <section className="tripview__results" aria-live="polite">
+      <section className="tripview__results" aria-live="polite">
             {!routes ? (
               <p className="tripview__msg">경로를 준비하고 있어요…</p>
-            ) : destStop && options.length === 0 ? (
+            ) : options.length === 0 ? (
               <p className="tripview__msg tripview__msg--none">
                 직접 가는 버스를 찾지 못했습니다.
               </p>
@@ -310,14 +283,12 @@ export default function TripView() {
                   key={`${opt.boardStopId}-${opt.directBus ? "d" : "t"}-${i}`}
                   option={opt}
                   stops={stops}
-                  destStop={destStop!}
+                  destStop={destStop}
                   fromPos={fromPos}
                 />
               ))
             )}
-          </section>
-        </>
-      )}
+      </section>
     </main>
   );
 }

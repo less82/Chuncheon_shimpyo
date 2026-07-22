@@ -126,12 +126,16 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
         <p className="tripcard__comfort">{comfortSentence(boardStop)}</p>
       )}
       {boardStop && firstRouteNo && (
-        <button className="tripcard__save" type="button" disabled={saved} onClick={() => saveJourney({
-          boardStopId: boardStop.id,
-          destinationStopId: destStop.id,
-          routeNo: firstRouteNo,
-          direction: `${directionStop?.name ?? destStop.name} 방면`,
-        })}>{saved ? "즐겨찾기 저장됨" : "이 버스 즐겨찾기"}</button>
+        <section className="tripcard__favorite" aria-label="즐겨찾기 안내">
+          <strong>자주 타시는 노선인가요?</strong>
+          <span>즐겨찾기하면 다음에도 빠르게 확인할 수 있어요.</span>
+          <button className="tripcard__save" type="button" disabled={saved} onClick={() => saveJourney({
+            boardStopId: boardStop.id,
+            destinationStopId: destStop.id,
+            routeNo: firstRouteNo,
+            direction: `${directionStop?.name ?? destStop.name} 방면`,
+          })}>{saved ? "즐겨찾기 저장됨" : "즐겨찾기"}</button>
+        </section>
       )}
     </article>
   );
