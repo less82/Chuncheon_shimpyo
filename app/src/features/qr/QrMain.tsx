@@ -71,17 +71,6 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
   }, 0);
 }
 
-function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop[]): string {
-  if (!routes) return "방면 확인 중";
-  const names = routes.routes.flatMap((route) => {
-    const index = route.stops.indexOf(stop.id);
-    const next = index >= 0 ? stops.find((candidate) => candidate.id === route.stops[index + 1]) : null;
-    return next ? [next.name] : [];
-  });
-  const unique = [...new Set(names)];
-  return unique.length ? `${unique.slice(0, 2).join(" · ")} 방면` : "방면 정보 없음";
-}
-
 function resizeReportPhoto(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -280,8 +269,6 @@ export default function QrMain() {
     if (!needle) return [];
     return stops.filter((stop) => normalized(stop.name).includes(needle) || stop.stopNo.includes(needle)).slice(0, 6);
   }, [manualStopQuery, stops]);
-  const searchingByNumber = /^\d+$/.test(manualStopQuery.trim());
-
   const chooseManualStop = (stop: Stop) => {
     setStartId(stop.id);
     setLocationSource("manual");
@@ -312,7 +299,7 @@ export default function QrMain() {
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
     <input className="qrmain__manual-input" id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
-    {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{searchingByNumber ? (stop.stopNo ? `#${stop.stopNo}` : "번호 미확인") : stopDirection(stop, routes, stops)}</span></button></li>)}</ul>}
+    {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong></button></li>)}</ul>}
   </div>;
 
   const submit = (event?: FormEvent) => {
@@ -463,7 +450,7 @@ export default function QrMain() {
         {locating && <p className="qrmain__inline-status" aria-live="polite">현재 위치를 확인하고 있어요</p>}
         {(outsideServiceArea || locationError) && <button type="button" className="qrmain__location-recovery" onClick={openDestination}>위치 정보를 찾을 수 없습니다</button>}
         {!start && manualStopSearch}
-        {start && locationSource && <div className="qrmain__selected-start" aria-live="polite"><span>출발 정류장</span><strong>{start.name}</strong><small>{stopDirection(start, routes, stops)}</small><button type="button" onClick={editStartStop}>다시 찾기</button></div>}
+        {start && locationSource && <div className="qrmain__selected-start" aria-live="polite"><span>출발 정류장</span><strong>{start.name}</strong><button type="button" onClick={editStartStop}>다시 찾기</button></div>}
         {start && locationSource && <div className="qrmain__location-proof">
           <QrStopMap stop={start} />
         </div>}
@@ -486,7 +473,7 @@ export default function QrMain() {
 
       {submitted && start && (
         <section className="qrmain__results qrmain__results-page" aria-live="polite" ref={resultsRef}>
-          <div className="qrmain__trip-summary"><div><span>승차 정류장</span><strong>{start.name}</strong><small>{routeChoices[0] ? `${routeChoices[0].directionName} 방면` : stopDirection(start, routes, stops)}</small></div><b aria-hidden="true">→</b><div><span>목적지</span><strong>{submitted}</strong><small>{results[0] ? `하차 정류장 · ${results[0].destination.name}` : "하차 정류장 확인 중"}</small></div></div>
+          <div className="qrmain__trip-summary"><div><span>승차 정류장</span><strong>{start.name}</strong><small>{routeChoices[0] ? `${routeChoices[0].directionName} 방면` : "방면 확인 중"}</small></div><b aria-hidden="true">→</b><div><span>목적지</span><strong>{submitted}</strong><small>{results[0] ? `하차 정류장 · ${results[0].destination.name}` : "하차 정류장 확인 중"}</small></div></div>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
           ) : results.length === 0 ? (
