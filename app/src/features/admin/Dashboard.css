@@ -164,14 +164,8 @@
   .report-section-head p { max-width: 260px; }
   .report-command { align-items: stretch; }
   .report-command-filters { flex-wrap: wrap; }
-  .report-tablewrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
-  .report-table, .report-table tbody { display: block; width: 100%; }
-  .report-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .report-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin-bottom: 10px; padding: 14px; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-card); }
-  .report-table td { display: block; min-width: 0; padding: 0; border: 0; }
-  .report-table td::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--ink-muted); font-size: 10px; font-weight: 800; }
-  .report-table td:nth-child(3), .report-table td:nth-child(5) { grid-column: 1 / -1; }
-  .report-table td:last-child { grid-column: 1 / -1; }
+  .report-tablewrap { overflow-x: auto; }
+  .report-table { min-width: 680px; }
 }
 
 @container dashboard-workspace (max-width: 600px) {
