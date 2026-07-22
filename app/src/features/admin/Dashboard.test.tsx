@@ -170,7 +170,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     fireEvent.click(within(utils.getByRole("group", { name: "처리 상태별 제보 목록" })).getByRole("button", { name: /처리 완료/ }));
     expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
     fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
-    expect(utils.getByText("담당자 확인과 처리 결과 등록이 완료되었습니다.")).toBeInTheDocument();
+    expect(utils.getByText("처리가 완료된 제보입니다.")).toBeInTheDocument();
   });
 
   it("검토 열기만으로 상태가 바뀌지 않고 필수 확인 후에만 다음 단계로 이동한다", () => {
@@ -180,7 +180,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
     fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
     expect(utils.getByRole("dialog", { name: "제보 검토" })).toBeInTheDocument();
-    const confirm = utils.getByRole("button", { name: "접수 확인 · 담당 배정" });
+    const confirm = utils.getByRole("button", { name: "접수 확인" });
     expect(confirm).toBeDisabled();
     expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("received");
     fireEvent.click(utils.getByRole("checkbox", { name: "정류장 식별정보 확인" }));
