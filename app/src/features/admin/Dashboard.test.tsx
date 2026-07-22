@@ -169,7 +169,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
     fireEvent.click(within(utils.getByRole("group", { name: "처리 상태별 제보 목록" })).getByRole("button", { name: /처리 완료/ }));
     expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
-    fireEvent.click(utils.getByRole("button", { name: "처리 기록 보기" }));
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
     expect(utils.getByText("담당자 확인과 처리 결과 등록이 완료되었습니다.")).toBeInTheDocument();
   });
 
@@ -178,7 +178,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
     ]));
     const utils = render(<Dashboard />);
-    fireEvent.click(utils.getByRole("button", { name: "검토 열기" }));
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
     expect(utils.getByRole("dialog", { name: "제보 검토" })).toBeInTheDocument();
     const confirm = utils.getByRole("button", { name: "접수 확인 · 담당 배정" });
     expect(confirm).toBeDisabled();
