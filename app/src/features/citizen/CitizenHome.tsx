@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { BusFront, ChevronRight, Clock3, MessageCircle, Navigation, QrCode, Star } from "lucide-react";
+import { ChevronRight, Clock3, MessageCircle, Navigation, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
-import QrScanner from "../share/QrScanner";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
@@ -24,6 +23,7 @@ export function FavoriteStopCard({ stop }: { stop: Stop }) {
   return (
     <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(stop.id)}`}>
       <span className="apphome-favorite__top"><Star aria-hidden="true" /><strong>{stop.name}</strong></span>
+      <span className="apphome-favorite__routes">경유 노선 {stop.routes.length > 0 ? stop.routes.slice(0, 4).map((route) => `${route}번`).join(" · ") : "확인 중"}</span>
       <span className="apphome-favorite__arrival" data-live={arrival.live}>
         <Clock3 aria-hidden="true" />
         <b>{firstRoute?.routeNo ? `${firstRoute.routeNo}번 ` : ""}{arrival.text}</b>
@@ -34,7 +34,6 @@ export function FavoriteStopCard({ stop }: { stop: Stop }) {
 }
 
 export default function CitizenHome() {
-  const [scanning, setScanning] = useState(false);
   const stops = useStops((state) => state.stops);
   const favIds = useFavorites((state) => state.ids);
   const favoriteStops = favIds
@@ -44,18 +43,8 @@ export default function CitizenHome() {
   return (
     <main className="apphome">
       <ImportOnLoad />
-      {scanning && <QrScanner onClose={() => setScanning(false)} />}
-
-      <header className="apphome__bar">
-        <Link className="apphome__brand" to="/app" aria-label="쉼표 정류장 홈">
-          <span><BusFront aria-hidden="true" /></span>
-          <b>쉼표 정류장</b>
-        </Link>
-        <button type="button" onClick={() => setScanning(true)}><QrCode aria-hidden="true" />QR 스캔</button>
-      </header>
 
       <section className="apphome__intro">
-        <p>안녕하세요</p>
         <h1>무엇을 도와드릴까요?</h1>
       </section>
 
@@ -92,7 +81,6 @@ export default function CitizenHome() {
         )}
       </section>
 
-      <p className="apphome__privacy">로그인 없이 바로 이용할 수 있어요</p>
     </main>
   );
 }

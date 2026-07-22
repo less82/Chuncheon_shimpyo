@@ -34,6 +34,9 @@ describe("<CitizenHome>", () => {
     expect(screen.getByRole("link", { name: /목적지로 가는 길 찾기/ })).toHaveAttribute("href", "/go");
     expect(screen.getByRole("link", { name: /정류장 불편 알리기/ })).toHaveAttribute("href", "/app/report");
     expect(screen.queryByText("주변 정류장")).not.toBeInTheDocument();
+    expect(screen.queryByText("QR 스캔")).not.toBeInTheDocument();
+    expect(screen.queryByText(/로그인 없이/)).not.toBeInTheDocument();
+    expect(screen.queryByText("쉼표 정류장")).not.toBeInTheDocument();
   });
 });
 
