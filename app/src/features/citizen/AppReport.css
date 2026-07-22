@@ -1,5 +1,5 @@
 .appreport { width: min(390px, 100vw); height: min(844px, 100svh); min-height: 0; margin: 0 auto; overflow: hidden; background: #f5f6f8; color: var(--ink); }
-.appreport__bar { display: grid; height: 64px; padding: 8px 14px; grid-template-columns: 74px 1fr 74px; align-items: center; border-bottom: 1px solid var(--border); background: white; }
+.appreport__bar { display: grid; height: 64px; padding: 8px 14px; grid-template-columns: 44px 1fr 44px; align-items: center; border-bottom: 1px solid var(--border); background: white; }
 .appreport__bar a { display: inline-flex; min-height: 44px; align-items: center; color: var(--brand); font-size: 15px; font-weight: 900; text-decoration: none; }
 .appreport__bar a svg { width: 21px; }
 .appreport__bar strong { text-align: center; font-size: 17px; white-space: nowrap; }
@@ -47,4 +47,20 @@
 .appreport__home { width: 100%; margin-top: 28px; gap: 8px; background: var(--brand); color: white; }
 .appreport__home svg { width: 20px; }
 @media (max-height: 680px) { .appreport__panel { padding-top: 18px; } .appreport h1 { font-size: 26px; } .appreport__issues button { min-height: 62px; } .appreport__stop { margin-top: 14px; min-height: 90px; padding: 12px; } }
+@media (max-height: 600px) {
+  .appreport__bar { height: 56px; padding-block: 5px; }
+  .appreport__panel,
+  .appreport__center { height: calc(100% - 56px); padding: 12px 14px 10px; }
+  .appreport__step { margin-bottom: 4px; font-size: 12px; }
+  .appreport h1 { margin-bottom: 4px; font-size: 24px; }
+  .appreport__panel > p:not(.appreport__step) { font-size: 13px; line-height: 1.3; }
+  .appreport__search { min-height: 50px; margin-top: 8px; padding-inline: 11px; }
+  .appreport__search input { height: 46px; font-size: 16px; }
+  .appreport__matches { gap: 4px; margin-top: 6px; }
+  .appreport__matches button { min-height: 48px; padding: 5px 9px; }
+  .appreport__matches button strong { font-size: 14px; }
+  .appreport__matches button small { font-size: 11px; }
+  .appreport__primary,
+  .appreport__secondary { min-height: 50px; font-size: 15px; }
+}
 @media (min-width: 601px) { .appreport { border: 8px solid #222a36; border-radius: 38px; box-shadow: var(--shadow-float); } }

@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { useStops } from "../../store/useStops";
 import { REPORT_STORAGE_KEY } from "../report/reportStore";
 import type { Stop } from "../../types/stop";
-import AppReport from "./AppReport";
+import AppReport, { stopDirection } from "./AppReport";
 
 const stop: Stop = {
   id: "250001",
@@ -29,6 +29,12 @@ beforeEach(() => {
 });
 
 describe("<AppReport>", () => {
+  it("같은 이름의 정류장을 다음 정류장 방면으로 구분한다", () => {
+    const next = { ...stop, id: "250002", name: "강원대학교" };
+    const routes = { generatedAt: "", routes: [{ routeId: "1", routeNo: "1", stops: [stop.id, next.id] }] };
+    expect(stopDirection(stop, routes, [stop, next])).toBe("강원대학교 방면");
+  });
+
   it("QR 화면 없이 정류장 검색부터 접수 완료까지 진행한다", async () => {
     const screen = render(<MemoryRouter><AppReport /></MemoryRouter>);
 

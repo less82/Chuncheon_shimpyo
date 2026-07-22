@@ -2,14 +2,28 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { haversine } from "../../lib/geo";
+import { loadRoutes } from "../../lib/loadRoutes";
 import { saveReport } from "../report/reportStore";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
+import type { RoutesFile } from "../../types/route";
 import "./AppReport.css";
 
 type Step = "locating" | "find" | "confirm" | "issue" | "done";
 const MAX_DISTANCE_M = 1500;
 const ISSUES = ["의자가 파손됐어요", "안내 화면이 꺼졌어요", "조명이 꺼졌어요", "승강장 시설물이 파손됐어요"];
+
+export function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop[]): string {
+  if (!routes) return "방면 확인 중";
+  const names = new Map(stops.map((item) => [item.id, item.name]));
+  for (const route of routes.routes) {
+    const index = route.stops.indexOf(stop.id);
+    if (index < 0) continue;
+    const nextName = names.get(route.stops[index + 1]);
+    if (nextName && nextName !== stop.name) return `${nextName} 방면`;
+  }
+  return "방면 미확인";
+}
 
 export default function AppReport() {
   const stops = useStops((state) => state.stops);
@@ -19,6 +33,7 @@ export default function AppReport() {
   const [nearby, setNearby] = useState<Stop[]>([]);
   const [query, setQuery] = useState("");
   const [issue, setIssue] = useState("");
+  const [routes, setRoutes] = useState<RoutesFile | null>(null);
 
   const locate = () => {
     setStep("locating");
@@ -52,6 +67,12 @@ export default function AppReport() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
 
+  useEffect(() => {
+    let alive = true;
+    loadRoutes().then((value) => alive && setRoutes(value)).catch(() => alive && setRoutes(null));
+    return () => { alive = false; };
+  }, []);
+
   const matches = useMemo(() => {
     const needle = query.replace(/\s+/g, "").toLowerCase();
     if (!needle) return [];
@@ -75,7 +96,7 @@ export default function AppReport() {
   return (
     <main className="appreport">
       <header className="appreport__bar">
-        <Link to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" />메인</Link>
+        <Link to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
         <strong>정류장 민원 접수</strong>
         <span aria-hidden="true" />
       </header>
@@ -90,7 +111,7 @@ export default function AppReport() {
       )}
 
       {step === "find" && (
-        <section className="appreport__panel">
+        <section className="appreport__panel appreport__panel--find">
           <p className="appreport__step">1 / 3 · 정류장 찾기</p>
           <h1>어느 정류장인가요?</h1>
           <p>정류장 이름이나 표지판의 4자리 번호를 입력하세요.</p>
@@ -100,7 +121,7 @@ export default function AppReport() {
             <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="예: 춘천역 또는 1001" />
           </label>
           <div className="appreport__matches">
-            {matches.map((stop) => <button type="button" key={stop.id} onClick={() => choose(stop)}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stop.stopNo ? `정류장 번호 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}
+            {matches.map((stop) => <button type="button" key={stop.id} onClick={() => choose(stop)}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stopDirection(stop, routes, stops)} · {stop.stopNo ? `정류장 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}
           </div>
           <button type="button" className="appreport__secondary" onClick={locate}>현재 위치 다시 확인</button>
         </section>
