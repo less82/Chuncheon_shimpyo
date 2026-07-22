@@ -44,7 +44,7 @@ describe("<Favorites>", () => {
     const { getByText, getAllByRole } = renderFav();
     expect(getByText("장학교차로")).toBeInTheDocument();
     expect(getByText("상공회의소")).toBeInTheDocument();
-    const links = getAllByRole("link", { name: /이곳으로 가기/ });
+    const links = getAllByRole("link", { name: /버스 정보/ });
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute("href", "/go?dest=A");
   });
