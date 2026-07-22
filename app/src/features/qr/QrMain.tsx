@@ -47,11 +47,13 @@ interface RouteSummary {
   totalMin: number;
   live: boolean;
   directionName: string;
+  directBus: boolean;
+  walkMin: number;
 }
 
 type QrMode = "home" | "destination" | "report";
 type LocationSource = "gps" | "manual" | null;
-type VoiceTarget = "start" | "destination";
+type VoiceTarget = "destination";
 const MAX_NEARBY_STOP_DISTANCE_M = 1500;
 
 function normalized(value: string): string {
@@ -74,6 +76,17 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
 function clockAfter(minutes: number): string {
   return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
     .format(new Date(Date.now() + minutes * 60_000));
+}
+
+function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop[]): string {
+  if (!routes) return "방면 확인 중";
+  const names = routes.routes.flatMap((route) => {
+    const index = route.stops.indexOf(stop.id);
+    const next = index >= 0 ? stops.find((candidate) => candidate.id === route.stops[index + 1]) : null;
+    return next ? [next.name] : [];
+  });
+  const unique = [...new Set(names)];
+  return unique.length ? `${unique.slice(0, 2).join(" · ")} 방면` : "방면 정보 없음";
 }
 
 function resizeReportPhoto(file: File): Promise<string> {
@@ -173,6 +186,32 @@ export default function QrMain() {
     [submitted, start, stops, routes],
   );
 
+  const routeChoices = useMemo<RouteSummary[]>(() => {
+    if (!start || !routes || results.length === 0) return [];
+    const { destination, option } = results[0];
+    const firstLeg = option.legs[0];
+    const rideMin = routeRideMinutes(option, routes);
+    return firstLeg.routeNos.map((routeNo) => {
+      const liveArrival = arrival?.byRoute?.find((item) => item.routeNo === routeNo);
+      const waitMin = liveArrival?.min ?? start.headwayMin ?? 15;
+      const route = routes.routes.find((candidate) => candidate.routeNo === routeNo);
+      const boardIndex = route?.stops.indexOf(start.id) ?? -1;
+      const nextStop = boardIndex >= 0 ? stops.find((stop) => stop.id === route?.stops[boardIndex + 1]) : null;
+      return {
+        routeNo,
+        waitMin,
+        rideMin,
+        totalMin: option.walkMin + waitMin + rideMin,
+        live: Boolean(liveArrival),
+        directionName: nextStop?.name ?? destination.name,
+        directBus: option.directBus,
+        walkMin: option.walkMin,
+      };
+    }).filter((item) => item.waitMin >= option.walkMin + 1)
+      .sort((a, b) => a.totalMin - b.totalMin)
+      .slice(0, 3);
+  }, [arrival, results, routes, start, stops]);
+
   const openDestination = () => {
     setMode("destination");
     setLocationError(false);
@@ -250,12 +289,19 @@ export default function QrMain() {
     if (!needle) return [];
     return stops.filter((stop) => normalized(stop.name).includes(needle) || stop.stopNo.includes(needle)).slice(0, 6);
   }, [manualStopQuery, stops]);
+  const searchingByNumber = /^\d+$/.test(manualStopQuery.trim());
 
   const chooseManualStop = (stop: Stop) => {
     setStartId(stop.id);
     setLocationSource("manual");
     setLocationError(false);
     setOutsideServiceArea(false);
+    setManualStopQuery("");
+  };
+
+  const editStartStop = () => {
+    setStartId(null);
+    setLocationSource(null);
     setManualStopQuery("");
   };
 
@@ -274,12 +320,8 @@ export default function QrMain() {
 
   const manualStopSearch = <div className="qrmain__manual-stop">
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
-    <button type="button" className="qrmain__mic" data-listening={listeningTarget === "start"} onClick={() => startVoice("start")}>
-      <Mic aria-hidden="true" />
-      {listeningTarget === "start" ? (speechActive ? "말씀을 듣고 있어요" : "말씀해 주세요") : "출발지 말하기"}
-    </button>
     <input className="qrmain__manual-input" id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
-    {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
+    {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{searchingByNumber ? (stop.stopNo ? `#${stop.stopNo}` : "번호 미확인") : stopDirection(stop, routes, stops)}</span></button></li>)}</ul>}
   </div>;
 
   const submit = (event?: FormEvent) => {
@@ -295,7 +337,8 @@ export default function QrMain() {
     return () => window.cancelAnimationFrame(frame);
   }, [submitted, start, routes]);
 
-  const startVoice = (target: "start" | "destination" = "destination") => {
+  const startVoice = () => {
+    const target: VoiceTarget = "destination";
     if (listeningTarget) {
       voiceStopRequestedRef.current = true;
       recognitionRef.current?.stop();
@@ -340,8 +383,7 @@ export default function QrMain() {
         .map((result) => result[0]?.transcript?.trim() ?? "")
         .filter(Boolean)
         .join(" ");
-      if (target === "start") setManualStopQuery(heardText);
-      else setQuery(heardText);
+      setQuery(heardText);
     };
     recognition.onerror = (event) => {
       if (event.error === "no-speech") return;
@@ -360,7 +402,7 @@ export default function QrMain() {
       if (finishTimer) window.clearTimeout(finishTimer);
       setSpeechActive(false);
       setListeningTarget(null);
-      if (!failed && target === "destination" && mode === "destination" && heardText) requestTrip(heardText);
+      if (!failed && mode === "destination" && heardText) requestTrip(heardText);
     };
     recognitionRef.current = recognition;
     setListeningTarget(target);
@@ -439,13 +481,13 @@ export default function QrMain() {
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
         {(outsideServiceArea || locationError) && <button type="button" className="qrmain__location-recovery" onClick={openDestination}>위치 정보를 찾을 수 없습니다</button>}
-        {manualStopSearch}
-        {start && locationSource && <div className="qrmain__selected-start" aria-live="polite">출발 정류장 <strong>{start.name}</strong></div>}
+        {!start && manualStopSearch}
+        {start && locationSource && <div className="qrmain__selected-start" aria-live="polite"><span>출발 정류장</span><strong>{start.name}</strong><small>{stopDirection(start, routes, stops)}</small><button type="button" onClick={editStartStop}>다시 찾기</button></div>}
         {start && locationSource && <div className="qrmain__location-proof">
           <QrStopMap stop={start} />
         </div>}
         <h2>목적지를 입력하세요</h2>
-        <button type="button" className="qrmain__mic" data-listening={listeningTarget === "destination"} onClick={() => startVoice("destination")}>
+        <button type="button" className="qrmain__mic" data-listening={listeningTarget === "destination"} onClick={startVoice}>
           <Mic aria-hidden="true" />
           {listeningTarget === "destination" ? (speechActive ? "말씀을 듣고 있어요" : "말씀해 주세요") : "목적지 말하기"}
         </button>
@@ -469,48 +511,23 @@ export default function QrMain() {
           ) : results.length === 0 ? (
             <p className="qrmain__state">“{submitted}”까지 가는 노선을 찾지 못했습니다. 정류장 이름을 다시 말씀해 주세요.</p>
           ) : (
-            results.slice(0, 1).map(({ destination, option }, index) => {
-              const firstLeg = option.legs[0];
-              const rideMin = routeRideMinutes(option, routes);
-              const routeArrivals: RouteSummary[] = firstLeg.routeNos.map((routeNo) => {
-                const liveArrival = arrival?.byRoute?.find((item) => item.routeNo === routeNo);
-                const waitMin = liveArrival?.min ?? start.headwayMin ?? 15;
-                const route = routes.routes.find((candidate) => candidate.routeNo === routeNo);
-                const boardIndex = route?.stops.indexOf(start.id) ?? -1;
-                const nextStop = boardIndex >= 0 ? stops.find((stop) => stop.id === route?.stops[boardIndex + 1]) : null;
-                return {
-                  routeNo,
-                  waitMin,
-                  rideMin,
-                  totalMin: option.walkMin + waitMin + rideMin,
-                  live: Boolean(liveArrival),
-                  directionName: nextStop?.name ?? destination.name,
-                };
-              }).filter((item) => item.waitMin >= option.walkMin + 1)
-                .sort((a, b) => a.totalMin - b.totalMin)
-                .slice(0, 3);
-              return (
-                <div className="qrmain__result-set" key={`${destination.id}-${index}`}>
-                  {routeArrivals.map((item, routeIndex) => (
-                    <article className="qrmain__route" data-best={index === 0 && routeIndex === 0} key={item.routeNo}>
+            <>
+              {routeChoices[0] && <div className="qrmain__boarding qrmain__boarding--summary"><span>승차 정류장</span><strong>{start.name}</strong><p>{routeChoices[0].directionName} 방면 · 도보 {routeChoices[0].walkMin}분</p></div>}
+              <div className="qrmain__result-set">
+                  {routeChoices.map((item, routeIndex) => (
+                    <article className="qrmain__route" data-best={routeIndex === 0} key={item.routeNo}>
                       <p className="qrmain__recommend">{routeIndex === 0 ? "가장 빠른 버스" : "다음 버스"}</p>
                       <div className="qrmain__route-head">
-                        <div><strong>{item.routeNo}번</strong><small>{option.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
+                        <div><strong>{item.routeNo}번</strong><small>{item.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
                         <p><b>{item.waitMin}분 후</b><span>총 약 {item.totalMin}분 · {clockAfter(item.totalMin)} 도착</span></p>
                       </div>
-                      <div className="qrmain__boarding">
-                        <span>승차 정류장</span>
-                        <strong>{item.directionName} 방면</strong>
-                        <p>{start.name} · 도보 {option.walkMin}분</p>
-                        <small>{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
-                      </div>
+                      <small className="qrmain__arrival-source">{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
                     </article>
                   ))}
-                </div>
-              );
-            })
+              </div>
+            </>
           )}
-          {results.length > 0 && (
+          {routeChoices.length > 0 && (
             <button type="button" className="qrmain__report" onClick={reportCurrentStop}>이 정류장 민원 접수</button>
           )}
         </section>
