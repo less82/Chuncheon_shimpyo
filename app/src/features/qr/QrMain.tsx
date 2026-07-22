@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ChevronLeft, Mic, Navigation } from "lucide-react";
+import { ChevronLeft, Mic } from "lucide-react";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -47,8 +47,6 @@ interface RouteSummary {
   totalMin: number;
   live: boolean;
   directionName: string;
-  directBus: boolean;
-  walkMin: number;
 }
 
 type QrMode = "home" | "destination" | "report";
@@ -71,11 +69,6 @@ function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
     const count = route.stops.indexOf(leg.alightStopId) - route.stops.indexOf(leg.boardStopId);
     return sum + Math.max(2, count * 2);
   }, 0);
-}
-
-function clockAfter(minutes: number): string {
-  return new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" })
-    .format(new Date(Date.now() + minutes * 60_000));
 }
 
 function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop[]): string {
@@ -204,8 +197,6 @@ export default function QrMain() {
         totalMin: option.walkMin + waitMin + rideMin,
         live: Boolean(liveArrival),
         directionName: nextStop?.name ?? destination.name,
-        directBus: option.directBus,
-        walkMin: option.walkMin,
       };
     }).filter((item) => item.waitMin >= option.walkMin + 1)
       .sort((a, b) => a.totalMin - b.totalMin)
@@ -434,7 +425,7 @@ export default function QrMain() {
   }
 
   if (mode === "report") {
-    if (locating) return <main className="qrmain"><section className="qrmain__error"><Navigation aria-hidden="true" className="qrmain__locate-icon" /><h1>가까운 정류장을 찾고 있어요</h1><p>현재 위치와 가장 가까운 정류장을 확인할게요.</p></section></main>;
+    if (locating) return <main className="qrmain"><section className="qrmain__report-location"><p className="qrmain__inline-status">현재 위치를 확인하고 있어요</p></section></main>;
     if (locationError || outsideServiceArea || !start) return <main className="qrmain">
       <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__report-location">
       <h1>주변 정류장을 찾지 못했습니다</h1>
@@ -467,19 +458,12 @@ export default function QrMain() {
     </section></main>;
   }
 
-  if (locating) {
-    return <main className="qrmain"><section className="qrmain__error">
-      <Navigation aria-hidden="true" className="qrmain__locate-icon" />
-      <h1>가까운 정류장을 찾고 있어요</h1>
-      <p>위치를 확인한 뒤 목적지를 여쭤볼게요.</p>
-    </section></main>;
-  }
-
   return (
     <main className="qrmain">
       <button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => submitted ? setSubmitted("") : setMode("home")}><ChevronLeft aria-hidden="true" /></button>
 
       {!submitted && <section className="qrmain__ask qrmain__destination-page">
+        {locating && <p className="qrmain__inline-status" aria-live="polite">현재 위치를 확인하고 있어요</p>}
         {(outsideServiceArea || locationError) && <button type="button" className="qrmain__location-recovery" onClick={openDestination}>위치 정보를 찾을 수 없습니다</button>}
         {!start && manualStopSearch}
         {start && locationSource && <div className="qrmain__selected-start" aria-live="polite"><span>출발 정류장</span><strong>{start.name}</strong><small>{stopDirection(start, routes, stops)}</small><button type="button" onClick={editStartStop}>다시 찾기</button></div>}
@@ -505,21 +489,20 @@ export default function QrMain() {
 
       {submitted && start && (
         <section className="qrmain__results qrmain__results-page" aria-live="polite" ref={resultsRef}>
-          <div className="qrmain__results-title"><span>목적지</span><h2>{submitted}</h2></div>
+          <div className="qrmain__trip-summary"><div><span>승차 정류장</span><strong>{start.name}</strong><small>{routeChoices[0] ? `${routeChoices[0].directionName} 방면` : stopDirection(start, routes, stops)}</small></div><b aria-hidden="true">→</b><div><span>목적지</span><strong>{submitted}</strong></div></div>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
           ) : results.length === 0 ? (
             <p className="qrmain__state">“{submitted}”까지 가는 노선을 찾지 못했습니다. 정류장 이름을 다시 말씀해 주세요.</p>
           ) : (
             <>
-              {routeChoices[0] && <div className="qrmain__boarding qrmain__boarding--summary"><span>승차 정류장</span><strong>{start.name}</strong><p>{routeChoices[0].directionName} 방면 · 도보 {routeChoices[0].walkMin}분</p></div>}
               <div className="qrmain__result-set">
                   {routeChoices.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={routeIndex === 0} key={item.routeNo}>
                       <p className="qrmain__recommend">{routeIndex === 0 ? "가장 빠른 버스" : "다음 버스"}</p>
                       <div className="qrmain__route-head">
-                        <div><strong>{item.routeNo}번</strong><small>{item.directBus ? "환승 없이 이동" : "1회 환승"}</small></div>
-                        <p><b>{item.waitMin}분 후</b><span>총 약 {item.totalMin}분 · {clockAfter(item.totalMin)} 도착</span></p>
+                        <div><strong>{item.routeNo}번</strong></div>
+                        <p><b>{item.waitMin}분 후</b><span>예상 약 {item.totalMin}분</span></p>
                       </div>
                       <small className="qrmain__arrival-source">{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
                     </article>

@@ -92,13 +92,15 @@
 .qrmain__form button { min-width: 76px; min-height: var(--qr-control); padding: 0 16px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 17px; font-weight: 900; }
 .qrmain__manual-stop ul { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .qrmain__manual-stop li button { display: flex; width: 100%; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: left; }
-.qrmain__manual-stop li span { max-width: 58%; color: var(--brand); text-align: right; font-size: 14px; font-weight: 900; line-height: 1.35; }
+.qrmain__manual-stop li span { max-width: 58%; color: var(--ink-muted); text-align: right; font-size: 13px; font-weight: 700; line-height: 1.35; }
 .qrmain__location-proof { overflow: hidden; margin-top: 8px; border-radius: 14px; }
 .qrmain__location-proof .qrmain__map { width: 100%; height: 180px; margin: 0; border: 0; }
-.qrmain__selected-start { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--border); color: var(--ink-muted); text-align: left; font-size: 15px; font-weight: 800; }
+.qrmain__selected-start { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; color: var(--ink-muted); text-align: left; font-size: 15px; font-weight: 800; }
+.qrmain__selected-start > span, .qrmain__selected-start > strong, .qrmain__selected-start > small { grid-column: 1; }
 .qrmain__selected-start strong { color: var(--ink); font-size: 22px; }
-.qrmain__selected-start small { color: var(--brand); font-size: 15px; }
-.qrmain__selected-start button { justify-self: start; min-height: 48px; padding: 0; border: 0; background: transparent; color: var(--brand); text-decoration: underline; text-underline-offset: 4px; font-size: 15px; font-weight: 900; }
+.qrmain__selected-start small { color: var(--ink-muted); font-size: 14px; font-weight: 700; }
+.qrmain__selected-start button { grid-column: 2; grid-row: 1 / 4; min-height: 48px; padding: 0 16px; border: 2px solid var(--brand); border-radius: 12px; background: white; color: var(--brand); font-size: 15px; font-weight: 900; }
+.qrmain__inline-status { color: var(--ink-muted); font-size: 15px; font-weight: 700; }
 
 /* 신고: 위치 실패·정류장 확인·항목 선택 */
 .qrmain__report-location h1, .qrmain__stop-confirm > h1 { margin-top: 16px; }
@@ -126,9 +128,11 @@
 
 /* 결과: 버스번호와 대기시간 우선 */
 .qrmain__results { display: grid; gap: 16px; }
-.qrmain__results-title { padding-bottom: 8px; }
-.qrmain__results-title > span { color: var(--ink-muted); font-size: 15px; font-weight: 800; }
-.qrmain__results-title h2 { margin-top: 4px; }
+.qrmain__trip-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); }
+.qrmain__trip-summary > div { min-width: 0; }
+.qrmain__trip-summary span, .qrmain__trip-summary small { display: block; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
+.qrmain__trip-summary strong { display: block; margin-top: 3px; overflow: hidden; color: var(--ink); font-size: 18px; text-overflow: ellipsis; white-space: nowrap; }
+.qrmain__trip-summary b { color: var(--brand); font-size: 20px; }
 .qrmain__result-set { display: grid; }
 .qrmain__route { padding: 20px 0; border: 0; border-top: 2px solid var(--brand); background: transparent; }
 .qrmain__recommend { margin-bottom: 12px; color: var(--brand); font-size: 15px; font-weight: 900; }
@@ -138,15 +142,8 @@
 .qrmain__route-head > p { text-align: right; }
 .qrmain__route-head > p b { display: block; color: var(--brand); font-size: 28px; line-height: 1.15; }
 .qrmain__route-head > p span { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
-.qrmain__boarding { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
-.qrmain__boarding > span { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
-.qrmain__boarding strong { display: block; margin: 4px 0; font-size: 20px; }
-.qrmain__boarding strong small { display: inline; color: var(--brand); font-size: 15px; }
-.qrmain__boarding p { font-size: 15px; font-weight: 700; }
-.qrmain__boarding > small { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.qrmain__boarding--summary { margin-top: 0; margin-bottom: 8px; padding: 16px 0; border-top: 2px solid var(--brand); }
 .qrmain__arrival-source { display: block; margin-top: 10px; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.qrmain__report { width: 100%; min-height: 52px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--brand); font-size: 17px; font-weight: 900; }
+.qrmain__report { width: 100%; min-height: 52px; border: 2px solid var(--brand); border-radius: 14px; background: white; color: var(--brand); font-size: 17px; font-weight: 900; }
 .qrmain__state { margin: 48px auto; text-align: center; font-size: 18px; font-weight: 800; line-height: 1.5; }
 .qrmain > .qrmain__state { display: grid; min-height: calc(100svh - 32px); margin: 0; place-items: center; }
 
@@ -221,7 +218,6 @@
   .qrmain__report-complete { margin-top: 0; }
 
   .qrmain__results { gap: 10px; }
-  .qrmain__results-title h2 { font-size: 24px; }
   .qrmain__route { padding: 14px 0; }
   .qrmain__recommend { margin-bottom: 8px; font-size: 14px; }
   .qrmain__route-head { grid-template-columns: 1fr 1fr; align-items: end; gap: 10px; }
@@ -229,7 +225,5 @@
   .qrmain__route-head > p { text-align: right; }
   .qrmain__route-head > p b { font-size: 24px; }
   .qrmain__route-head > p span { max-width: 132px; font-size: 11px; }
-  .qrmain__boarding { margin-top: 14px; padding-top: 12px; }
-  .qrmain__boarding strong { font-size: 18px; }
   .qrmain__report { min-height: 48px; font-size: 15px; }
 }
