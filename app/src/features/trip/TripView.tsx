@@ -43,6 +43,7 @@ export default function TripView() {
   const [picked, setPicked] = useState<{ board: Stop | null; dest: Stop | null }>({ board: null, dest: null });
   const [activeField, setActiveField] = useState<"board" | "dest">("board");
   const [voiceMessage, setVoiceMessage] = useState("");
+  const [voiceField, setVoiceField] = useState<"board" | "dest" | null>(null);
   const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
   const stopQuery = queries[activeField];
 
@@ -54,6 +55,7 @@ export default function TripView() {
   const visibleMatches = picked[activeField] ? [] : stopMatches;
 
   const listen = (field: "board" | "dest") => {
+    setVoiceField(field);
     const speechWindow = window as typeof window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
     if (!Recognition) { setVoiceMessage("이 브라우저는 음성 입력을 지원하지 않습니다."); return; }
@@ -123,8 +125,8 @@ export default function TripView() {
           <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
             <button className="tripview__voice" type="button" onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
           </div>
+          {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
         </div>)}
-        {voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
         <div className="tripview__matches">{visibleMatches.filter((stop) => stop.id !== picked[activeField === "board" ? "dest" : "board"]?.id).map((stop) => <button type="button" key={stop.id} onClick={() => { setPicked((value) => ({ ...value, [activeField]: stop })); setQueries((value) => ({ ...value, [activeField]: stop.name })); if (activeField === "board") setActiveField("dest"); }}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stop.stopNo ? `정류장 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}</div>
         <button className="tripview__find-submit" type="button" disabled={!picked.board || !picked.dest} onClick={() => picked.board && picked.dest && navigate(`/go?board=${encodeURIComponent(picked.board.id)}&dest=${encodeURIComponent(picked.dest.id)}`)}>도착 예정시간 확인</button>
       </section>

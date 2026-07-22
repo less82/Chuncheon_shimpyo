@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import TripView from "./TripView";
 import { useStops } from "../../store/useStops";
@@ -31,6 +31,8 @@ describe("<TripView>", () => {
     expect(screen.getByRole("button", { name: "출발지 말하기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "목적지 말하기" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "출발지 말하기" }));
-    expect(screen.getByRole("status")).toHaveTextContent("이 브라우저는 음성 입력을 지원하지 않습니다.");
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("이 브라우저는 음성 입력을 지원하지 않습니다.");
+    expect(within(status.closest(".tripview__field") as HTMLElement).getByRole("button", { name: "출발지 말하기" })).toBeInTheDocument();
   });
 });
