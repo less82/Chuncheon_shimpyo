@@ -2,7 +2,7 @@
 // 키보드 0: 즐겨찾기(=목적지)를 탭만으로 고르면 경로 카드가 나온다. 타이핑 불필요.
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, MapPin, Star } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { Stop } from "../../types/stop";
@@ -17,7 +17,19 @@ import { speechErrorMessage } from "./speechRecognition";
 import TripCard from "./TripCard";
 import "./TripView.css";
 
-type SpeechRecognitionConstructor = new () => { lang: string; start: () => void; onstart: () => void; onend: () => void; onresult: (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onerror: (event: { error: string }) => void };
+type SpeechRecognitionSession = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  onstart: () => void;
+  onend: () => void;
+  onresult: (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
+  onerror: (event: { error: string }) => void;
+};
+type SpeechRecognitionConstructor = new () => SpeechRecognitionSession;
 
 export default function TripView() {
   const [searchParams] = useSearchParams();
@@ -46,6 +58,7 @@ export default function TripView() {
   const [voiceMessage, setVoiceMessage] = useState("");
   const [voiceField, setVoiceField] = useState<"board" | "dest" | null>(null);
   const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
   const stopQuery = queries[activeField];
 
   const stopMatches = useMemo(() => {
@@ -55,26 +68,42 @@ export default function TripView() {
   }, [stopQuery, stops]);
   const visibleMatches = picked[activeField] ? [] : stopMatches;
 
+  useEffect(() => () => recognitionRef.current?.stop(), []);
+
   const listen = (field: "board" | "dest") => {
+    if (listeningField === field) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setListeningField(null);
+      setVoiceMessage("");
+      return;
+    }
+    recognitionRef.current?.stop();
     setVoiceField(field);
     const speechWindow = window as typeof window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
     if (!Recognition) { setVoiceMessage("이 브라우저는 음성 입력을 지원하지 않습니다."); return; }
     if (!window.isSecureContext) { setVoiceMessage("음성 입력은 보안 연결에서만 사용할 수 있습니다."); return; }
     const recognition = new Recognition();
+    recognitionRef.current = recognition;
     recognition.lang = "ko-KR";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
     recognition.onstart = () => { setListeningField(field); setVoiceMessage(""); };
-    recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); setListeningField(null); };
+    recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); setListeningField(null); if (recognitionRef.current === recognition) recognitionRef.current = null; };
     recognition.onerror = (event) => {
       setListeningField(null);
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
       if (import.meta.env.DEV) console.warn(`[speech-recognition] ${field}: ${event.error}`);
       setVoiceMessage(speechErrorMessage(event.error));
     };
-    recognition.onend = () => setListeningField(null);
+    recognition.onend = () => { setListeningField(null); if (recognitionRef.current === recognition) recognitionRef.current = null; };
     setActiveField(field);
     setVoiceMessage("");
     try { recognition.start(); } catch (error) {
       setListeningField(null);
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
       setVoiceMessage(error instanceof DOMException && error.name === "InvalidStateError" ? "이미 음성을 듣고 있습니다." : "브라우저가 음성 입력을 시작하지 못했습니다.");
     }
   };

@@ -16,7 +16,7 @@
   min-height: clamp(58px, calc(22px + 6dvh), 72px);
   padding: clamp(6px, 1.5dvh, 12px) clamp(12px, 4vw, 16px);
   background: var(--surface);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 .tripview__back {
   display: inline-flex;
