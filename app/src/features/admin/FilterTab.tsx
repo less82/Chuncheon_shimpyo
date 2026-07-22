@@ -125,10 +125,10 @@ export default function FilterTab({ stops, loaded }: Props) {
   }
 
   return (
-    <div>
+    <div className="admin-list-page filter-page">
       {/* 계절 프리셋 */}
-      <section className="dash-section" aria-label="계절 프리셋">
-        <h2 className="dash-h2">계절 프리셋</h2>
+      <section className="dash-section admin-toolbar filter-presets" aria-label="계절 프리셋">
+        <span className="dash-kicker">빠른 조건</span><h2 className="dash-h2">계절 프리셋</h2>
         <div className="dash-presets">
           {SEASON_ORDER.map((key) => (
             <button
@@ -146,8 +146,8 @@ export default function FilterTab({ stops, loaded }: Props) {
       </section>
 
       {/* 개별 조건 토글 */}
-      <section className="dash-section" aria-label="조건 필터">
-        <h2 className="dash-h2">조건 (직접 조정)</h2>
+      <section className="dash-section admin-toolbar filter-conditions" aria-label="조건 필터">
+        <span className="dash-kicker">세부 조건</span><h2 className="dash-h2">직접 조정</h2>
         <div className="dash-toggles">
           <div className="dash-percent" role="group" aria-label="한낮 승차 상위">
             <span className="dash-toggle-label">한낮(11~16시) 승차 상위</span>
@@ -191,9 +191,9 @@ export default function FilterTab({ stops, loaded }: Props) {
       </section>
 
       {/* 결과 요약 + CSV */}
-      <section className="dash-section">
+      <section className="dash-section admin-list-section filter-results">
         <div className="dash-resultbar">
-          <div className="dash-count">
+          <div><span className="dash-kicker">조회 결과</span><div className="dash-count">
             {loaded ? (
               <>
                 조건 만족 <strong>{totalMatched.toLocaleString()}</strong>개 정류장
@@ -216,7 +216,7 @@ export default function FilterTab({ stops, loaded }: Props) {
             ) : (
               "데이터 불러오는 중…"
             )}
-          </div>
+          </div></div>
           <button
             type="button"
             className="dash-csv"

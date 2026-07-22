@@ -57,8 +57,7 @@
   --fs-xl: 34px;
   --fs-2xl: 44px;  /* 초대형 카드 정류장명 */
 
-  --font-sans: "Pretendard", system-ui, "Malgun Gothic", "Apple SD Gothic Neo",
-    "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Nanum Gothic", "나눔고딕", "Malgun Gothic", system-ui, sans-serif;
 
   /* ---- 모서리 / 그림자 (부드럽고 신뢰감) ---- */
   --radius-sm: 10px;

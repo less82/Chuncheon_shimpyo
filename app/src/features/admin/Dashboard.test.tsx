@@ -98,11 +98,96 @@ describe("<Dashboard> — 조건 필터 탭(v1 보존)", () => {
 });
 
 describe("<Dashboard> — (a) 탭 구조", () => {
+  it("실제 운영 화면에는 개발용 시안 비교 탭을 노출하지 않는다", () => {
+    const utils = render(<Dashboard />);
+    expect(utils.queryByRole("navigation", { name: "대시보드 시안 비교" })).toBeNull();
+    expect(utils.getByRole("heading", { name: "처리 현황" })).toBeInTheDocument();
+  });
+
   it("시민 앱에서 저장한 불편 제보를 기본 화면에 표시한다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify([{ id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" }]));
     const { getByText } = render(<Dashboard />);
     expect(getByText("의자가 없어요")).toBeInTheDocument();
     expect(getByText("#1001 · 250000001")).toBeInTheDocument();
+  });
+
+  it("처리 단계를 누르면 해당 단계의 제보만 목록에 표시한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+      { id: "r2", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "안내기가 꺼졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "reviewing" },
+    ]));
+    const { getByRole, getByText, queryByText } = render(<Dashboard />);
+    fireEvent.click(getByRole("button", { name: /^접수/ }));
+    expect(getByText("의자가 없어요")).toBeInTheDocument();
+    expect(queryByText("안내기가 꺼졌어요")).toBeNull();
+    expect(getByText("처리 상태")).toBeInTheDocument();
+  });
+
+  it("안전 관련 여부와 유사 제보 집중을 요약하고 해당 업무만 필터링한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "시설물이 파손됐어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+      { id: "r2", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "유리가 깨졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "reviewing" },
+      { id: "r3", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "의자가 없어요", createdAt: "2026-07-21T08:20:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    const signals = utils.getByRole("group", { name: "목록 범위 선택" });
+
+    expect(within(signals).getByRole("button", { name: /안전 관련 후보 2/ })).toBeInTheDocument();
+    expect(within(signals).getByRole("button", { name: /유사 제보 집중 1/ })).toBeInTheDocument();
+    fireEvent.click(within(signals).getByRole("button", { name: /안전 관련/ }));
+    expect(utils.getByRole("heading", { name: "안전 관련 제보" })).toBeInTheDocument();
+    expect(utils.getByText("시설물이 파손됐어요")).toBeInTheDocument();
+    expect(utils.queryByText("의자가 없어요")).toBeNull();
+    expect(utils.queryByText("평균 처리시간")).toBeNull();
+  });
+
+  it("제보가 4건을 넘으면 스크롤 대신 페이지를 나눠 표시한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify(Array.from({ length: 7 }, (_, index) => ({
+      id: `r${index + 1}`,
+      stopId: `25000000${index + 1}`,
+      stopNo: `${1001 + index}`,
+      stopName: `정류장 ${index + 1}`,
+      issue: `제보 ${index + 1}`,
+      createdAt: `2026-07-21T08:0${index}:00.000Z`,
+      status: "received",
+    }))));
+    const utils = render(<Dashboard />);
+
+    expect(utils.getByRole("navigation", { name: "제보 목록 페이지" })).toBeInTheDocument();
+    expect(utils.getByText("제보 1")).toBeInTheDocument();
+    expect(utils.queryByText("제보 7")).toBeNull();
+
+    fireEvent.click(utils.getByRole("button", { name: "다음" }));
+    expect(utils.getByText("제보 7")).toBeInTheDocument();
+    expect(utils.queryByText("제보 1")).toBeNull();
+  });
+
+  it("처리 완료 건은 검토가 아니라 처리 기록을 연다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "resolved" },
+    ]));
+    const utils = render(<Dashboard />);
+    fireEvent.click(within(utils.getByRole("group", { name: "처리 상태별 제보 목록" })).getByRole("button", { name: /처리 완료/ }));
+    expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
+    expect(utils.getByText("처리가 완료된 제보입니다.")).toBeInTheDocument();
+  });
+
+  it("검토 열기만으로 상태가 바뀌지 않고 필수 확인 후에만 다음 단계로 이동한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
+    expect(utils.getByRole("dialog", { name: "제보 검토" })).toBeInTheDocument();
+    const confirm = utils.getByRole("button", { name: "접수 확인" });
+    expect(confirm).toBeDisabled();
+    expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("received");
+    fireEvent.click(utils.getByRole("checkbox", { name: "정류장 식별정보 확인" }));
+    fireEvent.click(utils.getByRole("checkbox", { name: "소관 담당 지정" }));
+    expect(confirm).toBeEnabled();
+    fireEvent.click(confirm);
+    expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("reviewing");
   });
 
   it("1단계/2단계/조건 필터 탭이 모두 존재한다", () => {

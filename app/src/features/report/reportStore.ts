@@ -9,7 +9,10 @@ export interface CitizenReport {
   stopNo: string;
   stopName: string;
   issue: string;
+  photoDataUrl?: string;
   createdAt: string;
+  updatedAt?: string;
+  resolvedAt?: string;
   status: "received" | "reviewing" | "task_created" | "resolved";
 }
 
@@ -22,14 +25,17 @@ export function loadReports(): CitizenReport[] {
   }
 }
 
-export function saveReport(stop: Stop, issue: string): CitizenReport {
+export function saveReport(stop: Stop, issue: string, photoDataUrl?: string): CitizenReport {
+  const now = new Date().toISOString();
   const report: CitizenReport = {
     id: crypto.randomUUID(),
     stopId: stop.id,
     stopNo: stop.stopNo,
     stopName: stop.name,
     issue,
-    createdAt: new Date().toISOString(),
+    photoDataUrl,
+    createdAt: now,
+    updatedAt: now,
     status: "received",
   };
   localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify([...loadReports(), report]));
@@ -38,6 +44,12 @@ export function saveReport(stop: Stop, issue: string): CitizenReport {
 }
 
 export function updateReportStatus(id: string, status: CitizenReport["status"]): void {
-  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(loadReports().map((report) => report.id === id ? { ...report, status } : report)));
+  const now = new Date().toISOString();
+  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(loadReports().map((report) => report.id === id ? {
+    ...report,
+    status,
+    updatedAt: now,
+    ...(status === "resolved" ? { resolvedAt: now } : {}),
+  } : report)));
   window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
 }

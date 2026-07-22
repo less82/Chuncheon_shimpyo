@@ -24,7 +24,7 @@ const mk = (id: string, name: string): Stop => ({
 
 beforeEach(() => {
   localStorage.clear();
-  useFavorites.setState({ ids: [] });
+  useFavorites.setState({ ids: [], journeys: [] });
   useStops.setState({
     stops: [mk("A", "장학교차로"), mk("B", "상공회의소")],
     loaded: true,
@@ -41,12 +41,16 @@ const renderFav = () =>
 describe("<Favorites>", () => {
   it("저장한 정류장을 검색 없는 목적지 단추로 보여준다", () => {
     useFavorites.setState({ ids: ["A", "B"] });
-    const { getByText, getAllByRole } = renderFav();
-    expect(getByText("장학교차로")).toBeInTheDocument();
-    expect(getByText("상공회의소")).toBeInTheDocument();
-    const links = getAllByRole("link", { name: /이곳으로 가기/ });
+    useFavorites.setState({ journeys: [
+      { id: "A:1:B", boardStopId: "A", destinationStopId: "B", routeNo: "1", direction: "상공회의소 방면" },
+      { id: "B:1:A", boardStopId: "B", destinationStopId: "A", routeNo: "1", direction: "장학교차로 방면" },
+    ] });
+    const { getAllByText, getAllByRole } = renderFav();
+    expect(getAllByText("장학교차로").length).toBeGreaterThan(0);
+    expect(getAllByText("상공회의소").length).toBeGreaterThan(0);
+    const links = getAllByRole("link", { name: /즐겨찾기 버스 정보/ });
     expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAttribute("href", "/go?dest=A");
+    expect(links[0]).toHaveAttribute("href", "/go?dest=B&board=A");
   });
 
   it("즐겨찾기가 없으면 안내 문구를 보여준다", () => {

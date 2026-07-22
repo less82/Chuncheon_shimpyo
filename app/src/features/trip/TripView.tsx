@@ -1,4 +1,4 @@
-// 목적지 길찾기 화면 (/go).
+// 목적지행 버스 도착정보 화면 (/go).
 // 키보드 0: 즐겨찾기(=목적지)를 탭만으로 고르면 경로 카드가 나온다. 타이핑 불필요.
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
@@ -31,6 +31,7 @@ export default function TripView() {
   );
 
   const requestedDestId = searchParams.get("dest");
+  const requestedBoardId = searchParams.get("board");
   const [destId, setDestId] = useState<string | null>(requestedDestId);
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
@@ -74,18 +75,18 @@ export default function TripView() {
 
   const options = useMemo(() => {
     if (!destStop || !routes) return [];
-    const planned = planTrip(fromPos, destStop, stops, routes.routes);
+    const planned = planTrip(fromPos, destStop, stops, routes.routes, requestedBoardId ? { boardStopId: requestedBoardId, walkRadiusM: Number.MAX_SAFE_INTEGER } : undefined);
     return sortByComfort(planned, stopsById, sortMode);
-  }, [destStop, routes, fromPos, stops, stopsById, sortMode]);
+  }, [destStop, routes, fromPos, stops, stopsById, sortMode, requestedBoardId]);
 
   return (
     <main className="tripview">
       <header className="tripview__bar">
-        <Link className="tripview__back" to="/app" aria-label="지도로 돌아가기">
+        <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기">
           <ChevronLeft aria-hidden="true" />
-          지도
+          메인
         </Link>
-        <h1 className="tripview__title">버스로 가기</h1>
+        <h1 className="tripview__title">목적지행 버스</h1>
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
 

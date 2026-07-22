@@ -1,100 +1,72 @@
-// 시민 첫 화면 — 켜자마자 지도 + 내 주변 최근접 정류장 카드.
-// 화면당 주행동 1개: "가까운 정류장 정보 보기". 검색·메뉴·온보딩 없음.
-
 import { useEffect, useState } from "react";
-import { House, Star } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
-import MapView from "../map/MapView";
-import StopCard from "./StopCard";
+import { Link } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
-import ShareSheet from "../share/ShareSheet";
-import QrScanner from "../share/QrScanner";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
+import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import type { Stop } from "../../types/stop";
+import type { FavoriteJourney } from "../../store/useFavorites";
 import "./CitizenHome.css";
 
-export default function CitizenHome() {
-  const [selected, setSelected] = useState<Stop | null>(null);
-  const [searchParams] = useSearchParams();
-  const [sharing, setSharing] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const loaded = useStops((s) => s.loaded);
-  const stops = useStops((s) => s.stops);
-  const favCount = useFavorites((s) => s.ids.length);
-  const favIds = useFavorites((s) => s.ids);
+export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney; stops: Stop[] }) {
+  const board = stops.find((stop) => stop.id === journey.boardStopId) ?? null;
+  const destination = stops.find((stop) => stop.id === journey.destinationStopId) ?? null;
+  const routeNo = journey.routeNo;
+  const [arrival, setArrival] = useState<Arrival>(() => board ? headwayFallback(board) : { text: "도착정보 미확인", live: false });
 
   useEffect(() => {
-    const stopId = searchParams.get("stop");
-    if (!stopId) return;
-    const stop = stops.find((item) => item.id === stopId);
-    if (stop) setSelected(stop);
-  }, [searchParams, stops]);
+    if (!board) {
+      setArrival({ text: "도착정보 미확인", live: false });
+      return;
+    }
+    let alive = true;
+    setArrival(headwayFallback(board));
+    getArrival(board, routeNo).then((value) => alive && setArrival(value));
+    return () => { alive = false; };
+  }, [board, routeNo]);
 
   return (
-    <main className="home">
+    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(journey.destinationStopId)}&board=${encodeURIComponent(journey.boardStopId)}`} aria-label={`${destination?.name ?? "목적지"} 즐겨찾기 버스 정보`}>
+      <span className="apphome-favorite__top"><strong>{board?.name ?? "정류장"}</strong><i>→</i><strong>{destination?.name ?? "목적지"}</strong></span>
+      <span className="apphome-favorite__direction">{journey.direction}</span>
+      <span className="apphome-favorite__arrival" data-live={arrival.live}>
+        <b>{routeNo ? `${routeNo}번 · ` : ""}{arrival.text}</b>
+      </span>
+    </Link>
+  );
+}
+
+export default function CitizenHome() {
+  const stops = useStops((state) => state.stops);
+  const journeys = useFavorites((state) => state.journeys);
+
+  return (
+    <main className="apphome">
       <ImportOnLoad />
-      {scanning && <QrScanner onClose={() => setScanning(false)} />}
 
-      <header className="home__bar">
-        <Link className="home__brand" to="/">
-          <House aria-hidden="true" />
-          <span className="home__title">홈으로</span>
+      <nav className="apphome__tasks" aria-label="주요 기능">
+        <Link className="apphome-task apphome-task--route" to="/go" aria-label="목적지행 버스 도착 예정시간">
+          <strong>버스</strong>
         </Link>
-        <h1 className="home__screen-title">정류장 지도</h1>
-        <div className="home__actions">
-          <button
-            type="button"
-            className="home__scan"
-            onClick={() => setScanning(true)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" />
-              <path d="M7 12h10" />
-            </svg>
-            <span>QR 스캔</span>
-          </button>
-          <Link className="home__go" to="/go">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M4 16V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73V19a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1.27A2 2 0 0 1 4 16zm2-1h12V6H6v9zm1.5 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zm9 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" />
-            </svg>
-            <span>버스로 가기</span>
-          </Link>
-          <button
-            type="button"
-            className="home__share"
-            onClick={() => setSharing(true)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M18 16.08a2.9 2.9 0 0 0-1.95.77l-7.1-4.13c.05-.24.05-.49 0-.73l7.02-4.09A3 3 0 1 0 15 5.5c0 .24.02.47.07.7L8.05 10.3a3 3 0 1 0 0 3.4l7.09 4.14a3 3 0 1 0 2.86-2.76z" />
-            </svg>
-            <span>공유</span>
-          </button>
-          <Link className="home__fav" to="/favorites">
-            <Star aria-hidden="true" />
-            <span>즐겨찾기{favCount > 0 ? ` ${favCount}` : ""}</span>
-          </Link>
-        </div>
-      </header>
+        <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">
+          <strong>정류장</strong>
+        </Link>
+      </nav>
 
-      <div className="home__map">
-        <MapView onSelect={setSelected} selectedId={selected?.id} />
-      </div>
-
-      <div className="home__sheet">
-        {sharing ? (
-          <ShareSheet
-            ids={favIds.length ? favIds : selected ? [selected.id] : []}
-            onClose={() => setSharing(false)}
-          />
-        ) : selected ? (
-          <StopCard stop={selected} />
+      <section className="apphome__saved" aria-labelledby="saved-title">
+        <header>
+          <h2 id="saved-title">즐겨찾기</h2>
+          <Link to="/favorites">전체{journeys.length > 0 ? ` ${journeys.length}` : ""}</Link>
+        </header>
+        {journeys.length > 0 ? (
+          <div className="apphome__saved-list">
+            {journeys.slice(0, 2).map((journey) => <FavoriteStopCard key={journey.id} journey={journey} stops={stops} />)}
+          </div>
         ) : (
-          <section className="home__hint">
-            <p>{loaded ? "지도에서 정류장을 눌러 정보를 확인하세요." : "정류장 정보를 불러오는 중…"}</p>
-          </section>
+          <Link className="apphome__saved-empty" to="/favorites"><strong>즐겨찾기 등록</strong></Link>
         )}
-      </div>
+      </section>
+
     </main>
   );
 }

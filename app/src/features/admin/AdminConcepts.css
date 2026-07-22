@@ -1,0 +1,42 @@
+.concept-page { min-height: 100dvh; padding: 28px; background: #dfe5eb; color: var(--ink); }
+.concept-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; max-width: 1400px; margin: 0 auto 18px; }
+.concept-head span { color: var(--ink-muted); font-size: 12px; font-weight: 800; }
+.concept-head > div { display: grid; gap: 3px; }
+.concept-head a { width: fit-content; margin-bottom: 5px; color: var(--brand); font-size: 12px; font-weight: 800; text-decoration: none; }
+.concept-head h1 { font-size: 26px; }
+.concept-head nav { display: flex; border-bottom: 2px solid var(--border-strong); }
+.concept-head button { min-height: 42px; padding: 0 16px; border: 0; border-bottom: 4px solid transparent; background: transparent; color: var(--ink-muted); font-weight: 800; cursor: pointer; }
+.concept-head button:last-child { border-right: 0; }
+.concept-head button[aria-selected="true"] { border-bottom-color: var(--brand); color: var(--brand-strong); }
+.concept-canvas { display: grid; width: min(1400px, 100%); min-height: 680px; grid-template-rows: 52px minmax(0, 1fr); margin: auto; overflow: hidden; border: 8px solid #222a36; border-radius: 26px; background: var(--brand-strong); box-shadow: var(--shadow-float); }
+.concept-appbar { display: grid; grid-template-columns: 220px 1fr auto; align-items: center; padding: 0 22px; background: var(--brand-strong); color: white; }
+.concept-appbar b { font-size: 14px; }
+.concept-appbar span { font-size: 12px; opacity: .72; }
+.concept-layout { display: grid; min-width: 0; min-height: 0; background: #f4f6f8; }
+.concept-canvas h2 { margin-bottom: 16px; font-size: 18px; }
+.concept-layout[data-concept="queue"] { grid-template-columns: 220px 1fr; }
+.concept-nav { padding: 30px 26px; background: #202f43; color: white; font-size: 14px; font-weight: 800; line-height: 3.8; }
+.concept-main { padding: 38px; }
+.concept-steps, .concept-kpis { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 22px; border-block: 1px solid var(--border-strong); }
+.concept-steps b, .concept-kpis b { padding: 18px; border-right: 1px solid var(--border); background: #f7f9fb; }
+.concept-table { border: 1px solid var(--border-strong); background: white; }
+.concept-table > div { display: grid; grid-template-columns: 1fr 1.5fr 1fr; }
+.concept-table span { padding: 14px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.concept-table-head { background: var(--brand-strong); color: white; font-weight: 800; }
+.concept-layout[data-concept="desk"] { grid-template-columns: 230px 1fr 340px; }
+.concept-filter, .concept-list, .concept-detail { padding: 28px; border-right: 1px solid var(--border); }
+.concept-filter button, .concept-list button { display: grid; width: 100%; gap: 4px; padding: 14px; border: 0; border-bottom: 1px solid var(--border); background: transparent; text-align: left; }
+.concept-detail dl { display: grid; grid-template-columns: 112px 1fr; margin: 0; border: 1px solid var(--border); }
+.concept-detail dt, .concept-detail dd { margin: 0; padding: 14px; border-bottom: 1px solid var(--border); }
+.concept-detail dt { white-space: nowrap; }
+.concept-board { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; }
+.concept-board section { padding: 26px 18px; border-right: 1px solid var(--border); }
+.concept-board article { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--border-strong); background: white; }
+.concept-layout[data-concept="evidence"] { grid-template-columns: 1.5fr 1fr; padding: 34px; gap: 24px; }
+.concept-compare { border-left: 1px solid var(--border-strong); padding-left: 24px; }
+.concept-compare > div { display: grid; gap: 7px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.concept-control { width: 100%; padding: 34px; }
+.concept-control-body { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+.concept-control-body aside { padding-left: 24px; border-left: 1px solid var(--border-strong); }
+.concept-control-body p { padding: 14px 0; border-bottom: 1px solid var(--border); }
+@media (max-width: 900px) { .concept-head { display: grid; } .concept-head nav { max-width: 100%; overflow-x: auto; } .concept-canvas { min-width: 760px; } .concept-page { overflow-x: auto; } }

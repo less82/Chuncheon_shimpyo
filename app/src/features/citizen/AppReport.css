@@ -1,0 +1,66 @@
+.appreport { width: min(390px, 100vw); height: min(844px, 100svh); min-height: 0; margin: 0 auto; overflow: hidden; background: #f5f6f8; color: var(--ink); }
+.appreport__bar { display: grid; height: 64px; padding: 8px 14px; grid-template-columns: 44px 1fr 44px; align-items: center; border-bottom: 1px solid var(--border); background: white; }
+.appreport__bar a { display: inline-flex; min-height: 44px; align-items: center; color: var(--brand); font-size: 15px; font-weight: 900; text-decoration: none; }
+.appreport__bar a svg { width: 21px; }
+.appreport__bar strong { text-align: center; font-size: 17px; white-space: nowrap; }
+.appreport__panel,
+.appreport__center { display: flex; height: calc(100% - 64px); padding: 28px 20px 22px; flex-direction: column; }
+.appreport__center { align-items: center; justify-content: center; text-align: center; }
+.appreport__step { margin-bottom: 10px; color: var(--brand); font-size: 14px; font-weight: 900; }
+.appreport h1 { margin-bottom: 10px; font-size: 30px; line-height: 1.2; letter-spacing: -.8px; word-break: keep-all; }
+.appreport__panel > p:not(.appreport__step),
+.appreport__center > p:not(.appreport__step) { color: var(--ink-muted); font-size: 16px; font-weight: 700; line-height: 1.5; word-break: keep-all; }
+.appreport__hero-icon { display: grid; width: 68px; height: 68px; margin-bottom: 20px; place-items: center; border-radius: 22px; background: var(--brand-soft); color: var(--brand); }
+.appreport__hero-icon svg { width: 34px; height: 34px; }
+.appreport__hero-icon--done { background: var(--yes-bg); color: var(--yes); }
+.appreport__search { display: grid; grid-template-columns: 28px 1fr; min-height: 58px; margin-top: 22px; padding: 0 14px; align-items: center; border: 2px solid var(--border-strong); border-radius: 15px; background: white; }
+.appreport__search svg { width: 21px; color: var(--ink-muted); }
+.appreport__search input { min-width: 0; height: 54px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 17px; font-weight: 700; }
+.appreport__matches { display: grid; gap: 7px; margin-top: 10px; }
+.appreport__matches button { display: grid; grid-template-columns: 32px 1fr; min-height: 58px; padding: 8px 12px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 13px; background: white; color: var(--ink); text-align: left; }
+.appreport__matches button svg { width: 20px; color: var(--brand); }
+.appreport__matches button span { display: flex; flex-direction: column; }
+.appreport__matches button strong { font-size: 16px; }
+.appreport__matches button small { color: var(--ink-muted); font-size: 12px; font-weight: 700; }
+.appreport__stop { display: grid; grid-template-columns: 58px 1fr; min-height: 106px; margin-top: 22px; padding: 18px; align-items: center; gap: 14px; border: 2px solid var(--brand); border-radius: 20px; background: white; }
+.appreport__stop > span { display: grid; width: 58px; height: 58px; place-items: center; border-radius: 17px; background: var(--brand-soft); color: var(--brand); }
+.appreport__stop svg { width: 28px; }
+.appreport__stop div { display: flex; min-width: 0; flex-direction: column; }
+.appreport__stop strong { overflow: hidden; font-size: 22px; text-overflow: ellipsis; white-space: nowrap; }
+.appreport__stop small { margin-top: 4px; color: var(--ink-muted); font-size: 14px; font-weight: 700; }
+.appreport__nearby { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 15px; }
+.appreport__nearby > span { grid-column: 1 / -1; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
+.appreport__nearby button { min-height: 46px; overflow: hidden; padding: 0 9px; border: 1px solid var(--border); border-radius: 11px; background: white; color: var(--ink); font-size: 13px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.appreport__stop-chip { display: inline-flex; align-self: flex-start; margin-bottom: 18px; padding: 7px 11px; align-items: center; gap: 5px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 14px; font-weight: 900; }
+.appreport__stop-chip svg { width: 17px; }
+.appreport__issues { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 22px; }
+.appreport__issues button { min-height: 76px; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: white; color: var(--ink); font-size: 16px; font-weight: 900; }
+.appreport__issues button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: white; }
+.appreport__bottom-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin-top: auto; }
+.appreport__primary,
+.appreport__secondary,
+.appreport__home { display: inline-flex; min-height: 56px; padding: 0 14px; align-items: center; justify-content: center; border-radius: 15px; font-size: 16px; font-weight: 900; text-decoration: none; }
+.appreport__primary { border: 0; background: var(--brand); color: white; }
+.appreport__primary:disabled { background: var(--border-strong); }
+.appreport__secondary { border: 2px solid var(--border-strong); background: white; color: var(--ink); }
+.appreport__panel > .appreport__secondary { margin-top: auto; }
+.appreport__home { width: 100%; margin-top: 28px; gap: 8px; background: var(--brand); color: white; }
+.appreport__home svg { width: 20px; }
+@media (max-height: 680px) { .appreport__panel { padding-top: 18px; } .appreport h1 { font-size: 26px; } .appreport__issues button { min-height: 62px; } .appreport__stop { margin-top: 14px; min-height: 90px; padding: 12px; } }
+@media (max-height: 600px) {
+  .appreport__bar { height: 56px; padding-block: 5px; }
+  .appreport__panel,
+  .appreport__center { height: calc(100% - 56px); padding: 12px 14px 10px; }
+  .appreport__step { margin-bottom: 4px; font-size: 12px; }
+  .appreport h1 { margin-bottom: 4px; font-size: 24px; }
+  .appreport__panel > p:not(.appreport__step) { font-size: 13px; line-height: 1.3; }
+  .appreport__search { min-height: 50px; margin-top: 8px; padding-inline: 11px; }
+  .appreport__search input { height: 46px; font-size: 16px; }
+  .appreport__matches { gap: 4px; margin-top: 6px; }
+  .appreport__matches button { min-height: 48px; padding: 5px 9px; }
+  .appreport__matches button strong { font-size: 14px; }
+  .appreport__matches button small { font-size: 11px; }
+  .appreport__primary,
+  .appreport__secondary { min-height: 50px; font-size: 15px; }
+}
+@media (min-width: 601px) { .appreport { border: 8px solid #222a36; border-radius: 38px; box-shadow: var(--shadow-float); } }

@@ -87,6 +87,12 @@ button {
   font-family: inherit;
 }
 
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
 /* 키보드 포커스는 항상 또렷하게 (접근성) */
 :focus-visible {
   outline: 4px solid var(--warning);

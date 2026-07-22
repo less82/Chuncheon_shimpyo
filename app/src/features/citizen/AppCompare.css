@@ -1,0 +1,12 @@
+.appcompare { min-height: 100vh; padding: 32px; overflow: auto; background: #e6e9ed; color: var(--ink); font-family: var(--font-sans); }
+.appcompare__head { width: max-content; min-width: 100%; margin-bottom: 24px; }
+.appcompare__head h1 { font-size: 28px; }
+.appcompare__head p { margin-top: 6px; color: var(--ink-muted); font-size: 16px; }
+.appcompare__screens { display: flex; width: max-content; min-width: 100%; align-items: flex-start; justify-content: center; gap: 40px; }
+.appcompare__item { display: grid; justify-items: center; gap: 12px; }
+.appcompare__label { width: 100%; }
+.appcompare__label h2 { font-size: 20px; }
+.appcompare__label span { display: block; margin-top: 3px; color: var(--ink-muted); font-size: 14px; font-weight: 700; }
+.appcompare__device { display: grid; padding: 8px; place-items: start; overflow: hidden; border-radius: 28px; background: #222a36; box-shadow: var(--shadow-float); }
+.appcompare__device iframe { display: block; border: 0; border-radius: 20px; background: white; }
+@media (max-width: 860px) { .appcompare { padding: 20px; } .appcompare__screens { justify-content: flex-start; gap: 24px; } }

@@ -1,173 +1,39 @@
-.home {
-  position: relative;
-  min-height: 100dvh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-2);
-}
-
-/* 지도 위 공통 내비게이션 */
-/* 상단 액션 바 — 일반 흐름(sticky). 지도 위 플로팅을 없애 확대/축소 버튼과
-   겹치지 않게 하고, 아래로 스크롤 가능한 문서 구조로 만든다. */
-.home__bar {
-  position: sticky;
-  top: 0;
-  z-index: 600;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-  pointer-events: none;
-}
-.home__bar > * {
-  pointer-events: auto;
-}
-
-.home__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: 0 var(--sp-2);
-  min-height: 58px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--brand);
-  text-decoration: none;
-  flex-direction: row;
-  justify-content: center;
-}
-.home__screen-title {
-  margin: 0;
-  font-size: 20px;
-  color: var(--ink);
-  text-align: center;
-  white-space: nowrap;
-}
-.home__title {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--ink);
-  white-space: nowrap;
-}
-
-.home__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--sp-2);
-}
-
-.home__share,
-.home__scan {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  min-height: 58px;
-  padding: var(--sp-1);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--brand);
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.home__share:active,
-.home__scan:active {
-  background: var(--brand-soft);
-}
-
-/* QR 스캔 — 시민앱 핵심 진입 동작이라 강조색 */
-.home__scan {
-  background: var(--brand);
-  color: var(--on-brand);
-  border: 1.5px solid var(--border-strong);
-}
-.home__scan:active {
-  background: var(--brand-strong);
-}
-
-.home__go {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-height: 58px;
-  padding: var(--sp-1);
-  border-radius: var(--radius-sm);
-  background: var(--brand);
-  color: var(--on-brand);
-  font-size: 12px;
-  font-weight: 800;
-  text-decoration: none;
-}
-.home__go:active {
-  background: var(--brand-strong);
-}
-
-.home__fav {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: 58px;
-  padding: 0 var(--sp-3);
-  border-radius: var(--radius);
-  background: var(--brand-soft);
-  color: var(--brand);
-  font-size: 16px;
-  font-weight: 800;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.home__map {
-  position: relative;
-  flex: none;
-  height: 55dvh;
-  min-height: 340px;
-}
-
-/* 카드 시트 — 지도 아래 일반 흐름. 페이지가 세로로 스크롤된다. */
-.home__sheet {
-  position: relative;
-  z-index: 1;
-  flex: 1 0 auto;
-  background: var(--surface-2);
-}
-
-.home__hint {
-  margin: var(--sp-4);
-  padding: var(--sp-5);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-float);
-  text-align: center;
-  font-size: var(--fs-md);
-  font-weight: 700;
-  color: var(--ink-body);
-}
-
-.home__bar svg { width: 24px; height: 24px; }
-
-@media (min-width: 640px) {
-  .home__map {
-    height: 62dvh;
-  }
-  .home__sheet {
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 var(--sp-4);
-  }
-  .home__sheet .stopcard {
-    border-radius: var(--radius-lg);
-  }
-}
+.apphome { width: min(390px, 100vw); height: min(844px, 100svh); min-height: 0; margin: 0 auto; overflow: hidden; display: flex; flex-direction: column; background: #f6f7f9; color: var(--ink); }
+.apphome__bar { display: flex; flex: 0 0 62px; padding: 8px 16px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: white; }
+.apphome__brand { display: inline-flex; min-height: 46px; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; }
+.apphome__brand > span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--brand); color: white; }
+.apphome__brand svg { width: 22px; }
+.apphome__brand b { font-size: 18px; }
+.apphome__bar > button { display: inline-flex; min-height: 44px; padding: 0 10px; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 12px; background: white; color: var(--brand); font-size: 12px; font-weight: 800; }
+.apphome__bar > button svg { width: 19px; }
+.apphome__tasks { display: grid; flex: 0 0 auto; grid-template-columns: 1fr 1fr; gap: 10px; padding: 22px 16px 18px; background: white; }
+.apphome-task { display: flex; min-width: 0; min-height: 82px; padding: 12px 14px; align-items: center; justify-content: center; border-radius: 18px; text-decoration: none; }
+.apphome-task--route { background: var(--brand); color: white; box-shadow: 0 8px 20px rgba(24, 35, 52, .18); }
+.apphome-task--report { border: 2px solid var(--yes); background: white; color: var(--yes); }
+.apphome-task__copy { display: flex; min-width: 0; flex-direction: column; justify-content: center; }
+.apphome-task__copy strong { font-size: 18px; line-height: 1.25; white-space: nowrap; }
+.apphome-task__copy small { margin-top: 4px; color: inherit; font-size: 14px; font-weight: 700; opacity: .76; white-space: nowrap; }
+.apphome-task > strong { font-size: 24px; }
+.apphome__saved { flex: 1 1 auto; min-height: 0; padding: 18px 16px 14px; }
+.apphome__saved > header { display: flex; align-items: end; justify-content: space-between; gap: 10px; }
+.apphome__saved h2 { margin-top: 1px; font-size: 25px; }
+.apphome__saved > header > a { display: inline-flex; min-height: 40px; align-items: center; color: var(--ink-muted); font-size: 12px; font-weight: 800; text-decoration: none; }
+.apphome__saved > header > a svg { width: 16px; }
+.apphome__saved-list { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+.apphome-favorite { display: flex; min-width: 0; min-height: 130px; padding: 13px 14px; flex-direction: column; justify-content: center; gap: 4px; border: 1px solid var(--border); border-radius: 17px; background: white; color: var(--ink); text-decoration: none; box-shadow: 0 4px 12px rgba(24, 35, 52, .06); }
+.apphome-favorite__top { display: flex; min-width: 0; align-items: center; gap: 5px; }
+.apphome-favorite__top strong { overflow: hidden; font-size: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.apphome-favorite__top i { flex: 0 0 auto; color: var(--ink-muted); font-style: normal; font-weight: 800; }
+.apphome-favorite__direction { overflow: hidden; color: var(--ink-muted); font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.apphome-favorite__arrival { display: flex; min-width: 0; margin-top: 3px; align-items: center; color: var(--brand); }
+.apphome-favorite__arrival[data-live="true"] { color: var(--yes); }
+.apphome-favorite__arrival b { overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+.apphome-favorite__destination { margin-top: 3px; color: var(--ink); font-size: 14px; font-weight: 800; }
+.apphome__saved-loading { display: grid; min-height: 100px; margin-top: 8px; place-items: center; border: 1px solid var(--border); border-radius: 15px; background: white; color: var(--ink-muted); font-size: 14px; font-weight: 700; }
+.apphome__saved-empty { display: grid; grid-template-columns: 1fr auto; min-height: 72px; margin-top: 8px; padding: 9px 11px; align-items: center; gap: 9px; border: 1px dashed var(--border-strong); border-radius: 15px; background: white; color: var(--ink); text-decoration: none; }
+.apphome__saved-empty > span { display: flex; flex-direction: column; }
+.apphome__saved-empty strong { font-size: 14px; }
+.apphome__saved-empty small { margin-top: 3px; color: var(--ink-muted); font-size: 11px; font-weight: 700; }
+.apphome__saved-empty > b { display: grid; min-width: 52px; min-height: 42px; place-items: center; border-radius: 11px; background: var(--brand); color: white; font-size: 13px; }
+@media (max-height: 720px) { .apphome__tasks { gap: 8px; padding-block: 14px 10px; } .apphome-task { min-height: 72px; } .apphome__saved { padding-top: 10px; } .apphome__saved h2 { font-size: 22px; } .apphome-favorite { min-height: 99px; padding-block: 9px; } .apphome-favorite__top strong { font-size: 18px; } .apphome-favorite__arrival b { font-size: 15px; } }
+@media (min-width: 601px) { .apphome { border: 8px solid #222a36; border-radius: 38px; box-shadow: var(--shadow-float); } }
