@@ -1,5 +1,5 @@
 .qrmain {
-  --qr-header: 56px;
+  --qr-header: 64px;
   --qr-control: 60px;
   --qr-gap: 16px;
   width: min(430px, 100vw);
@@ -9,6 +9,7 @@
   overflow-y: auto;
   background: white;
   color: var(--ink);
+  text-align: center;
   scrollbar-width: none;
   box-sizing: border-box;
 }
@@ -16,7 +17,7 @@
 .qrmain::-webkit-scrollbar { display: none; }
 .qrmain * { box-sizing: border-box; }
 
-/* 공통 헤더: 56px 높이, 48px 터치 영역, 24px 아이콘 */
+/* Material 3 Small Top App Bar: 64px 높이, 48px 터치 영역, 24px 아이콘 */
 .qrmain__back {
   position: sticky;
   z-index: 100;
@@ -148,7 +149,7 @@
 /* 갤럭시 폴더2급 웹 뷰포트: 320 × 533 CSS px */
 @media (max-width: 340px) and (max-height: 600px) {
   .qrmain {
-    --qr-header: 44px;
+    --qr-header: 64px;
     --qr-control: 48px;
     --qr-gap: 10px;
     height: 100svh;
@@ -157,8 +158,8 @@
   }
   .qrmain:has(.qrmain__report-start),
   .qrmain:has(.qrmain__results-page) { overflow-y: auto; }
-  .qrmain__back { width: 48px; height: 48px; margin: 0 0 8px; }
-  .qrmain__back svg { width: 22px; height: 22px; }
+  .qrmain__back { width: 48px; height: var(--qr-header); margin: 0 0 8px; }
+  .qrmain__back svg { width: 24px; height: 24px; }
   .qrmain h1,
   .qrmain h2,
   .qrmain__destination-page > h2,
@@ -173,8 +174,8 @@
 
   .qrmain__error { padding-top: 48px; }
   .qrmain__error .qrmain__locate-icon { width: 32px; height: 32px; margin-bottom: 16px; }
-  .qrmain__location-recovery { min-height: 40px; padding: 4px; font-size: 14px; }
-  .qrmain__retry { min-height: 44px; margin-top: 12px; }
+  .qrmain__location-recovery { min-height: 48px; padding: 4px; font-size: 14px; }
+  .qrmain__retry { min-height: 48px; margin-top: 12px; }
 
   .qrmain__destination-page > h2,
   .qrmain__manual-stop label { margin-top: 16px; }
@@ -189,7 +190,7 @@
   .qrmain__location-proof { display: none; }
   .qrmain__selected-start { font-size: 13px; }
   .qrmain__selected-start strong { font-size: 16px; }
-  .qrmain__manual-stop li button { min-height: 44px; font-size: 14px; }
+  .qrmain__manual-stop li button { min-height: 48px; font-size: 14px; }
   .qrmain__manual-stop li:nth-child(n + 5) { display: none; }
 
   .qrmain__report-location h1,
@@ -199,7 +200,7 @@
   .qrmain__confirm-actions { margin-top: 12px; }
   .qrmain__confirm-actions button { min-height: 48px; font-size: 16px; }
   .qrmain__nearby { margin-top: 20px; }
-  .qrmain__nearby button { min-height: 42px; font-size: 14px; }
+  .qrmain__nearby button { min-height: 48px; font-size: 14px; }
   .qrmain__nearby button:nth-of-type(n + 4) { display: none; }
   .qrmain__report-stop { margin-bottom: 10px; font-size: 14px; }
   .qrmain__report-start > p { margin-top: 4px; }
@@ -212,12 +213,12 @@
   .qrmain__results-title h2 { font-size: 24px; }
   .qrmain__route { padding: 14px 0; }
   .qrmain__recommend { margin-bottom: 8px; font-size: 14px; }
-  .qrmain__route-head { grid-template-columns: 1fr auto; align-items: end; gap: 10px; }
+  .qrmain__route-head { grid-template-columns: 1fr 1fr; align-items: end; gap: 10px; }
   .qrmain__route-head strong { font-size: 30px; }
   .qrmain__route-head > p { text-align: center; }
   .qrmain__route-head > p b { font-size: 24px; }
   .qrmain__route-head > p span { max-width: 132px; font-size: 11px; }
   .qrmain__boarding { margin-top: 14px; padding-top: 12px; }
   .qrmain__boarding strong { font-size: 18px; }
-  .qrmain__report { min-height: 44px; font-size: 15px; }
+  .qrmain__report { min-height: 48px; font-size: 15px; }
 }
