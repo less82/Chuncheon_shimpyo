@@ -62,6 +62,7 @@ export default function TripView() {
   const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
   const [manualFields, setManualFields] = useState({ board: false, dest: false });
   const [manualAvailable, setManualAvailable] = useState({ board: false, dest: false });
+  const [inputMode, setInputMode] = useState<"voice" | "manual">("voice");
   const [pendingTrip, setPendingTrip] = useState<{ origin: OriginPlace; dest: Stop } | null>(null);
   const [tripMessage, setTripMessage] = useState("");
   const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
@@ -246,7 +247,12 @@ export default function TripView() {
     setVoiceMessage("");
     setVoiceField(null);
     setManualFields((value) => ({ ...value, [field]: false }));
-    listen(field);
+    if (inputMode === "manual") {
+      setManualFields((value) => ({ ...value, [field]: true }));
+      requestAnimationFrame(() => inputRefs.current[field]?.focus());
+    } else {
+      listen(field);
+    }
   };
 
   const openManualInput = (field: "board" | "dest") => {
@@ -256,6 +262,18 @@ export default function TripView() {
     setManualFields((value) => ({ ...value, [field]: true }));
     setVoiceMessage("");
     requestAnimationFrame(() => inputRefs.current[field]?.focus());
+  };
+
+  const useManualInput = () => {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setListeningField(null);
+    setVoiceMessage("");
+    setVoiceField(null);
+    setInputMode("manual");
+    setManualFields({ board: true, dest: true });
+    setActiveField("board");
+    requestAnimationFrame(() => inputRefs.current.board?.focus());
   };
 
   if (!hasRequestedOrigin && !requestedBoardId) return (
@@ -278,8 +296,10 @@ export default function TripView() {
                   : choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseDestination(stop)}><strong>{stop.name}</strong></button>)}
               </div>
               <div className="tripview__choice-actions">
-                <button type="button" onClick={() => resetChoice(field)}>다시 말하기</button>
-                <button type="button" onClick={() => openManualInput(field)}>직접 입력</button>
+                {inputMode === "voice" ? <>
+                  <button type="button" onClick={() => resetChoice(field)}>다시 말하기</button>
+                  <button type="button" onClick={() => openManualInput(field)}>직접 입력</button>
+                </> : <button className="tripview__choice-action-wide" type="button" onClick={() => openManualInput(field)}>다시 입력</button>}
               </div>
             </div> : picked[field] ? <div className="tripview__selected">
               <span>{field === "board" ? "출발 위치" : "목적지 정류장"}</span>
@@ -288,8 +308,8 @@ export default function TripView() {
             </div> : <>
               <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 출발하세요?" : "어디로 가세요?"}</label>
               <div className="tripview__field-control">
-                {manualFields[field] && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder={field === "board" ? "출발할 장소를 입력해주세요" : "목적지 이름을 입력해주세요"} />}
-                <button className="tripview__voice" type="button" aria-pressed={listeningField === field} data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "● 듣고 있어요 · 누르면 중단" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
+                {(inputMode === "manual" || manualFields[field]) && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder={field === "board" ? "출발할 장소를 입력해주세요" : "목적지 이름을 입력해주세요"} />}
+                {inputMode === "voice" && <button className="tripview__voice" type="button" aria-pressed={listeningField === field} data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "● 듣고 있어요 · 누르면 중단" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>}
               </div>
               {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
               {voiceField === field && manualAvailable[field] && !manualFields[field] && <button className="tripview__manual" type="button" onClick={() => openManualInput(field)}>직접 쓰기</button>}
@@ -297,6 +317,7 @@ export default function TripView() {
           </div>;
         })}
         {tripMessage && <p className="tripview__trip-message" role="status">{tripMessage}</p>}
+        {inputMode === "voice" && <button className="tripview__input-mode" type="button" onClick={useManualInput}>지금은 말할 수 없어요</button>}
       </section>
     </main>
   );

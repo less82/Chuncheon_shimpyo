@@ -53,4 +53,14 @@ describe("<TripView>", () => {
     expect(within(result.closest(".tripview__field") as HTMLElement).queryByRole("textbox", { name: "어디서 출발하세요?" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "어디로 가세요?" })).not.toBeInTheDocument();
   });
+
+  it("말하기 어려운 사용자는 즉시 출발지와 목적지를 직접 입력할 수 있다", () => {
+    const screen = render(<MemoryRouter initialEntries={["/go"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
+    fireEvent.click(screen.getByRole("button", { name: "지금은 말할 수 없어요" }));
+
+    expect(screen.getByRole("textbox", { name: "어디서 출발하세요?" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "어디로 가세요?" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "출발지 말하기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "목적지 말하기" })).not.toBeInTheDocument();
+  });
 });
