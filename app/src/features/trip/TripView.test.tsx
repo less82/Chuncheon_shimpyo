@@ -25,9 +25,9 @@ describe("<TripView>", () => {
   it("출발지와 목적지를 모두 검색하고 각각 음성 입력을 제공한다", () => {
     const screen = render(<MemoryRouter initialEntries={["/go"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
     expect(screen.getByText("정류장을 선택하세요")).toBeInTheDocument();
-    fireEvent.change(screen.getByRole("textbox", { name: "출발 정류장 검색" }), { target: { value: "강원대" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "출발 정류장" }), { target: { value: "강원대" } });
     expect(screen.getByRole("button", { name: /강원대후문/ })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "목적지 정류장 검색" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "목적지 정류장" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "출발 정류장 음성 입력" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "목적지 정류장 음성 입력" })).toBeInTheDocument();
   });
