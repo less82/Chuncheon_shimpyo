@@ -121,9 +121,9 @@ export default function AppReport() {
 
       {step === "issue" && selected && (
         <section className="appreport__panel">
-          <p className="appreport__step">2 / 3 · 불편 선택</p>
+          <p className="appreport__step">2 / 3 · 상태 선택</p>
           <span className="appreport__stop-chip"><MapPin aria-hidden="true" />{selected.name}</span>
-          <h1>어떤 점이 불편했나요?</h1>
+          <h1>어떤 상태인가요?</h1>
           <p>해당하는 항목을 하나 눌러주세요.</p>
           <div className="appreport__issues">{ISSUES.map((item) => <button type="button" key={item} aria-pressed={issue === item} onClick={() => setIssue(item)}>{item}</button>)}</div>
           <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("confirm")}>이전</button><button type="button" className="appreport__primary" disabled={!issue} onClick={submit}>민원 접수하기</button></div>

@@ -20,13 +20,12 @@ export function FavoriteStopCard({ stop }: { stop: Stop }) {
   const firstRoute = arrival.byRoute?.[0];
 
   return (
-    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(stop.id)}`} aria-label={`${stop.name} 버스 보기`}>
+    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(stop.id)}`} aria-label={`${stop.name} 버스 도착정보`}>
       <span className="apphome-favorite__top"><strong>{stop.name}</strong></span>
       <span className="apphome-favorite__routes">경유 노선 {stop.routes.length > 0 ? stop.routes.slice(0, 4).map((route) => `${route}번`).join(" · ") : "확인 중"}</span>
       <span className="apphome-favorite__arrival" data-live={arrival.live}>
         <b>{firstRoute?.routeNo ? `${firstRoute.routeNo}번 ` : ""}{arrival.text}</b>
       </span>
-      <span className="apphome-favorite__go">보기</span>
     </Link>
   );
 }
@@ -47,15 +46,15 @@ export default function CitizenHome() {
       </section>
 
       <nav className="apphome__tasks" aria-label="주요 기능">
-        <Link className="apphome-task apphome-task--route" to="/go" aria-label="목적지행 버스 도착시간 보기">
+        <Link className="apphome-task apphome-task--route" to="/go" aria-label="목적지행 버스 도착 예정시간">
           <span className="apphome-task__copy">
             <strong>목적지행 버스</strong>
-            <small>도착시간 보기</small>
+            <small>도착 예정시간</small>
           </span>
         </Link>
-        <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 불편 알리기">
+        <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">
           <span className="apphome-task__copy">
-            <strong>정류장 불편</strong>
+            <strong>정류장 상태</strong>
             <small>알리기</small>
           </span>
         </Link>
