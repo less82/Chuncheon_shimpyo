@@ -166,10 +166,9 @@ export default function TripView() {
     return sortByComfort(planned, stopsById, sortMode);
   }, [destStop, routes, fromPos, stops, stopsById, sortMode, requestedBoardId]);
 
-  const openArrivals = () => {
-    if (!picked.board || !picked.dest) return;
-    const boardCandidates = stops.filter((stop) => stop.name === picked.board?.name);
-    const destinationCandidates = stops.filter((stop) => stop.name === picked.dest?.name);
+  const openArrivals = (boardChoice: Stop, destinationChoice: Stop) => {
+    const boardCandidates = stops.filter((stop) => stop.name === boardChoice.name);
+    const destinationCandidates = stops.filter((stop) => stop.name === destinationChoice.name);
     if (routes) {
       for (const destination of destinationCandidates) {
         for (const board of boardCandidates) {
@@ -184,7 +183,17 @@ export default function TripView() {
         }
       }
     }
-    navigate(`/go?board=${encodeURIComponent(picked.board.id)}&dest=${encodeURIComponent(picked.dest.id)}`);
+    navigate(`/go?board=${encodeURIComponent(boardChoice.id)}&dest=${encodeURIComponent(destinationChoice.id)}`);
+  };
+
+  const chooseStop = (field: "board" | "dest", stop: Stop) => {
+    setPicked((value) => ({ ...value, [field]: stop }));
+    setQueries((value) => ({ ...value, [field]: stop.name }));
+    if (field === "board") {
+      setActiveField("dest");
+      return;
+    }
+    if (picked.board) openArrivals(picked.board, stop);
   };
 
   if (!requestedBoardId) return (
@@ -195,15 +204,22 @@ export default function TripView() {
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
       <section className="tripview__find">
-        {(["board", "dest"] as const).map((field) => <div className="tripview__field" key={field} data-active={activeField === field}>
-          <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
-          <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
-            <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
-          </div>
-          {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
-          {activeField === field && visibleMatches.length > 0 && <div className="tripview__matches tripview__matches--inline">{visibleMatches.filter((stop) => stop.name !== picked[activeField === "board" ? "dest" : "board"]?.name).map((stop) => <button type="button" key={stop.name} onClick={() => { setPicked((value) => ({ ...value, [activeField]: stop })); setQueries((value) => ({ ...value, [activeField]: stop.name })); if (activeField === "board") setActiveField("dest"); }}><MapPin aria-hidden="true" /><strong>{stop.name}</strong></button>)}</div>}
-        </div>)}
-        <button className="tripview__find-submit" type="button" disabled={!picked.board || !picked.dest} onClick={openArrivals}>도착 예정시간 확인</button>
+        {(["board", "dest"] as const).map((field) => {
+          const showChoices = activeField === field && !picked[field] && queries[field].replace(/\s+/g, "").length >= 2 && visibleMatches.length > 0;
+          const choices = visibleMatches.filter((stop) => stop.name !== picked[field === "board" ? "dest" : "board"]?.name);
+          return <div className="tripview__field" key={field} data-active={activeField === field}>
+            {showChoices ? <div className="tripview__choices">
+              {choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseStop(field, stop)}><MapPin aria-hidden="true" /><strong>{stop.name}</strong></button>)}
+            </div> : <>
+              <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
+              <div className="tripview__field-control">
+                <input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
+                <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
+              </div>
+              {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
+            </>}
+          </div>;
+        })}
       </section>
     </main>
   );

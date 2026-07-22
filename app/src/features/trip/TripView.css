@@ -43,19 +43,15 @@
 .tripview--find { height: 100dvh; min-height: 0; padding-bottom: 0; overflow: hidden; }
 .tripview__find { max-width: 520px; margin: 0 auto; padding: clamp(14px, 3dvh, 26px) clamp(16px, 5.5vw, 24px); }
 .tripview__field { position: relative; margin-bottom: clamp(22px, 3.4dvh, 28px); }
-.tripview__field[data-active="true"] { z-index: 3; }
 .tripview__field-label { display: block; margin-bottom: clamp(6px, 2vw, 9px); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
 .tripview__field[data-active="true"] .tripview__field-label { color: var(--brand); }
 .tripview__field-control { display: grid; grid-template-columns: 1fr; gap: clamp(7px, 2vw, 10px); }
 .tripview__field-control input { min-width: 0; height: clamp(50px, calc(20px + 6dvh), 58px); padding: 0 clamp(12px, 4vw, 16px); border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: clamp(14px, calc(2px + 4vw), 18px); font-weight: 700; }
 .tripview__field-control input:focus { border-color: var(--brand); }
-.tripview__matches { display: grid; gap: clamp(6px, 1.2dvh, 8px); margin-top: clamp(6px, 1.5dvh, 10px); }
-.tripview__matches button { display: grid; grid-template-columns: 28px 1fr; min-height: clamp(50px, calc(18px + 7dvh), 62px); padding: clamp(5px, 1dvh, 8px) 12px; align-items: center; border: 1px solid var(--border); border-radius: 14px; background: white; color: var(--ink); text-align: left; }
-.tripview__matches button span { display: flex; min-width: 0; flex-direction: column; }
-.tripview__matches button strong { overflow: hidden; font-size: clamp(15px, calc(3px + 4vw), 17px); text-overflow: ellipsis; white-space: nowrap; }
-.tripview__matches button small { color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.tripview__matches--inline { position: absolute; top: calc(100% - 16px); right: 0; left: 0; z-index: 5; padding: 8px; border: 1px solid var(--border); border-radius: 15px; background: var(--surface); box-shadow: var(--shadow-card); }
-.tripview__matches--inline button { grid-template-columns: 28px 1fr; }
+.tripview__choices { display: grid; gap: clamp(8px, 1.5dvh, 12px); }
+.tripview__choices button { display: grid; grid-template-columns: 30px 1fr; min-height: clamp(58px, calc(22px + 7dvh), 70px); padding: 8px 16px; align-items: center; border: 2px solid var(--border-strong); border-radius: 15px; background: var(--surface); color: var(--ink); text-align: left; }
+.tripview__choices button svg { color: var(--brand); }
+.tripview__choices button strong { font-size: clamp(18px, calc(5px + 4vw), 21px); }
 .tripview__voice { display: flex; width: 100%; min-height: clamp(46px, calc(18px + 6dvh), 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: white; font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
 .tripview__voice:focus, .tripview__voice:focus-visible { outline: none; box-shadow: none; }
 .tripview__voice[data-listening="true"] { border-color: hsl(0 32% 22%); background: hsl(0 32% 22%); }

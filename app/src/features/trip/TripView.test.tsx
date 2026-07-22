@@ -37,17 +37,17 @@ describe("<TripView>", () => {
   it("출발지와 목적지를 모두 검색하고 각각 음성 입력을 제공한다", () => {
     const screen = render(<MemoryRouter initialEntries={["/go"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
     expect(screen.queryByText("어디서 어디로 가세요?")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByRole("textbox", { name: "어디서 타세요?" }), { target: { value: "강원대" } });
-    const result = screen.getByRole("button", { name: "강원대후문" });
-    expect(result).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "강원대후문" })).toHaveLength(1);
-    expect(within(result.closest(".tripview__field") as HTMLElement).getByRole("textbox", { name: "어디서 타세요?" })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "어디로 가세요?" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "출발지 말하기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "목적지 말하기" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "출발지 말하기" }));
     const status = screen.getByRole("status");
     expect(status).toHaveTextContent("이 브라우저는 음성 입력을 지원하지 않습니다.");
     expect(within(status.closest(".tripview__field") as HTMLElement).getByRole("button", { name: "출발지 말하기" })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "어디서 타세요?" }), { target: { value: "강원대" } });
+    const result = screen.getByRole("button", { name: "강원대후문" });
+    expect(result).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "강원대후문" })).toHaveLength(1);
+    expect(within(result.closest(".tripview__field") as HTMLElement).queryByRole("textbox", { name: "어디서 타세요?" })).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "어디로 가세요?" })).toBeInTheDocument();
   });
 });
