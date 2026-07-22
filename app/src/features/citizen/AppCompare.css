@@ -1,4 +1,5 @@
-.appcompare { min-height: 100vh; padding: 32px; overflow: auto; background: #e6e9ed; color: var(--ink); font-family: var(--font-sans); }
+.appcompare { min-height: 100vh; padding: 32px; overflow: auto; scrollbar-width: none; -ms-overflow-style: none; background: #e6e9ed; color: var(--ink); font-family: var(--font-sans); }
+.appcompare::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .appcompare__head { width: max-content; min-width: 100%; margin-bottom: 24px; }
 .appcompare__head h1 { font-size: 28px; }
 .appcompare__head p { margin-top: 6px; color: var(--ink-muted); font-size: 16px; }

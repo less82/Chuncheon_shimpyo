@@ -48,6 +48,20 @@ body .poster {
   overflow-y: auto;
 }
 
+/* 버스 입력 화면은 한 화면 고정. 결과 화면은 스크롤 가능하되 막대는 노출하지 않는다. */
+body .tripview {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body .tripview::-webkit-scrollbar { display: none; width: 0; height: 0; }
+html:has(.tripview--find),
+body:has(.tripview--find),
+#root:has(.tripview--find),
+body .tripview--find {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 @media (min-width: 601px) {
   body .home,
   body .qrmain,
