@@ -133,11 +133,12 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       { id: "r3", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "의자가 없어요", createdAt: "2026-07-21T08:20:00.000Z", status: "received" },
     ]));
     const utils = render(<Dashboard />);
-    const signals = utils.getByRole("group", { name: "우선 대응 신호" });
+    const signals = utils.getByRole("group", { name: "목록 범위 선택" });
 
     expect(within(signals).getByRole("button", { name: /안전 관련 후보 2/ })).toBeInTheDocument();
     expect(within(signals).getByRole("button", { name: /유사 제보 집중 1/ })).toBeInTheDocument();
     fireEvent.click(within(signals).getByRole("button", { name: /안전 관련/ }));
+    expect(utils.getByRole("heading", { name: "안전 관련 제보" })).toBeInTheDocument();
     expect(utils.getByText("시설물이 파손됐어요")).toBeInTheDocument();
     expect(utils.queryByText("의자가 없어요")).toBeNull();
     expect(utils.queryByText("평균 처리시간")).toBeNull();
