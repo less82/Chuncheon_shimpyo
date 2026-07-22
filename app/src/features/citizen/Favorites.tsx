@@ -3,31 +3,10 @@
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import type { Stop } from "../../types/stop";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
+import { FavoriteStopCard } from "./CitizenHome";
 import "./Favorites.css";
-
-function DestinationCard({ stop }: { stop: Stop }) {
-  const toggle = useFavorites((s) => s.toggle);
-
-  return (
-    <article className="favcard">
-      <h2 className="favcard__name">{stop.name}</h2>
-      <Link className="favcard__go" to={`/go?dest=${encodeURIComponent(stop.id)}`}>
-        버스 정보
-      </Link>
-      <button
-        type="button"
-        className="favcard__remove"
-        onClick={() => toggle(stop.id)}
-        aria-label={`${stop.name} 저장 해제`}
-      >
-        저장 해제
-      </button>
-    </article>
-  );
-}
 
 /** "○○정류장을 즐겨찾기에 넣었어요" / "○○ 외 N곳을 즐겨찾기에 넣었어요" */
 export function importedBannerText(names: string[]): string {
@@ -37,11 +16,9 @@ export function importedBannerText(names: string[]): string {
 }
 
 export default function Favorites() {
-  const favIds = useFavorites((s) => s.ids);
+  const journeys = useFavorites((s) => s.journeys);
+  const removeJourney = useFavorites((s) => s.removeJourney);
   const stops = useStops((s) => s.stops);
-  const favStops = favIds
-    .map((id) => stops.find((s) => s.id === id))
-    .filter((s): s is Stop => Boolean(s));
 
   const location = useLocation();
   const navImportedNames =
@@ -73,7 +50,7 @@ export default function Favorites() {
         </div>
       )}
 
-      {favStops.length === 0 ? (
+      {journeys.length === 0 ? (
         <section className="favpage__empty">
           <p className="favpage__empty-title">저장한 목적지가 없습니다.</p>
           <Link className="favpage__cta" to="/app">
@@ -82,7 +59,13 @@ export default function Favorites() {
         </section>
       ) : (
         <div className="favpage__list">
-          {favStops.map((stop) => <DestinationCard key={stop.id} stop={stop} />)}
+          {journeys.map((journey) => {
+            const destination = stops.find((stop) => stop.id === journey.destinationStopId);
+            return <article className="favcard" key={journey.id}>
+              <FavoriteStopCard journey={journey} stops={stops} />
+              <button type="button" className="favcard__remove" onClick={() => removeJourney(journey.id)} aria-label={`${destination?.name ?? "목적지"} 저장 해제`}>저장 해제</button>
+            </article>;
+          })}
         </div>
       )}
     </main>

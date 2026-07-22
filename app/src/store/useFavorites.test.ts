@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { useFavorites, FAVORITES_KEY } from "./useFavorites";
+import { useFavorites, FAVORITES_KEY, FAVORITE_JOURNEYS_KEY } from "./useFavorites";
 
 beforeEach(() => {
   localStorage.clear();
-  useFavorites.setState({ ids: [] });
+  useFavorites.setState({ ids: [], journeys: [] });
 });
 
 describe("useFavorites", () => {
@@ -39,5 +39,11 @@ describe("useFavorites", () => {
     expect(JSON.parse(localStorage.getItem(FAVORITES_KEY) as string)).toEqual(
       expect.arrayContaining(["x", "y"]),
     );
+  });
+
+  it("출발 정류장·버스·목적지를 한 이용 기록으로 저장한다", () => {
+    useFavorites.getState().saveJourney({ boardStopId: "A", destinationStopId: "B", routeNo: "12", direction: "춘천역 방면" });
+    expect(useFavorites.getState().journeys[0]).toMatchObject({ id: "A:12:B", boardStopId: "A", destinationStopId: "B" });
+    expect(JSON.parse(localStorage.getItem(FAVORITE_JOURNEYS_KEY) as string)).toHaveLength(1);
   });
 });

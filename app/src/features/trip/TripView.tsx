@@ -31,6 +31,7 @@ export default function TripView() {
   );
 
   const requestedDestId = searchParams.get("dest");
+  const requestedBoardId = searchParams.get("board");
   const [destId, setDestId] = useState<string | null>(requestedDestId);
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
@@ -74,9 +75,9 @@ export default function TripView() {
 
   const options = useMemo(() => {
     if (!destStop || !routes) return [];
-    const planned = planTrip(fromPos, destStop, stops, routes.routes);
+    const planned = planTrip(fromPos, destStop, stops, routes.routes, requestedBoardId ? { boardStopId: requestedBoardId, walkRadiusM: Number.MAX_SAFE_INTEGER } : undefined);
     return sortByComfort(planned, stopsById, sortMode);
-  }, [destStop, routes, fromPos, stops, stopsById, sortMode]);
+  }, [destStop, routes, fromPos, stops, stopsById, sortMode, requestedBoardId]);
 
   return (
     <main className="tripview">

@@ -246,3 +246,5 @@
   font-weight: 700;
   color: var(--brand-strong);
 }
+.tripcard__save { width: 100%; min-height: 48px; margin-top: 12px; border: 0; border-radius: 14px; background: var(--brand); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.tripcard__save:disabled { background: var(--border-strong); color: var(--ink-muted); cursor: default; }

@@ -10,6 +10,7 @@ import type { LatLng } from "../../lib/geo";
 import { getWalkRoute } from "../../lib/walking";
 import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { comfortSentence } from "./comfortSort";
+import { useFavorites } from "../../store/useFavorites";
 import "./TripView.css";
 
 interface Props {
@@ -45,6 +46,12 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
 
   // 첫 구간(승차) 버스 도착: 폴백 즉시 표시 후 실시간(있으면) 갱신.
   const firstRouteNo = option.legs[0]?.routeNos[0];
+  const saveJourney = useFavorites((s) => s.saveJourney);
+  const journeyId = `${option.boardStopId}:${firstRouteNo}:${destStop.id}`;
+  const saved = useFavorites((s) => s.journeys.some((item) => item.id === journeyId));
+  const firstLeg = option.legs[0];
+  const boardIndex = firstLeg ? stops.findIndex((stop) => stop.id === firstLeg.boardStopId) : -1;
+  const directionStop = boardIndex >= 0 ? stops.find((stop) => stop.id === firstLeg?.alightStopId) : undefined;
   const [arrival, setArrival] = useState<Arrival>(() =>
     boardStop ? headwayFallback(boardStop) : { text: "", live: false },
   );
@@ -117,6 +124,14 @@ export default function TripCard({ option, stops, destStop, fromPos }: Props) {
       </p>
       {boardStop && (
         <p className="tripcard__comfort">{comfortSentence(boardStop)}</p>
+      )}
+      {boardStop && firstRouteNo && (
+        <button className="tripcard__save" type="button" disabled={saved} onClick={() => saveJourney({
+          boardStopId: boardStop.id,
+          destinationStopId: destStop.id,
+          routeNo: firstRouteNo,
+          direction: `${directionStop?.name ?? destStop.name} 방면`,
+        })}>{saved ? "즐겨찾기 저장됨" : "이 버스 즐겨찾기"}</button>
       )}
     </article>
   );
