@@ -171,6 +171,7 @@ export default function TripView() {
           const routeExists = planTrip(board, destination, stops, routes.routes, {
             boardStopId: board.id,
             walkRadiusM: Number.MAX_SAFE_INTEGER,
+            maxTransfers: 0,
           }).length > 0;
           if (routeExists) {
             navigate(`/go?board=${encodeURIComponent(board.id)}&dest=${encodeURIComponent(destination.id)}`);
@@ -203,6 +204,9 @@ export default function TripView() {
   };
 
   const openManualInput = (field: "board" | "dest") => {
+    setPicked((value) => ({ ...value, [field]: null }));
+    setQueries((value) => ({ ...value, [field]: "" }));
+    setActiveField(field);
     setManualFields((value) => ({ ...value, [field]: true }));
     setVoiceMessage("");
     requestAnimationFrame(() => inputRefs.current[field]?.focus());
@@ -227,11 +231,16 @@ export default function TripView() {
               </div>
               <div className="tripview__choice-actions">
                 <button type="button" onClick={() => resetChoice(field)}>다시 말하기</button>
+                <button type="button" onClick={() => openManualInput(field)}>직접 입력</button>
               </div>
+            </div> : picked[field] ? <div className="tripview__selected">
+              <span>{field === "board" ? "출발 정류장" : "목적지 정류장"}</span>
+              <strong>{picked[field]?.name}</strong>
+              <button type="button" onClick={() => resetChoice(field)}>다시 선택</button>
             </div> : <>
               <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
               <div className="tripview__field-control">
-                {manualFields[field] && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />}
+                {manualFields[field] && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />}
                 <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
               </div>
               {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
@@ -261,7 +270,7 @@ export default function TripView() {
               <p className="tripview__msg">경로를 준비하고 있어요…</p>
             ) : options.length === 0 ? (
               <p className="tripview__msg tripview__msg--none">
-                직접 가는 버스를 찾지 못했습니다.
+                이 정류장 사이를 바로 가는 버스의 도착정보가 없습니다.
               </p>
             ) : (
               options.map((opt, i) => (

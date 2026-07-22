@@ -62,9 +62,7 @@ export default function CitizenHome() {
           <div className="apphome__saved-list">
             {journeys.slice(0, 2).map((journey) => <FavoriteStopCard key={journey.id} journey={journey} stops={stops} />)}
           </div>
-        ) : (
-          <Link className="apphome__saved-empty" to="/favorites"><strong>즐겨찾기 등록</strong></Link>
-        )}
+        ) : null}
       </section>
 
     </main>

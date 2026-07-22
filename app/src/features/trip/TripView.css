@@ -51,10 +51,14 @@
 .tripview__choice-stage { display: grid; gap: clamp(10px, 2dvh, 14px); }
 .tripview__choice-prompt { margin: 0; color: var(--ink); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
 .tripview__choices { display: grid; gap: clamp(8px, 1.5dvh, 12px); }
-.tripview__choices button { min-height: clamp(58px, calc(22px + 7dvh), 70px); padding: 8px 16px; border: 2px solid var(--border-strong); border-radius: 15px; background: var(--surface); color: var(--ink); text-align: center; }
+.tripview__choices button { min-height: clamp(58px, calc(22px + 7dvh), 70px); padding: 8px 16px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: white; text-align: center; }
 .tripview__choices button strong { font-size: clamp(18px, calc(5px + 4vw), 21px); }
-.tripview__choice-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.tripview__choice-actions button { min-height: clamp(46px, calc(18px + 6dvh), 54px); border: 2px solid var(--brand); border-radius: 15px; background: var(--surface); color: var(--brand); font: inherit; font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
+.tripview__choice-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tripview__choice-actions button { min-height: 44px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); color: var(--ink-body); font: inherit; font-size: clamp(14px, calc(3px + 3.5vw), 17px); font-weight: 800; }
+.tripview__selected { display: grid; grid-template-columns: 1fr auto; min-height: 92px; padding: 14px 16px; align-content: center; gap: 2px 12px; border: 2px solid var(--brand); border-radius: 16px; background: var(--brand-soft); }
+.tripview__selected span { color: var(--ink-body); font-size: 14px; font-weight: 800; }
+.tripview__selected strong { grid-column: 1; color: var(--brand); font-size: clamp(19px, calc(5px + 4.5vw), 23px); }
+.tripview__selected button { grid-column: 2; grid-row: 1 / 3; min-width: 78px; border: 1px solid var(--brand); border-radius: 12px; background: white; color: var(--brand); font: inherit; font-weight: 800; }
 .tripview__voice { display: flex; width: 100%; min-height: clamp(46px, calc(18px + 6dvh), 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: white; font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
 .tripview__voice:focus, .tripview__voice:focus-visible { outline: none; box-shadow: none; }
 .tripview__voice[data-listening="true"] { border-color: hsl(0 32% 22%); background: hsl(0 32% 22%); }
