@@ -65,6 +65,8 @@
 .tripview__field-control { display: grid; grid-template-columns: 1fr; gap: clamp(7px, 2vw, 10px); }
 .tripview__field-control input { min-width: 0; height: clamp(50px, calc(20px + 6dvh), 58px); padding: 0 clamp(12px, 4vw, 16px); border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: clamp(14px, calc(2px + 4vw), 18px); font-weight: 700; }
 .tripview__field-control input:focus { border-color: var(--brand); }
+.tripview__search { min-height: clamp(44px, calc(16px + 5dvh), 50px); border: 0; border-radius: 13px; background: var(--brand); color: var(--on-brand); font: inherit; font-size: clamp(15px, calc(3px + 3.8vw), 18px); font-weight: 900; }
+.tripview__search:disabled { background: var(--border-strong); color: var(--ink-muted); }
 .tripview__choice-stage { display: grid; gap: clamp(10px, 2dvh, 14px); }
 .tripview__choice-prompt { margin: 0; color: var(--ink); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
 .tripview__choices { display: grid; gap: clamp(8px, 1.5dvh, 12px); }
