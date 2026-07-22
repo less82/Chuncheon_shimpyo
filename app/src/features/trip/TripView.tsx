@@ -2,7 +2,7 @@
 // 키보드 0: 즐겨찾기(=목적지)를 탭만으로 고르면 경로 카드가 나온다. 타이핑 불필요.
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import type { Stop } from "../../types/stop";
@@ -54,6 +54,8 @@ export default function TripView() {
   const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
   const [manualFields, setManualFields] = useState({ board: false, dest: false });
   const [manualAvailable, setManualAvailable] = useState({ board: false, dest: false });
+  const [pendingTrip, setPendingTrip] = useState<{ board: Stop; dest: Stop } | null>(null);
+  const [tripMessage, setTripMessage] = useState("");
   const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
   const inputRefs = useRef<Record<"board" | "dest", HTMLInputElement | null>>({ board: null, dest: null });
   const stopQuery = queries[activeField];
@@ -162,26 +164,40 @@ export default function TripView() {
     } : undefined);
   }, [destStop, routes, fromPos, stops, requestedBoardId]);
 
-  const openArrivals = (boardChoice: Stop, destinationChoice: Stop) => {
+  const openArrivals = useCallback((boardChoice: Stop, destinationChoice: Stop) => {
+    if (!routes) {
+      setPendingTrip({ board: boardChoice, dest: destinationChoice });
+      setTripMessage("버스 정보를 준비하고 있어요.");
+      return;
+    }
     const boardCandidates = stops.filter((stop) => stop.name === boardChoice.name);
     const destinationCandidates = stops.filter((stop) => stop.name === destinationChoice.name);
-    if (routes) {
-      for (const destination of destinationCandidates) {
-        for (const board of boardCandidates) {
-          const routeExists = planTrip(board, destination, stops, routes.routes, {
-            boardStopId: board.id,
-            walkRadiusM: Number.MAX_SAFE_INTEGER,
-            maxTransfers: 0,
-          }).length > 0;
-          if (routeExists) {
-            navigate(`/go?board=${encodeURIComponent(board.id)}&dest=${encodeURIComponent(destination.id)}`);
-            return;
-          }
+    for (const destination of destinationCandidates) {
+      for (const board of boardCandidates) {
+        const routeExists = planTrip(board, destination, stops, routes.routes, {
+          boardStopId: board.id,
+          walkRadiusM: Number.MAX_SAFE_INTEGER,
+          maxTransfers: 0,
+        }).length > 0;
+        if (routeExists) {
+          setTripMessage("");
+          navigate(`/go?board=${encodeURIComponent(board.id)}&dest=${encodeURIComponent(destination.id)}`);
+          return;
         }
       }
     }
-    navigate(`/go?board=${encodeURIComponent(boardChoice.id)}&dest=${encodeURIComponent(destinationChoice.id)}`);
-  };
+    setPicked((value) => ({ ...value, dest: null }));
+    setQueries((value) => ({ ...value, dest: "" }));
+    setActiveField("dest");
+    setTripMessage("이 출발지에서 바로 가는 버스가 없어요. 다른 목적지 정류장을 선택해주세요.");
+  }, [navigate, routes, stops]);
+
+  useEffect(() => {
+    if (!routes || !pendingTrip) return;
+    const next = pendingTrip;
+    setPendingTrip(null);
+    openArrivals(next.board, next.dest);
+  }, [openArrivals, routes, pendingTrip]);
 
   const chooseStop = (field: "board" | "dest", stop: Stop) => {
     setPicked((value) => ({ ...value, [field]: stop }));
@@ -248,6 +264,7 @@ export default function TripView() {
             </>}
           </div>;
         })}
+        {tripMessage && <p className="tripview__trip-message" role="status">{tripMessage}</p>}
       </section>
     </main>
   );
