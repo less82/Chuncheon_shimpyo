@@ -1,5 +1,5 @@
 .qrmain {
-  --qr-header: 48px;
+  --qr-header: 56px;
   --qr-control: 60px;
   --qr-gap: 16px;
   width: min(430px, 100vw);
@@ -16,15 +16,15 @@
 .qrmain::-webkit-scrollbar { display: none; }
 .qrmain * { box-sizing: border-box; }
 
-/* 공통 헤더: 48px 높이, 44px 터치 영역, 20px 아이콘 */
+/* 공통 헤더: 56px 높이, 48px 터치 영역, 24px 아이콘 */
 .qrmain__back {
   position: sticky;
   z-index: 100;
   top: env(safe-area-inset-top, 0px);
   display: grid;
-  width: 44px;
+  width: 48px;
   height: var(--qr-header);
-  margin: 0 0 16px -12px;
+  margin: 0 0 16px 0;
   padding: 0;
   place-items: center;
   border: 0;
@@ -32,7 +32,7 @@
   color: var(--ink);
   cursor: pointer;
 }
-.qrmain__back svg { width: 20px; height: 20px; stroke-width: 2.2; }
+.qrmain__back svg { width: 24px; height: 24px; stroke-width: 2.2; }
 
 /* 공통 타이포와 평면 섹션 */
 .qrmain__ask,
@@ -53,6 +53,7 @@
 .qrmain h1, .qrmain h2 { margin: 0; font-size: 28px; line-height: 1.3; letter-spacing: -.6px; word-break: keep-all; }
 .qrmain p { margin: 0; color: var(--ink-body); font-size: 17px; line-height: 1.55; word-break: keep-all; }
 .qrmain button, .qrmain input { font: inherit; }
+.qrmain input { text-align: center; }
 .qrmain input:focus { border-color: var(--brand); outline: 2px solid var(--brand); outline-offset: 1px; }
 .qrmain button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .qrmain button:active { background-color: var(--brand-strong); color: white; }
@@ -83,7 +84,7 @@
 .qrmain__form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .qrmain__form button { min-width: 76px; min-height: var(--qr-control); padding: 0 16px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 17px; font-weight: 900; }
 .qrmain__manual-stop ul { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
-.qrmain__manual-stop li button { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: left; }
+.qrmain__manual-stop li button { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: center; gap: 12px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: center; }
 .qrmain__manual-stop li span { color: var(--brand); font-size: 14px; font-weight: 900; white-space: nowrap; }
 .qrmain__location-proof { overflow: hidden; margin-top: 8px; border-radius: 14px; }
 .qrmain__location-proof .qrmain__map { width: 100%; height: 180px; margin: 0; border: 0; }
@@ -100,7 +101,7 @@
 .qrmain__confirm-actions button:first-child { background: var(--brand); color: white; }
 .qrmain__nearby { display: grid; margin-top: 32px; }
 .qrmain__nearby > span { margin-bottom: 8px; color: var(--ink-muted); font-size: 15px; font-weight: 800; }
-.qrmain__nearby button { min-height: 52px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: left; font-weight: 800; }
+.qrmain__nearby button { min-height: 52px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: center; font-weight: 800; }
 .qrmain__report-stop { display: inline-flex; margin-bottom: 16px; color: var(--brand); font-size: 16px; font-weight: 900; }
 .qrmain__report-start > p { margin-top: 8px; }
 .qrmain__quick-report { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; }
@@ -156,7 +157,8 @@
   }
   .qrmain:has(.qrmain__report-start),
   .qrmain:has(.qrmain__results-page) { overflow-y: auto; }
-  .qrmain__back { width: 44px; height: 44px; margin: 0 0 8px -8px; }
+  .qrmain__back { width: 48px; height: 48px; margin: 0 0 8px; }
+  .qrmain__back svg { width: 22px; height: 22px; }
   .qrmain h1,
   .qrmain h2,
   .qrmain__destination-page > h2,

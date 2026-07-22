@@ -27,6 +27,8 @@ interface SpeechRecognitionLike {
   onresult: ((event: SpeechResultEvent) => void) | null;
   onerror: ((event: SpeechErrorEvent) => void) | null;
   onend: (() => void) | null;
+  onspeechstart: (() => void) | null;
+  onspeechend: (() => void) | null;
   start: () => void;
   stop: () => void;
 }
@@ -141,6 +143,7 @@ export default function QrMain() {
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [arrival, setArrival] = useState<Arrival | null>(null);
   const [listeningTarget, setListeningTarget] = useState<VoiceTarget | null>(null);
+  const [speechActive, setSpeechActive] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceStopRequestedRef = useRef(false);
   const resultsRef = useRef<HTMLElement | null>(null);
@@ -273,7 +276,7 @@ export default function QrMain() {
     <label htmlFor="manual-stop">출발 정류장을 입력하세요</label>
     <button type="button" className="qrmain__mic" data-listening={listeningTarget === "start"} onClick={() => startVoice("start")}>
       <Mic aria-hidden="true" />
-      {listeningTarget === "start" ? "듣는 중 · 누르면 완료" : "출발지 말하기"}
+      {listeningTarget === "start" ? (speechActive ? "말씀을 듣고 있어요" : "말씀해 주세요") : "출발지 말하기"}
     </button>
     <input className="qrmain__manual-input" id="manual-stop" value={manualStopQuery} onChange={(event) => setManualStopQuery(event.target.value)} placeholder="정류장명 또는 정류장 번호 4자리" />
     {manualMatches.length > 0 && <ul>{manualMatches.map((stop) => <li key={stop.id}><button type="button" onClick={() => chooseManualStop(stop)}><strong>{stop.name}</strong><span>{stop.stopNo ? `#${stop.stopNo}` : "번호 미확인"}</span></button></li>)}</ul>}
@@ -313,9 +316,25 @@ export default function QrMain() {
     voiceStopRequestedRef.current = false;
     recognition.interimResults = false;
     recognition.continuous = true;
-    let heardText = target === "start" ? manualStopQuery.trim() : query.trim();
+    let heardText = "";
     let failed = false;
     const startedAt = Date.now();
+    let finishTimer: number | undefined;
+    const maxTimer = window.setTimeout(() => {
+      voiceStopRequestedRef.current = true;
+      recognition.stop();
+    }, 45_000);
+    recognition.onspeechstart = () => {
+      setSpeechActive(true);
+      if (finishTimer) window.clearTimeout(finishTimer);
+    };
+    recognition.onspeechend = () => {
+      setSpeechActive(false);
+      finishTimer = window.setTimeout(() => {
+        voiceStopRequestedRef.current = true;
+        recognition.stop();
+      }, 1800);
+    };
     recognition.onresult = (event) => {
       heardText = Array.from(event.results)
         .map((result) => result[0]?.transcript?.trim() ?? "")
@@ -327,13 +346,19 @@ export default function QrMain() {
     recognition.onerror = (event) => {
       if (event.error === "no-speech") return;
       failed = true;
+      window.clearTimeout(maxTimer);
+      if (finishTimer) window.clearTimeout(finishTimer);
+      setSpeechActive(false);
       setListeningTarget(null);
     };
     recognition.onend = () => {
-      if (!failed && !voiceStopRequestedRef.current && Date.now() - startedAt < 30_000) {
+      if (!failed && !voiceStopRequestedRef.current && !heardText && Date.now() - startedAt < 10_000) {
         window.setTimeout(() => recognition.start(), 100);
         return;
       }
+      window.clearTimeout(maxTimer);
+      if (finishTimer) window.clearTimeout(finishTimer);
+      setSpeechActive(false);
       setListeningTarget(null);
       if (!failed && target === "destination" && mode === "destination" && heardText) requestTrip(heardText);
     };
@@ -422,7 +447,7 @@ export default function QrMain() {
         <h2>목적지를 입력하세요</h2>
         <button type="button" className="qrmain__mic" data-listening={listeningTarget === "destination"} onClick={() => startVoice("destination")}>
           <Mic aria-hidden="true" />
-          {listeningTarget === "destination" ? "듣는 중 · 누르면 완료" : "목적지 말하기"}
+          {listeningTarget === "destination" ? (speechActive ? "말씀을 듣고 있어요" : "말씀해 주세요") : "목적지 말하기"}
         </button>
         <form className="qrmain__form" onSubmit={submit}>
           <input
