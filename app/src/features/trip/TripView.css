@@ -50,9 +50,10 @@
 @media (min-width: 601px) {
   .tripview { --safe-top: 24px; --safe-bottom: 48px; }
 }
+.tripview[data-safe-preview="true"] { --safe-top: 24px; --safe-bottom: 48px; }
 .tripview__field { position: relative; margin-bottom: clamp(22px, 3.4dvh, 28px); }
 .tripview__field-label { display: block; margin-bottom: clamp(6px, 2vw, 9px); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
-.tripview__field[data-active="true"] .tripview__field-label { color: var(--brand); }
+.tripview__field[data-active="true"] .tripview__field-label { color: var(--ink); }
 .tripview__field-control { display: grid; grid-template-columns: 1fr; gap: clamp(7px, 2vw, 10px); }
 .tripview__field-control input { min-width: 0; height: clamp(50px, calc(20px + 6dvh), 58px); padding: 0 clamp(12px, 4vw, 16px); border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: clamp(14px, calc(2px + 4vw), 18px); font-weight: 700; }
 .tripview__field-control input:focus { border-color: var(--brand); }

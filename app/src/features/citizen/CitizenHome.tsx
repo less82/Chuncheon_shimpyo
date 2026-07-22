@@ -38,15 +38,16 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
 
 export default function CitizenHome() {
   const [searchParams] = useSearchParams();
+  const safePreview = searchParams.get("safePreview") === "1";
   const stops = useStops((state) => state.stops);
   const journeys = useFavorites((state) => state.journeys);
 
   return (
-    <main className="apphome" data-safe-preview={searchParams.get("safePreview") === "1" || undefined}>
+    <main className="apphome" data-safe-preview={safePreview || undefined}>
       <ImportOnLoad />
 
       <nav className="apphome__tasks" aria-label="주요 기능">
-        <Link className="apphome-task apphome-task--route" to="/go" aria-label="버스 도착 예정시간 확인">
+        <Link className="apphome-task apphome-task--route" to={safePreview ? "/go?safePreview=1" : "/go"} aria-label="버스 도착 예정시간 확인">
           <strong>버스</strong>
         </Link>
         <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">

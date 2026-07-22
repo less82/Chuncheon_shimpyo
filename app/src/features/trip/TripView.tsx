@@ -44,6 +44,7 @@ export default function TripView() {
   const cityCenter = useStops((s) => s.cityCenter);
   const requestedDestId = searchParams.get("dest");
   const requestedBoardId = searchParams.get("board");
+  const safePreview = searchParams.get("safePreview") === "1";
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
   const [queries, setQueries] = useState({ board: "", dest: "" });
@@ -181,7 +182,7 @@ export default function TripView() {
         }).length > 0;
         if (routeExists) {
           setTripMessage("");
-          navigate(`/go?board=${encodeURIComponent(board.id)}&dest=${encodeURIComponent(destination.id)}`);
+          navigate(`/go?board=${encodeURIComponent(board.id)}&dest=${encodeURIComponent(destination.id)}${safePreview ? "&safePreview=1" : ""}`);
           return;
         }
       }
@@ -190,7 +191,7 @@ export default function TripView() {
     setQueries((value) => ({ ...value, dest: "" }));
     setActiveField("dest");
     setTripMessage("이 출발지에서 바로 가는 버스가 없어요. 다른 목적지 정류장을 선택해주세요.");
-  }, [navigate, routes, stops]);
+  }, [navigate, routes, safePreview, stops]);
 
   useEffect(() => {
     if (!routes || !pendingTrip) return;
@@ -229,7 +230,7 @@ export default function TripView() {
   };
 
   if (!requestedBoardId) return (
-    <main className="tripview tripview--find">
+    <main className="tripview tripview--find" data-safe-preview={safePreview || undefined}>
       <header className="tripview__bar">
         <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
         <span aria-hidden="true" />
@@ -269,10 +270,10 @@ export default function TripView() {
     </main>
   );
 
-  if (!requestedDestId || !destStop) return <Navigate to="/go" replace />;
+  if (!requestedDestId || !destStop) return <Navigate to={safePreview ? "/go?safePreview=1" : "/go"} replace />;
 
   return (
-    <main className="tripview">
+    <main className="tripview" data-safe-preview={safePreview || undefined}>
       <header className="tripview__bar">
         <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기">
           <ChevronLeft aria-hidden="true" />
