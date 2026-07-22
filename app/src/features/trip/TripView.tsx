@@ -26,10 +26,18 @@ type SpeechRecognitionSession = {
   stop: () => void;
   onstart: () => void;
   onend: () => void;
+  onaudiostart: () => void;
+  onaudioend: () => void;
+  onspeechstart: () => void;
+  onspeechend: () => void;
   onresult: (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
   onerror: (event: { error: string }) => void;
 };
 type SpeechRecognitionConstructor = new () => SpeechRecognitionSession;
+
+function speechDevLog(field: "board" | "dest", event: string, detail = ""): void {
+  if (import.meta.env.DEV) console.info(`[speech-recognition] ${field} ${event}${detail ? `: ${detail}` : ""}`);
+}
 
 export default function TripView() {
   const [searchParams] = useSearchParams();
@@ -90,15 +98,26 @@ export default function TripView() {
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-    recognition.onstart = () => { setListeningField(field); setVoiceMessage(""); };
-    recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); setListeningField(null); if (recognitionRef.current === recognition) recognitionRef.current = null; };
+    recognition.onstart = () => { setListeningField(field); setVoiceMessage(""); speechDevLog(field, "start", `lang=${recognition.lang}`); };
+    recognition.onaudiostart = () => speechDevLog(field, "audio-start", "마이크 입력 시작");
+    recognition.onspeechstart = () => speechDevLog(field, "speech-start", "사람 음성 감지");
+    recognition.onspeechend = () => speechDevLog(field, "speech-end", "사람 음성 종료");
+    recognition.onaudioend = () => speechDevLog(field, "audio-end", "마이크 입력 종료");
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      speechDevLog(field, "result", transcript);
+      setQueries((value) => ({ ...value, [field]: transcript }));
+      setVoiceMessage("");
+      setListeningField(null);
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
+    };
     recognition.onerror = (event) => {
       setListeningField(null);
       if (recognitionRef.current === recognition) recognitionRef.current = null;
-      if (import.meta.env.DEV) console.warn(`[speech-recognition] ${field}: ${event.error}`);
+      if (import.meta.env.DEV) console.warn(`[speech-recognition] ${field} error: ${event.error}`);
       setVoiceMessage(speechErrorMessage(event.error));
     };
-    recognition.onend = () => { setListeningField(null); if (recognitionRef.current === recognition) recognitionRef.current = null; };
+    recognition.onend = () => { speechDevLog(field, "end"); setListeningField(null); if (recognitionRef.current === recognition) recognitionRef.current = null; };
     setActiveField(field);
     setVoiceMessage("");
     try { recognition.start(); } catch (error) {
