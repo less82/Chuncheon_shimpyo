@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, Clock3, MessageCircle, Navigation, Star } from "lucide-react";
+import { BusFront, ChevronRight, Clock3, MessageCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
@@ -50,10 +50,10 @@ export default function CitizenHome() {
 
       <nav className="apphome__tasks" aria-label="주요 기능">
         <Link className="apphome-task apphome-task--route" to="/go">
-          <span className="apphome-task__icon"><Navigation aria-hidden="true" /></span>
+          <span className="apphome-task__icon"><BusFront aria-hidden="true" /></span>
           <span className="apphome-task__copy">
-            <small>가장 빠른 버스와 타는 곳을 한 번에</small>
-            <strong>목적지로 가는 길 찾기</strong>
+            <small>목적지를 고르면 버스 도착 예정시간을 알려드려요</small>
+            <strong>목적지행 버스 도착시간 보기</strong>
           </span>
           <ChevronRight aria-hidden="true" />
         </Link>

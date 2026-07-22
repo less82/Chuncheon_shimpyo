@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
-import CitizenHome from "./features/citizen/CitizenHome";
+import AppEntry from "./features/citizen/AppEntry";
+import AppCompare from "./features/citizen/AppCompare";
 import Favorites from "./features/citizen/Favorites";
 import AppReport from "./features/citizen/AppReport";
 import TripView from "./features/trip/TripView";
@@ -25,8 +26,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<CitizenHome />} />
-        <Route path="/app" element={<CitizenHome />} />
+        <Route path="/" element={<AppEntry />} />
+        <Route path="/app" element={<AppEntry />} />
+        <Route path="/app-compare" element={<AppCompare />} />
         <Route path="/qr_main" element={<QrEntry />} />
         <Route path="/qr-compare" element={<QrCompare />} />
         <Route path="/app/report" element={<AppReport />} />
