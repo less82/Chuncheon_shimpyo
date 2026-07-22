@@ -27,13 +27,21 @@ export function extractStopKeyword(transcript: string, stopNames: string[]): str
     .sort((a, b) => comparable(b).length - comparable(a).length)[0];
   if (matchedName) return matchedName;
 
-  return transcript
+  const words = transcript
+    .replace(/대학교/g, "대")
+    .replace(/(안녕하세요|안녕|반갑습니다|저기요|여보세요|감사합니다)/g, " ")
     .replace(/(출발지|목적지|버스|정류장|승강장)/g, " ")
-    .replace(/(에서|으로|로|까지|가는|가고|가려고|가주세요|갈게요|타요|탑니다|말할게요|알려줘요)/g, " ")
-    .replace(/(입니다|이에요|예요|해주세요|싶어요)/g, " ")
+    .replace(/(가고 싶어요|가려고 해요|가주세요|갈게요|탈게요|타고 싶어요|말할게요|알려줘요|해주세요|부탁합니다)/g, " ")
+    .replace(/(입니다|이에요|예요|반가워요|탑니다|타요)/g, " ")
     .replace(/[^0-9a-zA-Z가-힣]+/g, " ")
     .trim()
     .split(/\s+/)
-    .filter((word) => word.length > 1)
-    .join(" ");
+    .map((word) => word.replace(/(에서|으로|까지)$/g, ""))
+    .filter((word) => word.length > 1);
+
+  const knownKeyword = words
+    .sort((a, b) => b.length - a.length)
+    .find((word) => stopNames.some((name) => comparable(name).includes(comparable(word))));
+
+  return knownKeyword ?? words.join(" ");
 }

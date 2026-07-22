@@ -25,6 +25,7 @@ beforeEach(() => {
 describe("<TripView>", () => {
   it("전체 발화 대신 정류장을 특정하는 이름이나 번호만 추출한다", () => {
     expect(extractStopKeyword("출발지는 강원대학교 후문 정류장에서 탈게요", ["강원대후문", "춘천역"])).toBe("강원대후문");
+    expect(extractStopKeyword("안녕하세요 반갑습니다 강원대학교", ["강원대후문", "강원대병원"])).toBe("강원대");
     expect(extractStopKeyword("목적지는 정류장 번호 1480입니다", ["강원대후문"])).toBe("1480");
   });
 
