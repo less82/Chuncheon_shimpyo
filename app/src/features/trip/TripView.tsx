@@ -52,6 +52,8 @@ export default function TripView() {
   const [voiceMessage, setVoiceMessage] = useState("");
   const [voiceField, setVoiceField] = useState<"board" | "dest" | null>(null);
   const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
+  const [manualFields, setManualFields] = useState({ board: false, dest: false });
+  const [manualAvailable, setManualAvailable] = useState({ board: false, dest: false });
   const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
   const inputRefs = useRef<Record<"board" | "dest", HTMLInputElement | null>>({ board: null, dest: null });
   const stopQuery = queries[activeField];
@@ -80,8 +82,8 @@ export default function TripView() {
     setVoiceField(field);
     const speechWindow = window as typeof window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-    if (!Recognition) { setVoiceMessage("이 브라우저는 음성 입력을 지원하지 않습니다."); return; }
-    if (!window.isSecureContext) { setVoiceMessage("음성 입력은 보안 연결에서만 사용할 수 있습니다."); return; }
+    if (!Recognition) { setManualAvailable((value) => ({ ...value, [field]: true })); setVoiceMessage("이 브라우저는 음성 입력을 지원하지 않습니다."); return; }
+    if (!window.isSecureContext) { setManualAvailable((value) => ({ ...value, [field]: true })); setVoiceMessage("음성 입력은 보안 연결에서만 사용할 수 있습니다."); return; }
     const recognition = new Recognition();
     recognitionRef.current = recognition;
     recognition.lang = "ko-KR";
@@ -112,6 +114,9 @@ export default function TripView() {
       setListeningField(null);
       if (recognitionRef.current === recognition) recognitionRef.current = null;
       if (import.meta.env.DEV) console.warn(`[speech-recognition] ${field} error: ${event.error}`);
+      if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
+        setManualAvailable((value) => ({ ...value, [field]: true }));
+      }
       setVoiceMessage(speechErrorMessage(event.error));
     };
     recognition.onend = () => { speechDevLog(field, "end"); setListeningField(null); if (recognitionRef.current === recognition) recognitionRef.current = null; };
@@ -120,6 +125,7 @@ export default function TripView() {
     try { recognition.start(); } catch (error) {
       setListeningField(null);
       if (recognitionRef.current === recognition) recognitionRef.current = null;
+      setManualAvailable((value) => ({ ...value, [field]: true }));
       setVoiceMessage(error instanceof DOMException && error.name === "InvalidStateError" ? "이미 음성을 듣고 있습니다." : "브라우저가 음성 입력을 시작하지 못했습니다.");
     }
   };
@@ -186,21 +192,27 @@ export default function TripView() {
     if (picked.board) openArrivals(picked.board, stop);
   };
 
-  const resetChoice = (field: "board" | "dest", retryWithVoice: boolean) => {
+  const resetChoice = (field: "board" | "dest") => {
     setPicked((value) => ({ ...value, [field]: null }));
     setQueries((value) => ({ ...value, [field]: "" }));
     setActiveField(field);
     setVoiceMessage("");
     setVoiceField(null);
-    if (retryWithVoice) listen(field);
-    else requestAnimationFrame(() => inputRefs.current[field]?.focus());
+    setManualFields((value) => ({ ...value, [field]: false }));
+    listen(field);
+  };
+
+  const openManualInput = (field: "board" | "dest") => {
+    setManualFields((value) => ({ ...value, [field]: true }));
+    setVoiceMessage("");
+    requestAnimationFrame(() => inputRefs.current[field]?.focus());
   };
 
   if (!requestedBoardId) return (
     <main className="tripview tripview--find">
       <header className="tripview__bar">
         <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
-        <h1 className="tripview__title">버스 도착정보</h1>
+        <span aria-hidden="true" />
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
       <section className="tripview__find">
@@ -214,16 +226,16 @@ export default function TripView() {
                 {choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseStop(field, stop)}><strong>{stop.name}</strong></button>)}
               </div>
               <div className="tripview__choice-actions">
-                <button type="button" onClick={() => resetChoice(field, true)}>다시 말하기</button>
-                <button type="button" onClick={() => resetChoice(field, false)}>직접 쓰기</button>
+                <button type="button" onClick={() => resetChoice(field)}>다시 말하기</button>
               </div>
             </div> : <>
               <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
               <div className="tripview__field-control">
-                <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
+                {manualFields[field] && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />}
                 <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
               </div>
               {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
+              {voiceField === field && manualAvailable[field] && !manualFields[field] && <button className="tripview__manual" type="button" onClick={() => openManualInput(field)}>직접 쓰기</button>}
             </>}
           </div>;
         })}
