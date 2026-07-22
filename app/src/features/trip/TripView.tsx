@@ -13,7 +13,7 @@ import { useFavorites } from "../../store/useFavorites";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { planTrip } from "./planTrip";
 import { sortByComfort, type SortMode } from "./comfortSort";
-import { speechErrorMessage } from "./speechRecognition";
+import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
 import TripCard from "./TripCard";
 import "./TripView.css";
 
@@ -105,8 +105,9 @@ export default function TripView() {
     recognition.onaudioend = () => speechDevLog(field, "audio-end", "마이크 입력 종료");
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      speechDevLog(field, "result", transcript);
-      setQueries((value) => ({ ...value, [field]: transcript }));
+      const keyword = extractStopKeyword(transcript, stops.map((stop) => stop.name));
+      speechDevLog(field, "keyword", keyword || "추출 실패");
+      setQueries((value) => ({ ...value, [field]: keyword }));
       setVoiceMessage("");
       setListeningField(null);
       if (recognitionRef.current === recognition) recognitionRef.current = null;

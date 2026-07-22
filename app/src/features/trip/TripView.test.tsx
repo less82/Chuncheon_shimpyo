@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import TripView from "./TripView";
-import { speechErrorMessage } from "./speechRecognition";
+import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
@@ -23,6 +23,11 @@ beforeEach(() => {
 });
 
 describe("<TripView>", () => {
+  it("전체 발화 대신 정류장을 특정하는 이름이나 번호만 추출한다", () => {
+    expect(extractStopKeyword("출발지는 강원대학교 후문 정류장에서 탈게요", ["강원대후문", "춘천역"])).toBe("강원대후문");
+    expect(extractStopKeyword("목적지는 정류장 번호 1480입니다", ["강원대후문"])).toBe("1480");
+  });
+
   it("브라우저의 network 오류를 앱 전체 연결 문제가 아닌 음성 서비스 오류로 안내한다", () => {
     expect(speechErrorMessage("network")).toBe("음성 인식 서비스 연결 실패 · 직접 입력해주세요.");
   });
