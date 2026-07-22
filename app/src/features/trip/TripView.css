@@ -39,37 +39,30 @@
 .tripview__spacer {
   width: var(--touch);
 }
-.tripview__find { max-width: 520px; margin: 0 auto; padding: 30px 24px; }
-.tripview__find h2 { margin: 0 0 26px; font-size: 30px; }
-.tripview__field { margin-bottom: 24px; }
-.tripview__field-label { display: block; margin-bottom: 9px; font-size: 20px; font-weight: 900; }
-.tripview__field-help { display: block; margin: -3px 0 9px; color: var(--ink-muted); font-size: 16px; font-weight: 700; }
+.tripview__find { max-width: 520px; margin: 0 auto; padding: clamp(18px, 6vw, 30px) clamp(16px, 5.5vw, 24px); }
+.tripview__find h2 { margin: 0 0 clamp(16px, 5vw, 26px); font-size: clamp(24px, calc(8px + 5vw), 30px); }
+.tripview__field { margin-bottom: clamp(16px, 5vw, 24px); }
+.tripview__field-label { display: block; margin-bottom: clamp(6px, 2vw, 9px); font-size: clamp(17px, calc(4px + 4vw), 20px); font-weight: 900; }
 .tripview__field[data-active="true"] .tripview__field-label { color: var(--brand); }
-.tripview__field-control { display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 12px; }
-.tripview__field-control input { min-width: 0; height: 58px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: 17px; font-weight: 700; }
+.tripview__field-control { display: grid; grid-template-columns: 1fr; gap: clamp(7px, 2vw, 10px); }
+.tripview__field-control input { min-width: 0; height: clamp(50px, 15vw, 58px); padding: 0 clamp(12px, 4vw, 16px); border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: clamp(14px, calc(2px + 4vw), 18px); font-weight: 700; }
 .tripview__field-control input:focus { border-color: var(--brand); }
 .tripview__matches { display: grid; gap: 8px; margin-top: 10px; }
 .tripview__matches button { display: grid; grid-template-columns: 28px 1fr; min-height: 62px; padding: 8px 12px; align-items: center; border: 1px solid var(--border); border-radius: 14px; background: white; color: var(--ink); text-align: left; }
 .tripview__matches button span { display: flex; min-width: 0; flex-direction: column; }
 .tripview__matches button strong { overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
 .tripview__matches button small { color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.tripview__voice { display: grid; width: 58px; height: 58px; place-items: center; border: 2px solid var(--brand); border-radius: 15px; background: white; color: var(--brand); }
-.tripview__voice svg { width: 25px; }
+.tripview__voice { display: flex; width: 100%; min-height: clamp(46px, 13vw, 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: white; color: var(--brand); font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
+.tripview__voice svg { width: clamp(20px, 6vw, 25px); }
 .tripview__voice-message { margin: -10px 0 12px; color: var(--no); font-size: 14px; font-weight: 700; }
 .tripview__find-submit { width: 100%; min-height: 58px; margin-top: 14px; border: 0; border-radius: 15px; background: var(--brand); color: white; font-size: 19px; font-weight: 900; }
 .tripview__find-submit:disabled { background: var(--border-strong); color: var(--ink-muted); }
 @media (max-width: 340px), (max-height: 600px) {
   .tripview__bar { min-height: 58px; padding-block: 6px; }
-  .tripview__title { font-size: 22px; }
-  .tripview__find { padding: 22px 18px; }
-  .tripview__find h2 { margin-bottom: 20px; font-size: 25px; }
-  .tripview__field { margin-bottom: 18px; }
-  .tripview__field-label { margin-bottom: 7px; font-size: 17px; }
-  .tripview__field-help { margin-bottom: 7px; font-size: 14px; }
-  .tripview__field-control { grid-template-columns: minmax(0, 1fr) 52px; gap: 9px; }
-  .tripview__field-control input { height: 52px; padding-inline: 12px; font-size: 15px; }
-  .tripview__voice { width: 52px; height: 52px; }
-  .tripview__voice svg { width: 22px; }
+  .tripview__title { font-size: clamp(21px, 7vw, 24px); }
+  .tripview__find { padding-block: 14px; }
+  .tripview__find h2 { margin-bottom: 12px; }
+  .tripview__field { margin-bottom: 12px; }
   .tripview__matches { gap: 6px; margin-top: 6px; }
   .tripview__matches button { min-height: 50px; padding-block: 5px; }
   .tripview__matches button strong { font-size: 15px; }

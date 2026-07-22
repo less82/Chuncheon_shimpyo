@@ -110,9 +110,8 @@ export default function TripView() {
         <h2>정류장을 선택하세요</h2>
         {(["board", "dest"] as const).map((field) => <div className="tripview__field" key={field} data-active={activeField === field}>
           <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "출발 정류장" : "목적지 정류장"}</label>
-          <small className="tripview__field-help">정류장 이름 또는 번호를 입력해주세요</small>
-          <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="입력해주세요" />
-            <button className="tripview__voice" type="button" onClick={() => listen(field)} aria-label={`${field === "board" ? "출발" : "목적지"} 정류장 음성 입력`}><Mic aria-hidden="true" /></button>
+          <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
+            <button className="tripview__voice" type="button" onClick={() => listen(field)} aria-label={`${field === "board" ? "출발" : "목적지"} 정류장 음성 입력`}><Mic aria-hidden="true" /><span>음성으로 입력</span></button>
           </div>
         </div>)}
         {voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
