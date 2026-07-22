@@ -128,13 +128,14 @@
 
 /* 결과: 버스번호와 대기시간 우선 */
 .qrmain__results { display: grid; gap: 16px; }
-.qrmain__trip-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); }
-.qrmain__trip-summary > div { min-width: 0; }
+.qrmain__trip-summary { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); gap: 8px; align-items: stretch; min-height: 132px; padding: 10px; border: 0; border-radius: 16px; background: var(--brand-soft); }
+.qrmain__trip-summary > div { display: grid; min-width: 0; grid-template-rows: 22px minmax(48px, auto) minmax(34px, auto); align-content: start; padding: 10px; border-radius: 11px; background: var(--surface); }
 .qrmain__trip-summary span, .qrmain__trip-summary small { display: block; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.qrmain__trip-summary strong { display: block; margin-top: 3px; overflow: hidden; color: var(--ink); font-size: 18px; text-overflow: ellipsis; white-space: nowrap; }
-.qrmain__trip-summary b { color: var(--brand); font-size: 20px; }
-.qrmain__result-set { display: grid; }
-.qrmain__route { padding: 20px 0; border: 0; border-top: 2px solid var(--brand); background: transparent; }
+.qrmain__trip-summary strong { display: block; align-self: start; color: var(--ink); font-size: clamp(16px, 4.6vw, 19px); line-height: 1.25; overflow-wrap: anywhere; word-break: keep-all; }
+.qrmain__trip-summary small { line-height: 1.35; overflow-wrap: anywhere; word-break: keep-all; }
+.qrmain__trip-summary b { display: grid; width: 32px; height: 32px; align-self: center; place-items: center; border-radius: 50%; background: var(--brand); color: white; font-size: 17px; }
+.qrmain__result-set { display: grid; gap: 10px; }
+.qrmain__route { padding: 18px; border: 0; border-radius: 14px; background: var(--surface-2); }
 .qrmain__recommend { margin-bottom: 12px; color: var(--brand); font-size: 15px; font-weight: 900; }
 .qrmain__route-head { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 16px; }
 .qrmain__route-head strong { display: block; font-size: 36px; line-height: 1.1; }
@@ -143,15 +144,14 @@
 .qrmain__route-head > p b { display: block; color: var(--brand); font-size: 28px; line-height: 1.15; }
 .qrmain__route-head > p span { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
 .qrmain__arrival-source { display: block; margin-top: 10px; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.qrmain__report { width: 100%; min-height: 52px; border: 2px solid var(--brand); border-radius: 14px; background: white; color: var(--brand); font-size: 17px; font-weight: 900; }
+.qrmain__report { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 17px; font-weight: 900; }
 .qrmain__state { margin: 48px auto; text-align: center; font-size: 18px; font-weight: 800; line-height: 1.5; }
 .qrmain > .qrmain__state { display: grid; min-height: calc(100svh - 32px); margin: 0; place-items: center; }
 
 @media (max-width: 360px) {
   .qrmain { padding-inline: 16px; }
   .qrmain h1, .qrmain h2, .qrmain__destination-page > h2, .qrmain__manual-stop label { font-size: 26px; }
-  .qrmain__route-head { grid-template-columns: 1fr; align-items: start; }
-  .qrmain__route-head > p { text-align: right; }
+  .qrmain__trip-summary { min-height: 128px; }
 }
 
 /* 갤럭시 폴더2급 웹 뷰포트: 320 × 533 CSS px */
@@ -218,7 +218,12 @@
   .qrmain__report-complete { margin-top: 0; }
 
   .qrmain__results { gap: 10px; }
-  .qrmain__route { padding: 14px 0; }
+  .qrmain__trip-summary { grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); min-height: 120px; gap: 6px; padding: 8px; }
+  .qrmain__trip-summary > div { grid-template-rows: 20px minmax(44px, auto) minmax(30px, auto); padding: 8px; }
+  .qrmain__trip-summary b { width: 28px; height: 28px; font-size: 15px; }
+  .qrmain__trip-summary strong { font-size: 16px; }
+  .qrmain__trip-summary small, .qrmain__trip-summary span { font-size: 11px; }
+  .qrmain__route { padding: 14px; }
   .qrmain__recommend { margin-bottom: 8px; font-size: 14px; }
   .qrmain__route-head { grid-template-columns: 1fr 1fr; align-items: end; gap: 10px; }
   .qrmain__route-head strong { font-size: 30px; }
