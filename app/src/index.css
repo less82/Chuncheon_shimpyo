@@ -39,11 +39,11 @@ body .poster {
 }
 
 body .home,
-body .qrmain { height: min(844px, 100svh); }
+body .qrmain { height: min(844px, 100dvh); }
 body .tripview,
 body .favpage,
 body .poster {
-  height: min(844px, 100svh);
+  height: min(844px, 100dvh);
   min-height: 0;
   overflow-y: auto;
 }

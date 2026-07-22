@@ -1,7 +1,11 @@
 .tripview {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-color: #f2cf52;
+  --available-height: calc(100dvh - var(--safe-top) - var(--safe-bottom));
   min-height: 100dvh;
-  background: var(--bg);
-  padding-bottom: calc(var(--sp-7) + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, var(--bg) 0 calc(100% - var(--safe-bottom)), var(--safe-color) calc(100% - var(--safe-bottom)) 100%);
+  padding-bottom: calc(var(--sp-7) + var(--safe-bottom));
 }
 
 /* 상단 바 */
@@ -14,8 +18,8 @@
   align-items: center;
   gap: clamp(8px, 2.5vw, 12px);
   min-height: clamp(58px, calc(22px + 6dvh), 72px);
-  padding: calc(clamp(6px, 1.5dvh, 12px) + env(safe-area-inset-top, 0px)) clamp(12px, 4vw, 16px) clamp(6px, 1.5dvh, 12px);
-  background: var(--surface);
+  padding: calc(clamp(6px, 1.5dvh, 12px) + var(--safe-top)) clamp(12px, 4vw, 16px) clamp(6px, 1.5dvh, 12px);
+  background: linear-gradient(to bottom, var(--safe-color) 0 var(--safe-top), var(--surface) var(--safe-top) 100%);
   box-shadow: none;
 }
 .tripview__back {
@@ -40,8 +44,12 @@
 .tripview__spacer {
   width: var(--touch);
 }
-.tripview--find { height: 100dvh; min-height: 0; padding-bottom: env(safe-area-inset-bottom, 0px); overflow: hidden; }
-.tripview__find { max-width: 520px; margin: 0 auto; padding: clamp(14px, 3dvh, 26px) clamp(16px, 5.5vw, 24px); }
+.tripview--find { height: 100dvh; min-height: 0; padding-bottom: var(--safe-bottom); overflow: hidden; }
+.tripview__find { display: grid; max-width: 520px; min-height: calc(var(--available-height) - 72px); margin: 0 auto; padding: clamp(14px, 3dvh, 26px) clamp(16px, 5.5vw, 24px); align-content: center; }
+
+@media (min-width: 601px) {
+  .tripview { --safe-top: 18px; --safe-bottom: 16px; }
+}
 .tripview__field { position: relative; margin-bottom: clamp(22px, 3.4dvh, 28px); }
 .tripview__field-label { display: block; margin-bottom: clamp(6px, 2vw, 9px); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
 .tripview__field[data-active="true"] .tripview__field-label { color: var(--brand); }
