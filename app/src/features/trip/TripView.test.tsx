@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import TripView, { speechErrorMessage } from "./TripView";
+import TripView from "./TripView";
+import { speechErrorMessage } from "./speechRecognition";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
