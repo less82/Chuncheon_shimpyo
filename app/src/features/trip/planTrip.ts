@@ -21,6 +21,13 @@ export interface PlanOptions {
   walkSpeed?: number;
 }
 
+export interface PlacePlanOptions extends PlanOptions {
+  /** 목적지 좌표 주변에서 하차 정류장을 찾는 반경(m). */
+  destinationWalkRadiusM?: number;
+  /** 목적지 주변 하차 후보 정류장 최대 개수. */
+  maxDestinationCandidates?: number;
+}
+
 const DEFAULTS: Required<Omit<PlanOptions, "boardStopId">> = {
   walkRadiusM: 500,
   maxCandidates: 5,
@@ -174,4 +181,57 @@ export function planTrip(
 
   // 직행 우선, 그다음 환승.
   return [...directOptions, ...transferOptions];
+}
+
+/**
+ * 장소 좌표를 목적지로 받아 주변 하차 정류장까지 포함한 경로를 찾는다.
+ * 장소 이름과 같은 정류장 한 곳에만 묶지 않기 때문에, 시청입구처럼 실제로
+ * 목적지까지 걸어갈 수 있는 정류장에 내리는 버스도 결과에 포함된다.
+ */
+export function planTripToPlace(
+  fromPos: LatLng,
+  destinationPos: LatLng,
+  stops: Stop[],
+  routes: RouteInfo[],
+  opts?: PlacePlanOptions,
+): TripOption[] {
+  const {
+    destinationWalkRadiusM = 700,
+    maxDestinationCandidates = 16,
+    ...planOptions
+  } = opts ?? {};
+  const walkSpeed = planOptions.walkSpeed ?? DEFAULTS.walkSpeed;
+  const destinations = stops
+    .map((stop) => ({
+      stop,
+      distance: haversine(destinationPos, { lat: stop.lat, lng: stop.lng }),
+    }))
+    .filter(({ distance }) => distance <= destinationWalkRadiusM)
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, maxDestinationCandidates);
+
+  const candidates = destinations.flatMap(({ stop, distance }) =>
+    planTrip(fromPos, stop, stops, routes, planOptions).map((option) => ({
+      ...option,
+      destinationStopId: stop.id,
+      destinationWalkMin: Math.max(1, Math.round(distance / walkSpeed)),
+    })),
+  );
+
+  const unique = new Map<string, TripOption>();
+  for (const option of candidates) {
+    const key = `${option.boardStopId}:${option.legs[0]?.routeNos.join(",") ?? ""}`;
+    const previous = unique.get(key);
+    const score = option.walkMin + (option.destinationWalkMin ?? 0);
+    const previousScore = previous
+      ? previous.walkMin + (previous.destinationWalkMin ?? 0)
+      : Number.POSITIVE_INFINITY;
+    if (!previous || score < previousScore) unique.set(key, option);
+  }
+
+  return [...unique.values()].sort((a, b) => {
+    if (a.directBus !== b.directBus) return a.directBus ? -1 : 1;
+    return (a.walkMin + (a.destinationWalkMin ?? 0))
+      - (b.walkMin + (b.destinationWalkMin ?? 0));
+  });
 }

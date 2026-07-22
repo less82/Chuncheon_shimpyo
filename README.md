@@ -25,17 +25,23 @@ npm install
 npm run dev
 ```
 
-브라우저에서 http://localhost:5173 접속. 시민앱은 `/`, 대시보드는 `/admin`.
+시민앱은 http://localhost:5173/app 에서 확인합니다.
+
+관리자 웹은 시민앱과 분리해 다음 명령으로 실행하며, 주소는 http://localhost:5174 입니다.
+
+```bash
+npm run dev:admin
+```
 
 ## 3. 데모용 정적 빌드 (오프라인 시연)
 
 ```bash
 cd app
 npm run build
-npm run preview
+npm run preview:citizen
 ```
 
-네트워크가 없어도 작동합니다(PWA 캐시). 도착정보는 TAGO 키가 없으면 "배차간격 약 N분"으로 표시됩니다.
+시민 앱 산출물은 `app/dist/citizen`, 관리자 웹 산출물은 `app/dist/admin`에 각각 생성됩니다. 두 산출물은 같은 웹 루트에 배포하지 않습니다. TAGO 연결이 없으면 배차간격을 도착 예정시간처럼 대체하지 않고 실시간 정보를 불러오지 못했다고 표시합니다.
 
 ## 4. 테스트
 

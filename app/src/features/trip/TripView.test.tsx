@@ -5,12 +5,28 @@ import TripView from "./TripView";
 import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
+import { getArrival } from "../../lib/arrivals";
 import type { Stop } from "../../types/stop";
 
 vi.mock("./geocodePlace", () => ({
   searchPlaces: vi.fn(async (query: string) => [{ name: query, displayName: `${query}, 춘천시`, lat: 37.87, lng: 127.74 }]),
   osmEmbedUrl: vi.fn(() => "https://www.openstreetmap.org/export/embed.html"),
 }));
+
+vi.mock("../../lib/loadRoutes", () => ({
+  loadRoutes: vi.fn(async () => ({
+    generatedAt: "test",
+    routes: [
+      { routeId: "r7", routeNo: "7", stops: ["A", "B"] },
+      { routeId: "r9", routeNo: "9", stops: ["A2", "B"] },
+    ],
+  })),
+}));
+
+vi.mock("../../lib/arrivals", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/arrivals")>();
+  return { ...actual, getArrival: vi.fn() };
+});
 
 const stop: Stop = {
   id: "A", stopNo: "1480", name: "강원대후문", lat: 37.88, lng: 127.73,
@@ -20,12 +36,13 @@ const stop: Stop = {
     light: { status: "unknown", source: "none" }, sign: { status: "unknown", source: "none" },
   },
 };
-const destination: Stop = { ...stop, id: "B", stopNo: "1481", name: "춘천역" };
-const opposite: Stop = { ...stop, id: "A2", stopNo: "1482", name: "강원대후문" };
+const destination: Stop = { ...stop, id: "B", stopNo: "1481", name: "춘천역", lat: 37.89, lng: 127.74 };
+const opposite: Stop = { ...stop, id: "A2", stopNo: "1482", name: "강원대후문", lat: 37.8802, lng: 127.7302 };
 
 beforeEach(() => {
   useStops.setState({ stops: [stop, opposite, destination], loaded: true });
   useFavorites.setState({ ids: [], journeys: [] });
+  vi.mocked(getArrival).mockResolvedValue({ text: "실시간 도착정보 없음", live: false });
 });
 
 describe("<TripView>", () => {
@@ -63,9 +80,11 @@ describe("<TripView>", () => {
     expect(screen.queryByRole("button", { name: "강원대" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "지도에서 찾기" }));
     expect(await screen.findByTitle("강원대 위치 지도")).toBeInTheDocument();
+    expect(screen.queryByText("어디로 가세요?")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "이 위치에서 출발" }));
     expect(screen.getByText("출발 위치")).toBeInTheDocument();
     expect(screen.getByText("강원대")).toBeInTheDocument();
+    expect(screen.getByText("어디로 가세요?")).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "어디서 출발하세요?" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "어디로 가세요?" })).not.toBeInTheDocument();
   });
@@ -90,5 +109,17 @@ describe("<TripView>", () => {
     expect(originInput).toHaveValue("강원");
     expect(screen.getByRole("button", { name: "지도에서 찾기" })).toBeInTheDocument();
     expect(screen.queryByText("출발 위치를 확인해주세요")).not.toBeInTheDocument();
+  });
+
+  it("목적지로 가는 후보 중 실제 도착 예정시간이 가장 빠른 버스를 먼저 보여준다", async () => {
+    vi.mocked(getArrival).mockImplementation(async (boardStop) => boardStop.id === "A2"
+      ? { text: "약 3분 후 도착", live: true, byRoute: [{ routeNo: "9", min: 3, seq: 1 }] }
+      : { text: "약 9분 후 도착", live: true, byRoute: [{ routeNo: "7", min: 9, seq: 4 }] });
+
+    const screen = render(<MemoryRouter initialEntries={["/go?fromLat=37.88&fromLng=127.73&dest=B"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
+
+    expect(await screen.findByText("9번")).toBeInTheDocument();
+    expect(screen.getByText("3분 후")).toBeInTheDocument();
+    expect(screen.queryByText("9분 후")).not.toBeInTheDocument();
   });
 });

@@ -51,6 +51,6 @@ describe("<FavoriteStopCard>", () => {
     expect(screen.getByText("춘천역 방면")).toBeInTheDocument();
     expect(await screen.findByText("12번 · 실시간 도착정보 없음")).toBeInTheDocument();
     expect(screen.queryByText(/배차간격/)).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "춘천역 즐겨찾기 버스 정보" })).toHaveAttribute("href", "/go?dest=250001&board=250010");
+    expect(screen.getByRole("link", { name: "춘천역 즐겨찾기 버스 정보" })).toHaveAttribute("href", "/go?dest=250001&board=250010&to=%EC%B6%98%EC%B2%9C%EC%97%AD");
   });
 });

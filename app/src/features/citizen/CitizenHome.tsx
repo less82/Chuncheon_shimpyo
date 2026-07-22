@@ -11,6 +11,7 @@ import "./CitizenHome.css";
 export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney; stops: Stop[] }) {
   const board = stops.find((stop) => stop.id === journey.boardStopId) ?? null;
   const destination = stops.find((stop) => stop.id === journey.destinationStopId) ?? null;
+  const destinationName = journey.destinationName ?? destination?.name ?? "목적지";
   const routeNo = journey.routeNo;
   const [arrival, setArrival] = useState<Arrival>(() => ({ text: "도착정보 확인 중", live: false }));
 
@@ -26,8 +27,8 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
   }, [board, routeNo]);
 
   return (
-    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(journey.destinationStopId)}&board=${encodeURIComponent(journey.boardStopId)}`} aria-label={`${destination?.name ?? "목적지"} 즐겨찾기 버스 정보`}>
-      <span className="apphome-favorite__top"><strong>{board?.name ?? "정류장"}</strong><i>→</i><strong>{destination?.name ?? "목적지"}</strong></span>
+    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(journey.destinationStopId)}&board=${encodeURIComponent(journey.boardStopId)}&to=${encodeURIComponent(destinationName)}`} aria-label={`${destinationName} 즐겨찾기 버스 정보`}>
+      <span className="apphome-favorite__top"><strong>{board?.name ?? "정류장"}</strong><i>→</i><strong>{destinationName}</strong></span>
       <span className="apphome-favorite__direction">{journey.direction}</span>
       <span className="apphome-favorite__arrival" data-live={arrival.live}>
         <b>{routeNo ? `${routeNo}번 · ` : ""}{arrival.text}</b>

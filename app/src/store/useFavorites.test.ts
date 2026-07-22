@@ -42,8 +42,8 @@ describe("useFavorites", () => {
   });
 
   it("출발 정류장·버스·목적지를 한 이용 기록으로 저장한다", () => {
-    useFavorites.getState().saveJourney({ boardStopId: "A", destinationStopId: "B", routeNo: "12", direction: "춘천역 방면" });
-    expect(useFavorites.getState().journeys[0]).toMatchObject({ id: "A:12:B", boardStopId: "A", destinationStopId: "B" });
+    useFavorites.getState().saveJourney({ boardStopId: "A", destinationStopId: "B", destinationName: "춘천역", routeNo: "12", direction: "춘천역 방면" });
+    expect(useFavorites.getState().journeys[0]).toMatchObject({ id: "A:12:B", boardStopId: "A", destinationStopId: "B", destinationName: "춘천역" });
     expect(JSON.parse(localStorage.getItem(FAVORITE_JOURNEYS_KEY) as string)).toHaveLength(1);
   });
 });

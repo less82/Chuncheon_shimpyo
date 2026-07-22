@@ -10,7 +10,8 @@ import type { RoutesFile } from "../../types/route";
 import type { LatLng } from "../../lib/geo";
 import { useStops } from "../../store/useStops";
 import { loadRoutes } from "../../lib/loadRoutes";
-import { planTrip } from "./planTrip";
+import { planTrip, planTripToPlace } from "./planTrip";
+import { rankTripArrivals, type ResolvedTrip } from "./rankTripArrivals";
 import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
 import { osmEmbedUrl, searchPlaces, type PlaceResult } from "./geocodePlace";
 import TripCard from "./TripCard";
@@ -49,6 +50,7 @@ export default function TripView() {
   const requestedBoardId = searchParams.get("board");
   const requestedFromLatValue = searchParams.get("fromLat");
   const requestedFromLngValue = searchParams.get("fromLng");
+  const requestedDestinationName = searchParams.get("to");
   const requestedFromLat = Number(requestedFromLatValue);
   const requestedFromLng = Number(requestedFromLngValue);
   const hasRequestedOrigin = requestedFromLatValue !== null && requestedFromLngValue !== null
@@ -70,6 +72,7 @@ export default function TripView() {
   const [originSearchState, setOriginSearchState] = useState<"idle" | "loading" | "error">("idle");
   const [pendingTrip, setPendingTrip] = useState<{ origin: OriginPlace; dest: Stop } | null>(null);
   const [tripMessage, setTripMessage] = useState("");
+  const [resolvedTrips, setResolvedTrips] = useState<ResolvedTrip[] | null>(null);
   const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
   const inputRefs = useRef<Record<"board" | "dest", HTMLInputElement | null>>({ board: null, dest: null });
   const stopQuery = queries[activeField];
@@ -199,12 +202,36 @@ export default function TripView() {
 
   const options = useMemo(() => {
     if (!destStop || !routes) return [];
-    return planTrip(routeFromPos, destStop, stops, routes.routes, {
+    const commonOptions = {
       walkRadiusM: 1000,
-      maxCandidates: 8,
+      maxCandidates: 32,
       maxTransfers: 0,
-    });
-  }, [destStop, routes, routeFromPos, stops]);
+    } as const;
+    if (requestedBoardId) {
+      return planTrip(routeFromPos, destStop, stops, routes.routes, {
+        ...commonOptions,
+        boardStopId: requestedBoardId,
+      });
+    }
+    return planTripToPlace(
+      routeFromPos,
+      { lat: destStop.lat, lng: destStop.lng },
+      stops,
+      routes.routes,
+      commonOptions,
+    );
+  }, [destStop, requestedBoardId, routes, routeFromPos, stops]);
+
+  useEffect(() => {
+    if (!routes || options.length === 0) {
+      setResolvedTrips([]);
+      return;
+    }
+    let alive = true;
+    setResolvedTrips(null);
+    rankTripArrivals(options, stops).then((items) => alive && setResolvedTrips(items));
+    return () => { alive = false; };
+  }, [options, routes, stops]);
 
   const openArrivals = useCallback((origin: OriginPlace, destinationChoice: Stop) => {
     if (!routes) {
@@ -212,18 +239,17 @@ export default function TripView() {
       setTripMessage("버스 정보를 준비하고 있어요.");
       return;
     }
-    const destinationCandidates = stops.filter((stop) => stop.name === destinationChoice.name);
-    for (const destination of destinationCandidates) {
-        const routeExists = planTrip(origin, destination, stops, routes.routes, {
-          walkRadiusM: 1000,
-          maxCandidates: 8,
-          maxTransfers: 0,
-        }).length > 0;
-        if (routeExists) {
-          setTripMessage("");
-          navigate(`/go?fromLat=${origin.lat}&fromLng=${origin.lng}&from=${encodeURIComponent(origin.name)}&dest=${encodeURIComponent(destination.id)}${safePreview ? "&safePreview=1" : ""}`);
-          return;
-        }
+    const routeExists = planTripToPlace(
+      origin,
+      { lat: destinationChoice.lat, lng: destinationChoice.lng },
+      stops,
+      routes.routes,
+      { walkRadiusM: 1000, maxCandidates: 32, maxTransfers: 0 },
+    ).length > 0;
+    if (routeExists) {
+      setTripMessage("");
+      navigate(`/go?fromLat=${origin.lat}&fromLng=${origin.lng}&from=${encodeURIComponent(origin.name)}&dest=${encodeURIComponent(destinationChoice.id)}&to=${encodeURIComponent(destinationChoice.name)}${safePreview ? "&safePreview=1" : ""}`);
+      return;
     }
     setPicked((value) => ({ ...value, dest: null }));
     setQueries((value) => ({ ...value, dest: "" }));
@@ -315,6 +341,7 @@ export default function TripView() {
           const choices = visibleMatches.filter((stop) => stop.name !== picked.board?.name);
           const showChoices = activeField === field && !picked[field] && searchConfirmed[field]
             && (field === "board" || choices.length > 0);
+          if (field === "dest" && activeField === "board" && !picked.board && searchConfirmed.board) return null;
           return <div className="tripview__field" key={field} data-active={activeField === field}>
             {showChoices ? <div className="tripview__choice-stage">
               <p className="tripview__choice-prompt">{field === "board" ? "출발 위치를 확인해주세요" : "목적지 정류장을 선택해주세요"}</p>
@@ -383,22 +410,26 @@ export default function TripView() {
       </header>
 
       <section className="tripview__results" aria-live="polite">
-            {!routes ? (
+            {!routes || (options.length > 0 && resolvedTrips === null) ? (
               <p className="tripview__msg">경로를 준비하고 있어요…</p>
             ) : options.length === 0 ? (
               <p className="tripview__msg tripview__msg--none">
                 이 위치 주변에서 목적지로 가는 버스의 도착정보가 없습니다.
               </p>
             ) : (
-              options.slice(0, 1).map((opt, i) => (
-                <TripCard
+              (resolvedTrips ?? []).slice(0, 1).map(({ option: opt, arrival }, i) => {
+                const alightStop = stops.find((stop) => stop.id === (opt.destinationStopId ?? destStop.id));
+                if (!alightStop) return null;
+                return <TripCard
                   key={`${opt.boardStopId}-${opt.directBus ? "d" : "t"}-${i}`}
                   option={opt}
                   stops={stops}
-                  destStop={destStop}
+                  destStop={alightStop}
+                  destinationLabel={requestedDestinationName ?? destStop.name}
+                  arrival={arrival}
                   fromPos={routeFromPos}
-                />
-              ))
+                />;
+              })
             )}
       </section>
     </main>

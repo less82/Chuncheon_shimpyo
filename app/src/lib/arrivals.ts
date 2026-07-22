@@ -12,6 +12,18 @@ export interface Arrival {
   byRoute?: RouteArrival[];
 }
 
+function routeNoKey(routeNo: string): string {
+  return routeNo.trim().replace(/\s+/g, "").replace(/\([^)]*\)$/g, "");
+}
+
+/** 앱 노선명의 괄호 설명을 제외하고 TAGO 응답과 일치하는 도착정보만 고른다. */
+export function arrivalsForRoutes(arrival: Arrival, routeNos: string[]): RouteArrival[] {
+  const allowed = new Set(routeNos.map(routeNoKey));
+  return (arrival.byRoute ?? [])
+    .filter((item) => allowed.has(routeNoKey(item.routeNo)))
+    .sort((a, b) => a.min - b.min);
+}
+
 const TIMEOUT_MS = 2500;
 const DEFAULT_HEADWAY = 15;
 

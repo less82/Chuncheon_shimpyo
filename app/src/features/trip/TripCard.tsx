@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Stop } from "../../types/stop";
 import type { TripOption } from "../../types/trip";
 import type { LatLng } from "../../lib/geo";
-import { getArrival, type RouteArrival } from "../../lib/arrivals";
+import { arrivalsForRoutes, getArrival, type Arrival } from "../../lib/arrivals";
 import { useFavorites } from "../../store/useFavorites";
 import { Link } from "react-router-dom";
 import "./TripView.css";
@@ -11,47 +11,47 @@ interface Props {
   option: TripOption;
   stops: Stop[];
   destStop: Stop;
+  destinationLabel?: string;
+  arrival?: Arrival;
   fromPos: LatLng;
 }
 
-export default function TripCard({ option, stops, destStop }: Props) {
+export default function TripCard({ option, stops, destStop, destinationLabel, arrival }: Props) {
   const boardStop = stops.find((stop) => stop.id === option.boardStopId);
+  const destinationName = destinationLabel ?? destStop.name;
   const routeNos = useMemo(() => option.legs[0]?.routeNos ?? [], [option.legs]);
-  const [arrivals, setArrivals] = useState<RouteArrival[]>([]);
-  const [arrivalState, setArrivalState] = useState<"loading" | "live" | "unavailable">("loading");
+  const [fetchedArrival, setFetchedArrival] = useState<Arrival | null>(null);
   const saveJourney = useFavorites((state) => state.saveJourney);
   const savedJourneys = useFavorites((state) => state.journeys);
 
   useEffect(() => {
-    if (!boardStop) return;
+    if (!boardStop || arrival) return;
     let alive = true;
-    setArrivalState("loading");
-    setArrivals([]);
-    getArrival(boardStop).then((arrival) => {
-      if (!alive) return;
-      const allowed = new Set(routeNos);
-      const matching = (arrival.byRoute ?? []).filter((item) => allowed.has(item.routeNo)).sort((a, b) => a.min - b.min);
-      setArrivals(matching);
-      setArrivalState(arrival.live && matching.length > 0 ? "live" : "unavailable");
-    });
+    setFetchedArrival(null);
+    getArrival(boardStop).then((value) => alive && setFetchedArrival(value));
     return () => { alive = false; };
-  }, [boardStop, routeNos]);
+  }, [arrival, boardStop]);
 
   if (!boardStop) return null;
 
-  const shownBuses = arrivals.slice(0, 2).map((arrival) => ({
-    routeNo: arrival.routeNo,
-    text: arrival.min <= 0 ? "곧 도착" : `${arrival.min}분 후`,
+  const resolvedArrival = arrival ?? fetchedArrival;
+  const matchingArrivals = resolvedArrival ? arrivalsForRoutes(resolvedArrival, routeNos) : [];
+  const arrivalState = !resolvedArrival
+    ? "loading"
+    : resolvedArrival.live && matchingArrivals.length > 0 ? "live" : "unavailable";
+  const shownBuses = matchingArrivals.slice(0, 2).map((item) => ({
+    routeNo: item.routeNo,
+    text: item.min <= 0 ? "곧 도착" : `${item.min}분 후`,
   }));
   const primaryRouteNo = shownBuses[0]?.routeNo ?? routeNos[0];
   const journeyId = primaryRouteNo ? `${boardStop.id}:${primaryRouteNo}:${destStop.id}` : "";
   const saved = savedJourneys.some((item) => item.id === journeyId);
 
   return (
-    <article className="tripcard" aria-label={`${boardStop.name} 출발 ${destStop.name} 도착 예정 버스`}>
+    <article className="tripcard" aria-label={`${boardStop.name} 출발 ${destinationName} 도착 예정 버스`}>
       <header className="tripcard__heading">
         <strong>{boardStop.name}</strong>
-        <span>정류장 {boardStop.stopNo} · {destStop.name} 방면</span>
+        <span>정류장 {boardStop.stopNo} · {destinationName} 방면</span>
         <b>타는 곳까지 도보 약 {option.walkMin}분</b>
       </header>
 
@@ -75,8 +75,9 @@ export default function TripCard({ option, stops, destStop }: Props) {
           <button className="tripcard__save" type="button" disabled={saved} onClick={() => saveJourney({
             boardStopId: boardStop.id,
             destinationStopId: destStop.id,
+            destinationName,
             routeNo: primaryRouteNo,
-            direction: `${destStop.name} 방면`,
+            direction: `${destinationName} 방면`,
           })}>{saved ? "저장됨" : "즐겨찾기"}</button>
         </section>
       )}

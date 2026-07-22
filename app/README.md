@@ -1,32 +1,34 @@
-# React + TypeScript + Vite
+# 쉼표 정류장 프론트엔드
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+시민 앱과 관리자 웹은 소스 진입점과 빌드 산출물을 분리합니다.
 
-Currently, two official plugins are available:
+## 로컬 실행
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev:citizen  # http://localhost:5173/app
+npm run dev:admin    # http://localhost:5174
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run dev`는 시민 앱과 같습니다. 두 개발 서버를 동시에 실행하려면 터미널을 각각 사용합니다.
+
+## 빌드와 확인
+
+```bash
+npm run build
+npm run preview:citizen
+npm run preview:admin
+```
+
+- 시민 앱: `dist/citizen`
+- 관리자 웹: `dist/admin`
+
+두 산출물은 서로 다른 도메인과 배포 프로젝트에서 운영해야 합니다.
+
+## 검증
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+```

@@ -18,7 +18,7 @@ export default defineConfig({
         description:
           '춘천시 버스정류장 그늘·의자·조명·도착안내기 정보를 3상태로 보여주는 고령자용 웹앱',
         lang: 'ko',
-        start_url: '/',
+        start_url: '/app',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#26344a',
