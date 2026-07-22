@@ -124,12 +124,6 @@
 
 /* 결과: 버스번호와 대기시간 우선 */
 .qrmain__results { display: grid; gap: 16px; }
-.qrmain__trip-summary { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); gap: 8px; align-items: stretch; min-height: 132px; padding: 10px; border: 0; border-radius: 16px; background: var(--brand-soft); }
-.qrmain__trip-summary > div { display: grid; min-width: 0; grid-template-rows: 22px minmax(48px, auto) minmax(34px, auto); align-content: start; padding: 10px; border-radius: 11px; background: var(--surface); }
-.qrmain__trip-summary span, .qrmain__trip-summary small { display: block; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.qrmain__trip-summary strong { display: block; align-self: start; color: var(--ink); font-size: clamp(16px, 4.6vw, 19px); line-height: 1.25; overflow-wrap: anywhere; word-break: keep-all; }
-.qrmain__trip-summary small { line-height: 1.35; overflow-wrap: anywhere; word-break: keep-all; }
-.qrmain__trip-summary b { display: grid; width: 32px; height: 32px; align-self: center; place-items: center; border-radius: 50%; background: var(--brand); color: white; font-size: 17px; }
 .qrmain__result-set { display: grid; gap: 10px; }
 .qrmain__route { padding: 18px; border: 0; border-radius: 14px; background: var(--surface-2); }
 .qrmain__recommend { margin-bottom: 12px; color: var(--brand); font-size: 15px; font-weight: 900; }
@@ -147,7 +141,6 @@
 @media (max-width: 360px) {
   .qrmain { padding-inline: 16px; }
   .qrmain h1, .qrmain h2, .qrmain__destination-page > h2, .qrmain__manual-stop label { font-size: 26px; }
-  .qrmain__trip-summary { min-height: 128px; }
 }
 
 /* 갤럭시 폴더2급 웹 뷰포트: 320 × 533 CSS px */
@@ -213,11 +206,6 @@
   .qrmain__report-complete { margin-top: 0; }
 
   .qrmain__results { gap: 10px; }
-  .qrmain__trip-summary { grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); min-height: 120px; gap: 6px; padding: 8px; }
-  .qrmain__trip-summary > div { grid-template-rows: 20px minmax(44px, auto) minmax(30px, auto); padding: 8px; }
-  .qrmain__trip-summary b { width: 28px; height: 28px; font-size: 15px; }
-  .qrmain__trip-summary strong { font-size: 16px; }
-  .qrmain__trip-summary small, .qrmain__trip-summary span { font-size: 11px; }
   .qrmain__route { padding: 14px; }
   .qrmain__recommend { margin-bottom: 8px; font-size: 14px; }
   .qrmain__route-head { grid-template-columns: 1fr 1fr; align-items: end; gap: 10px; }

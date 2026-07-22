@@ -121,6 +121,7 @@ export default function QrMain() {
   const loaded = useStops((state) => state.loaded);
   const [mode, setMode] = useState<QrMode>("home");
   const [startId, setStartId] = useState<string | null>(null);
+  const [startCandidateIds, setStartCandidateIds] = useState<string[]>([]);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [outsideServiceArea, setOutsideServiceArea] = useState(false);
@@ -197,6 +198,7 @@ export default function QrMain() {
     setLocationError(false);
     setOutsideServiceArea(false);
     setStartId(null);
+    setStartCandidateIds([]);
     setLocationSource(null);
     if (!navigator.geolocation) { setLocationError(true); return; }
     setLocating(true);
@@ -206,6 +208,8 @@ export default function QrMain() {
         const distance = nearest ? Math.round(haversine({ lat: coords.latitude, lng: coords.longitude }, nearest)) : null;
         const usable = nearest && distance !== null && distance <= MAX_NEARBY_STOP_DISTANCE_M;
         setStartId(usable ? nearest.id : null);
+        setStartCandidateIds(usable && nearest ? [nearest.id] : []);
+        setStartCandidateIds(usable ? [nearest.id] : []);
         setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(Boolean(nearest && !usable));
         setLocationError(!nearest);
@@ -232,6 +236,7 @@ export default function QrMain() {
     setReportReview(false);
     setOutsideServiceArea(false);
     setStartId(null);
+    setStartCandidateIds([]);
     setLocationSource(null);
     if (!navigator.geolocation) {
       setLocationError(true);
@@ -245,6 +250,7 @@ export default function QrMain() {
         const usable = distance !== null && distance <= MAX_NEARBY_STOP_DISTANCE_M;
         setNearbyStops(candidates);
         setStartId(usable ? candidates[0]?.id ?? null : null);
+        setStartCandidateIds(usable && candidates[0] ? [candidates[0].id] : []);
         setLocationSource(usable ? "gps" : null);
         setOutsideServiceArea(candidates.length > 0 && !usable);
         setLocationError(candidates.length === 0);
@@ -260,17 +266,29 @@ export default function QrMain() {
 
   const requestTrip = (destination: string) => {
     if (!destination) return;
-    if (startId && locationSource) setSubmitted(destination);
+    if (startId && locationSource) {
+      if (routes && startCandidateIds.length > 1) {
+        const matchedStart = startCandidateIds
+          .map((id) => stops.find((stop) => stop.id === id))
+          .filter((stop): stop is Stop => Boolean(stop))
+          .find((stop) => findTrips(destination, stop, stops, routes).length > 0);
+        if (matchedStart) setStartId(matchedStart.id);
+      }
+      setSubmitted(destination);
+    }
     else openDestination();
   };
 
   const manualMatches = useMemo(() => {
     const needle = normalized(manualStopQuery);
     if (!needle) return [];
-    return stops.filter((stop) => normalized(stop.name).includes(needle) || stop.stopNo.includes(needle)).slice(0, 6);
+    const matches = stops.filter((stop) => normalized(stop.name).includes(needle) || stop.stopNo.includes(needle));
+    return [...new Map(matches.map((stop) => [normalized(stop.name), stop])).values()].slice(0, 6);
   }, [manualStopQuery, stops]);
   const chooseManualStop = (stop: Stop) => {
+    const candidateIds = stops.filter((candidate) => normalized(candidate.name) === normalized(stop.name)).map((candidate) => candidate.id);
     setStartId(stop.id);
+    setStartCandidateIds(candidateIds);
     setLocationSource("manual");
     setLocationError(false);
     setOutsideServiceArea(false);
@@ -279,6 +297,7 @@ export default function QrMain() {
 
   const editStartStop = () => {
     setStartId(null);
+    setStartCandidateIds([]);
     setLocationSource(null);
     setManualStopQuery("");
   };
@@ -473,7 +492,6 @@ export default function QrMain() {
 
       {submitted && start && (
         <section className="qrmain__results qrmain__results-page" aria-live="polite" ref={resultsRef}>
-          <div className="qrmain__trip-summary"><div><span>승차 정류장</span><strong>{start.name}</strong><small>{routeChoices[0] ? `${routeChoices[0].directionName} 방면` : "방면 확인 중"}</small></div><b aria-hidden="true">→</b><div><span>목적지</span><strong>{submitted}</strong><small>{results[0] ? `하차 정류장 · ${results[0].destination.name}` : "하차 정류장 확인 중"}</small></div></div>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
           ) : results.length === 0 ? (
@@ -483,7 +501,7 @@ export default function QrMain() {
               <div className="qrmain__result-set">
                   {routeChoices.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={routeIndex === 0} key={item.routeNo}>
-                      <p className="qrmain__recommend">{routeIndex === 0 ? "목적지에 가장 빨리 도착" : "다음 도착 후보"}</p>
+                      <p className="qrmain__recommend">{routeIndex === 0 ? `${results[0].destination.name}(${item.directionName} 방면) 정류장에 가장 빨리 도착` : "다음 도착 후보"}</p>
                       <div className="qrmain__route-head">
                         <div><strong>{item.routeNo}번</strong></div>
                         <p><b>{item.waitMin}분 후</b><span>{item.live ? "실시간 도착정보" : "배차표 기준 예상"}</span><em>목적지까지 약 {item.totalMin}분</em></p>
