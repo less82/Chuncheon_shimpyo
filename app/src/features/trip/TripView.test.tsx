@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import TripView from "./TripView";
+import TripView, { speechErrorMessage } from "./TripView";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
@@ -22,6 +22,10 @@ beforeEach(() => {
 });
 
 describe("<TripView>", () => {
+  it("브라우저의 network 오류를 앱 전체 연결 문제가 아닌 음성 서비스 오류로 안내한다", () => {
+    expect(speechErrorMessage("network")).toBe("음성 인식 서비스 연결 실패 · 직접 입력해주세요.");
+  });
+
   it("출발지와 목적지를 모두 검색하고 각각 음성 입력을 제공한다", () => {
     const screen = render(<MemoryRouter initialEntries={["/go"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
     expect(screen.getByText("어디서 어디로 가세요?")).toBeInTheDocument();

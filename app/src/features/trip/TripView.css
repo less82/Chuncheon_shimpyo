@@ -63,7 +63,7 @@
   .tripview__title { font-size: clamp(21px, 7vw, 24px); }
   .tripview__find { padding-block: 14px; }
   .tripview__find h2 { margin-bottom: 12px; }
-  .tripview__field { margin-bottom: 12px; }
+  .tripview__field { margin-bottom: 19px; }
   .tripview__matches { gap: 6px; margin-top: 6px; }
   .tripview__matches button { min-height: 50px; padding-block: 5px; }
   .tripview__matches button strong { font-size: 15px; }
