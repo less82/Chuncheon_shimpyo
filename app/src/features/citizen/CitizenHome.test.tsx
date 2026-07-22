@@ -45,6 +45,6 @@ describe("<FavoriteStopCard>", () => {
     const screen = render(<MemoryRouter><FavoriteStopCard stop={stop} /></MemoryRouter>);
     expect(screen.getByText("춘천역")).toBeInTheDocument();
     expect(screen.getByText("배차간격 약 12분")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /이곳으로 가기/ })).toHaveAttribute("href", "/go?dest=250001");
+    expect(screen.getByRole("link", { name: "춘천역 버스 보기" })).toHaveAttribute("href", "/go?dest=250001");
   });
 });

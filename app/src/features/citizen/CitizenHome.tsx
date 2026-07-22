@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { BusFront, ChevronRight, Clock3, MessageCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
@@ -21,14 +20,13 @@ export function FavoriteStopCard({ stop }: { stop: Stop }) {
   const firstRoute = arrival.byRoute?.[0];
 
   return (
-    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(stop.id)}`}>
-      <span className="apphome-favorite__top"><Star aria-hidden="true" /><strong>{stop.name}</strong></span>
+    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(stop.id)}`} aria-label={`${stop.name} 버스 보기`}>
+      <span className="apphome-favorite__top"><strong>{stop.name}</strong></span>
       <span className="apphome-favorite__routes">경유 노선 {stop.routes.length > 0 ? stop.routes.slice(0, 4).map((route) => `${route}번`).join(" · ") : "확인 중"}</span>
       <span className="apphome-favorite__arrival" data-live={arrival.live}>
-        <Clock3 aria-hidden="true" />
         <b>{firstRoute?.routeNo ? `${firstRoute.routeNo}번 ` : ""}{arrival.text}</b>
       </span>
-      <span className="apphome-favorite__go">이곳으로 가기<ChevronRight aria-hidden="true" /></span>
+      <span className="apphome-favorite__go">보기</span>
     </Link>
   );
 }
@@ -49,35 +47,31 @@ export default function CitizenHome() {
       </section>
 
       <nav className="apphome__tasks" aria-label="주요 기능">
-        <Link className="apphome-task apphome-task--route" to="/go">
-          <span className="apphome-task__icon"><BusFront aria-hidden="true" /></span>
+        <Link className="apphome-task apphome-task--route" to="/go" aria-label="목적지행 버스 도착시간 보기">
           <span className="apphome-task__copy">
-            <small>목적지를 고르면 버스 도착 예정시간을 알려드려요</small>
-            <strong>목적지행 버스 도착시간 보기</strong>
+            <strong>목적지행 버스</strong>
+            <small>도착시간 보기</small>
           </span>
-          <ChevronRight aria-hidden="true" />
         </Link>
-        <Link className="apphome-task apphome-task--report" to="/app/report">
-          <span className="apphome-task__icon"><MessageCircle aria-hidden="true" /></span>
+        <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 불편 알리기">
           <span className="apphome-task__copy">
-            <small>의자·그늘·조명·안내 화면이 불편할 때</small>
-            <strong>정류장 불편 알리기</strong>
+            <strong>정류장 불편</strong>
+            <small>알리기</small>
           </span>
-          <ChevronRight aria-hidden="true" />
         </Link>
       </nav>
 
       <section className="apphome__saved" aria-labelledby="saved-title">
         <header>
           <div><span>반복 이용</span><h2 id="saved-title">자주 가는 곳</h2></div>
-          <Link to="/favorites">전체 보기{favIds.length > 0 ? ` ${favIds.length}` : ""}<ChevronRight aria-hidden="true" /></Link>
+          <Link to="/favorites">전체{favIds.length > 0 ? ` ${favIds.length}` : ""}</Link>
         </header>
         {favoriteStops.length > 0 ? (
           <div className="apphome__saved-list">
             {favoriteStops.slice(0, 2).map((stop) => <FavoriteStopCard key={stop.id} stop={stop} />)}
           </div>
         ) : (
-          <Link className="apphome__saved-empty" to="/favorites"><Star aria-hidden="true" /><span><strong>자주 가는 곳을 저장하세요</strong><small>다음부터 검색 없이 바로 길을 찾을 수 있어요.</small></span><ChevronRight aria-hidden="true" /></Link>
+          <Link className="apphome__saved-empty" to="/favorites"><span><strong>자주 가는 곳 저장</strong><small>다음부터 바로 확인</small></span><b>등록</b></Link>
         )}
       </section>
 
