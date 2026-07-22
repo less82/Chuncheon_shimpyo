@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CitizenReport } from "../report/reportStore";
-import { buildReportInsights, classifyCategory, classifyRisk } from "./reportInsights";
+import { buildReportInsights, classifyCategory, classifySafety } from "./reportInsights";
 
 const report = (id: string, issue: string, overrides: Partial<CitizenReport> = {}): CitizenReport => ({
   id, stopId: "2501", stopNo: "1001", stopName: "춘천역", issue,
@@ -8,9 +8,9 @@ const report = (id: string, issue: string, overrides: Partial<CitizenReport> = {
 });
 
 describe("reportInsights", () => {
-  it("민원 유형과 안전 위험도를 규칙 기반 후보로 분류한다", () => {
+  it("민원 유형과 안전 관련 여부를 규칙 기반 후보로 분류한다", () => {
     expect(classifyCategory("승강장 시설물이 파손됐어요")).toBe("안전");
-    expect(classifyRisk("승강장 시설물이 파손됐어요")).toBe("높음");
+    expect(classifySafety("승강장 시설물이 파손됐어요")).toBe("안전 관련");
     expect(classifyCategory("의자가 없어요")).toBe("편의시설");
   });
 

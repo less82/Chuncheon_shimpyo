@@ -7,7 +7,7 @@ describe("<AdminConcepts>", () => {
     const utils = render(<AdminConcepts />);
     expect(utils.getAllByRole("tab")).toHaveLength(5);
     fireEvent.click(utils.getByRole("tab", { name: "C. 단계 보드형" }));
-    expect(utils.getByText("정보 반영")).toBeInTheDocument();
+    expect(utils.getByText("처리 완료")).toBeInTheDocument();
     fireEvent.click(utils.getByRole("tab", { name: "D. 근거 대조형" }));
     expect(utils.getByText("공식 시설자료")).toBeInTheDocument();
   });

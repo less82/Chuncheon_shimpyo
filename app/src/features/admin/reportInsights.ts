@@ -1,7 +1,7 @@
 import type { CitizenReport } from "../report/reportStore";
 
 export type ReportCategory = "안전" | "조명" | "안내정보" | "편의시설" | "기타";
-export type RiskLevel = "높음" | "주의" | "일반";
+export type SafetyFlag = "안전 관련" | "일반 불편";
 
 const CATEGORY_RULES: Array<[ReportCategory, RegExp]> = [
   ["안전", /파손|깨졌|날카|넘어|쓰러|위험|유리|화재|누전|침수/],
@@ -14,10 +14,8 @@ export function classifyCategory(issue: string): ReportCategory {
   return CATEGORY_RULES.find(([, pattern]) => pattern.test(issue))?.[0] ?? "기타";
 }
 
-export function classifyRisk(issue: string): RiskLevel {
-  if (/파손|깨졌|날카|쓰러|위험|유리|화재|누전|침수/.test(issue)) return "높음";
-  if (/조명|어두|화면이\s*꺼|안내.*꺼/.test(issue)) return "주의";
-  return "일반";
+export function classifySafety(issue: string): SafetyFlag {
+  return /파손|깨졌|날카|쓰러|위험|유리|화재|누전|침수|조명|어두/.test(issue) ? "안전 관련" : "일반 불편";
 }
 
 function elapsedHours(from: string, to: string): number {
@@ -33,12 +31,11 @@ export function formatElapsed(hours: number): string {
 export interface ReportInsight {
   report: CitizenReport;
   category: ReportCategory;
-  risk: RiskLevel;
+  safety: SafetyFlag;
   overlap: number;
   elapsedHours: number;
   elapsedLabel: string;
   speed: "빠름" | "보통" | "지연" | "진행 중" | "측정 불가";
-  priorityScore: number;
 }
 
 export function buildReportInsights(reports: CitizenReport[], now = new Date()): ReportInsight[] {
@@ -50,7 +47,7 @@ export function buildReportInsights(reports: CitizenReport[], now = new Date()):
 
   return reports.map((report) => {
     const category = classifyCategory(report.issue);
-    const risk = classifyRisk(report.issue);
+    const safety = classifySafety(report.issue);
     const end = report.resolvedAt ?? now.toISOString();
     const hours = elapsedHours(report.createdAt, end);
     const count = overlap.get(`${report.stopId}:${category}`) ?? 1;
@@ -59,7 +56,6 @@ export function buildReportInsights(reports: CitizenReport[], now = new Date()):
       : !report.resolvedAt
         ? "측정 불가"
         : hours <= 24 ? "빠름" : hours <= 72 ? "보통" : "지연";
-    const priorityScore = ({ 높음: 300, 주의: 200, 일반: 100 }[risk]) + Math.min(count, 10) * 10 + Math.min(Math.floor(hours / 24), 30);
-    return { report, category, risk, overlap: count, elapsedHours: hours, elapsedLabel: formatElapsed(hours), speed, priorityScore };
+    return { report, category, safety, overlap: count, elapsedHours: hours, elapsedLabel: formatElapsed(hours), speed };
   });
 }

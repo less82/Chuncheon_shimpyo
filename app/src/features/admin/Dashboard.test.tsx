@@ -120,13 +120,13 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       { id: "r2", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "안내기가 꺼졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "reviewing" },
     ]));
     const { getByRole, getByText, queryByText } = render(<Dashboard />);
-    fireEvent.click(getByRole("button", { name: /신규 접수/ }));
+    fireEvent.click(getByRole("button", { name: /^접수/ }));
     expect(getByText("의자가 없어요")).toBeInTheDocument();
     expect(queryByText("안내기가 꺼졌어요")).toBeNull();
     expect(getByText("처리 상태")).toBeInTheDocument();
   });
 
-  it("안전 위험과 반복 제보를 요약하고 해당 업무만 필터링한다", () => {
+  it("안전 관련 여부와 유사 제보 집중을 요약하고 해당 업무만 필터링한다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify([
       { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "시설물이 파손됐어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
       { id: "r2", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "유리가 깨졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "reviewing" },
@@ -135,9 +135,9 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
     const signals = utils.getByRole("group", { name: "우선 대응 신호" });
 
-    expect(within(signals).getByRole("button", { name: /안전 위험 높음2/ })).toBeInTheDocument();
-    expect(within(signals).getByRole("button", { name: /반복 발생1/ })).toBeInTheDocument();
-    fireEvent.click(within(signals).getByRole("button", { name: /안전 위험 높음/ }));
+    expect(within(signals).getByRole("button", { name: /안전 관련2/ })).toBeInTheDocument();
+    expect(within(signals).getByRole("button", { name: /유사 제보 집중1/ })).toBeInTheDocument();
+    fireEvent.click(within(signals).getByRole("button", { name: /안전 관련/ }));
     expect(utils.getByText("시설물이 파손됐어요")).toBeInTheDocument();
     expect(utils.queryByText("의자가 없어요")).toBeNull();
   });
@@ -155,23 +155,23 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
 
     expect(utils.getByRole("navigation", { name: "제보 목록 페이지" })).toBeInTheDocument();
-    expect(utils.getByText("제보 7")).toBeInTheDocument();
-    expect(utils.queryByText("제보 1")).toBeNull();
-
-    fireEvent.click(utils.getByRole("button", { name: "다음" }));
     expect(utils.getByText("제보 1")).toBeInTheDocument();
     expect(utils.queryByText("제보 7")).toBeNull();
+
+    fireEvent.click(utils.getByRole("button", { name: "다음" }));
+    expect(utils.getByText("제보 7")).toBeInTheDocument();
+    expect(utils.queryByText("제보 1")).toBeNull();
   });
 
-  it("정보 반영 완료 건은 검토가 아니라 처리 기록을 연다", () => {
+  it("처리 완료 건은 검토가 아니라 처리 기록을 연다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify([
       { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "resolved" },
     ]));
     const utils = render(<Dashboard />);
-    fireEvent.click(within(utils.getByRole("group", { name: "제보 처리 단계" })).getByRole("button", { name: /정보 반영/ }));
+    fireEvent.click(within(utils.getByRole("group", { name: "제보 처리 단계" })).getByRole("button", { name: /처리 완료/ }));
     expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
     fireEvent.click(utils.getByRole("button", { name: "처리 기록 보기" }));
-    expect(utils.getByText("담당자 확인과 정보 반영이 완료되었습니다.")).toBeInTheDocument();
+    expect(utils.getByText("담당자 확인과 처리 결과 등록이 완료되었습니다.")).toBeInTheDocument();
   });
 
   it("검토 열기만으로 상태가 바뀌지 않고 필수 확인 후에만 다음 단계로 이동한다", () => {
@@ -181,11 +181,11 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
     fireEvent.click(utils.getByRole("button", { name: "검토 열기" }));
     expect(utils.getByRole("dialog", { name: "제보 검토" })).toBeInTheDocument();
-    const confirm = utils.getByRole("button", { name: "확인 완료 · 자료 대조로 이동" });
+    const confirm = utils.getByRole("button", { name: "접수 확인 · 담당 배정" });
     expect(confirm).toBeDisabled();
     expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("received");
     fireEvent.click(utils.getByRole("checkbox", { name: "정류장 식별정보 확인" }));
-    fireEvent.click(utils.getByRole("checkbox", { name: "시민 원문과 AI 분류 대조" }));
+    fireEvent.click(utils.getByRole("checkbox", { name: "소관 담당 지정" }));
     expect(confirm).toBeEnabled();
     fireEvent.click(confirm);
     expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("reviewing");

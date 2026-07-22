@@ -5,10 +5,10 @@ import "./DashboardConceptPreview.css";
 export type DashboardConceptKey = "queue" | "desk" | "board" | "evidence" | "control";
 
 const STATUS_LABEL: Record<CitizenReport["status"], string> = {
-  received: "신규 접수",
-  reviewing: "자료 대조",
-  task_created: "현장 점검",
-  resolved: "정보 반영",
+  received: "접수",
+  reviewing: "담당 배정",
+  task_created: "처리 중",
+  resolved: "처리 완료",
 };
 
 const fallback: CitizenReport[] = [
