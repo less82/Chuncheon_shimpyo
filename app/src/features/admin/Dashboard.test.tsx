@@ -135,11 +135,12 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const utils = render(<Dashboard />);
     const signals = utils.getByRole("group", { name: "우선 대응 신호" });
 
-    expect(within(signals).getByRole("button", { name: /안전 관련2/ })).toBeInTheDocument();
-    expect(within(signals).getByRole("button", { name: /유사 제보 집중1/ })).toBeInTheDocument();
+    expect(within(signals).getByRole("button", { name: /안전 관련 후보 2/ })).toBeInTheDocument();
+    expect(within(signals).getByRole("button", { name: /유사 제보 집중 1/ })).toBeInTheDocument();
     fireEvent.click(within(signals).getByRole("button", { name: /안전 관련/ }));
     expect(utils.getByText("시설물이 파손됐어요")).toBeInTheDocument();
     expect(utils.queryByText("의자가 없어요")).toBeNull();
+    expect(utils.queryByText("평균 처리시간")).toBeNull();
   });
 
   it("제보가 4건을 넘으면 스크롤 대신 페이지를 나눠 표시한다", () => {

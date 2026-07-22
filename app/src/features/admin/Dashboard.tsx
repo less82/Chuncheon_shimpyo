@@ -59,8 +59,6 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
     const start = Math.min(Math.max(1, currentPage - 2), Math.max(1, totalPages - 4));
     return start + index;
   });
-  const measuredResolutions = insights.filter((item) => item.report.status === "resolved" && item.report.resolvedAt);
-  const averageResolutionHours = measuredResolutions.length ? measuredResolutions.reduce((sum, item) => sum + item.elapsedHours, 0) / measuredResolutions.length : null;
   const currentLabel = attentionFilter === "open" ? "미처리 제보" : attentionFilter === "safety" ? "안전 관련 제보" : attentionFilter === "overlap" ? "유사 제보 집중" : statusFilter ? REPORT_STATUS[statusFilter].label : "전체 제보";
   const selected = reports.find((report) => report.id === selectedId) ?? null;
   const selectedInsight = insights.find(({ report }) => report.id === selectedId) ?? null;
@@ -94,13 +92,11 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   }
 
   return <section className="dash-section report-panel">
-    <div className="report-signals" role="group" aria-label="우선 대응 신호">
-      <button type="button" aria-pressed={attentionFilter === "open"} onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}><span>미처리 제보</span><strong>{unresolved.length}</strong><small>전체 업무량</small></button>
-      <button type="button" data-tone="danger" aria-pressed={attentionFilter === "safety"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "safety" ? "open" : "safety"); setPage(1); }}><span>안전 관련</span><strong>{unresolved.filter((item) => item.safety === "안전 관련").length}</strong><small>분류 후보</small></button>
-      <button type="button" data-tone="repeat" aria-pressed={attentionFilter === "overlap"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "overlap" ? "open" : "overlap"); setPage(1); }}><span>유사 제보 집중</span><strong>{repeatedGroups}</strong><small>정류장·유형 묶음</small></button>
-      <div className="report-signal-metric"><span>평균 처리시간</span><strong>{averageResolutionHours === null ? "—" : averageResolutionHours < 24 ? `${Math.round(averageResolutionHours)}시간` : `${(averageResolutionHours / 24).toFixed(1)}일`}</strong><small>{averageResolutionHours === null ? "완료 이력 축적 전" : `${measuredResolutions.length}건 기준`}</small></div>
+    <div className="report-command" role="group" aria-label="우선 대응 신호">
+      <button className="report-command-total" type="button" aria-pressed={attentionFilter === "open"} onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}><span>미처리</span><strong>{unresolved.length}<small>건</small></strong></button>
+      <div className="report-command-filters"><span>빠른 필터</span><button type="button" data-tone="danger" aria-pressed={attentionFilter === "safety"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "safety" ? "open" : "safety"); setPage(1); }}>안전 관련 후보 <b>{unresolved.filter((item) => item.safety === "안전 관련").length}</b></button><button type="button" data-tone="repeat" aria-pressed={attentionFilter === "overlap"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "overlap" ? "open" : "overlap"); setPage(1); }}>유사 제보 집중 <b>{repeatedGroups}</b></button></div>
     </div>
-    <div className="report-section-head"><div><span className="dash-kicker">업무 현황</span><h3>처리 단계별 제보</h3></div></div>
+    <div className="report-section-head"><div><span className="dash-kicker">처리 현황</span><h3>업무 단계</h3></div></div>
     <div className="report-flow" role="group" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setAttentionFilter(null); setStatusFilter((current) => current === status ? null : status); setPage(1); }}><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
     <div className="report-list-head"><div><span className="dash-kicker">접수 오래된 순</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleInsights.length}</strong><span>건</span></div>{(statusFilter || attentionFilter) && <button type="button" onClick={() => { setStatusFilter(null); setAttentionFilter(null); setPage(1); }}>필터 초기화</button>}</div></div>
     <div className="report-workbench"><div className="report-queue">
