@@ -74,7 +74,10 @@ export default function TripView() {
     if (!needle) return [];
     return stops.filter((stop) => stop.name.replace(/\s+/g, "").toLowerCase().includes(needle) || stop.stopNo.includes(needle)).slice(0, 4);
   }, [stopQuery, stops]);
-  const visibleMatches = picked[activeField] ? [] : stopMatches;
+  const visibleMatches = useMemo(() => {
+    if (picked[activeField]) return [];
+    return Array.from(new Map(stopMatches.map((stop) => [stop.name.replace(/\s+/g, ""), stop])).values());
+  }, [activeField, picked, stopMatches]);
 
   useEffect(() => () => recognitionRef.current?.stop(), []);
 
@@ -163,6 +166,27 @@ export default function TripView() {
     return sortByComfort(planned, stopsById, sortMode);
   }, [destStop, routes, fromPos, stops, stopsById, sortMode, requestedBoardId]);
 
+  const openArrivals = () => {
+    if (!picked.board || !picked.dest) return;
+    const boardCandidates = stops.filter((stop) => stop.name === picked.board?.name);
+    const destinationCandidates = stops.filter((stop) => stop.name === picked.dest?.name);
+    if (routes) {
+      for (const destination of destinationCandidates) {
+        for (const board of boardCandidates) {
+          const routeExists = planTrip(board, destination, stops, routes.routes, {
+            boardStopId: board.id,
+            walkRadiusM: Number.MAX_SAFE_INTEGER,
+          }).length > 0;
+          if (routeExists) {
+            navigate(`/go?board=${encodeURIComponent(board.id)}&dest=${encodeURIComponent(destination.id)}`);
+            return;
+          }
+        }
+      }
+    }
+    navigate(`/go?board=${encodeURIComponent(picked.board.id)}&dest=${encodeURIComponent(picked.dest.id)}`);
+  };
+
   if (!requestedBoardId) return (
     <main className="tripview tripview--find">
       <header className="tripview__bar">
@@ -177,9 +201,9 @@ export default function TripView() {
             <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
           </div>
           {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
+          {activeField === field && visibleMatches.length > 0 && <div className="tripview__matches tripview__matches--inline">{visibleMatches.filter((stop) => stop.name !== picked[activeField === "board" ? "dest" : "board"]?.name).map((stop) => <button type="button" key={stop.name} onClick={() => { setPicked((value) => ({ ...value, [activeField]: stop })); setQueries((value) => ({ ...value, [activeField]: stop.name })); if (activeField === "board") setActiveField("dest"); }}><MapPin aria-hidden="true" /><strong>{stop.name}</strong></button>)}</div>}
         </div>)}
-        <div className="tripview__matches">{visibleMatches.filter((stop) => stop.id !== picked[activeField === "board" ? "dest" : "board"]?.id).map((stop) => <button type="button" key={stop.id} onClick={() => { setPicked((value) => ({ ...value, [activeField]: stop })); setQueries((value) => ({ ...value, [activeField]: stop.name })); if (activeField === "board") setActiveField("dest"); }}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stop.stopNo ? `정류장 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}</div>
-        <button className="tripview__find-submit" type="button" disabled={!picked.board || !picked.dest} onClick={() => picked.board && picked.dest && navigate(`/go?board=${encodeURIComponent(picked.board.id)}&dest=${encodeURIComponent(picked.dest.id)}`)}>도착 예정시간 확인</button>
+        <button className="tripview__find-submit" type="button" disabled={!picked.board || !picked.dest} onClick={openArrivals}>도착 예정시간 확인</button>
       </section>
     </main>
   );
