@@ -72,7 +72,7 @@ export default function TripView() {
     if (!window.isSecureContext) { setVoiceMessage("음성 입력은 보안 연결에서만 사용할 수 있습니다."); return; }
     const recognition = new Recognition();
     recognition.lang = "ko-KR";
-    recognition.onstart = () => { setListeningField(field); setVoiceMessage("듣고 있어요. 정류장 이름을 말해주세요."); };
+    recognition.onstart = () => { setListeningField(field); setVoiceMessage(""); };
     recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); setListeningField(null); };
     recognition.onerror = (event) => {
       setListeningField(null);
@@ -80,7 +80,7 @@ export default function TripView() {
     };
     recognition.onend = () => setListeningField(null);
     setActiveField(field);
-    setVoiceMessage("마이크 연결 중");
+    setVoiceMessage("");
     try { recognition.start(); } catch (error) {
       setListeningField(null);
       setVoiceMessage(error instanceof DOMException && error.name === "InvalidStateError" ? "이미 음성을 듣고 있습니다." : "브라우저가 음성 입력을 시작하지 못했습니다.");
