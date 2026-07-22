@@ -7,7 +7,7 @@
   --brand: #00a3e0; /* 춘천 도시브랜드 PANTONE 299 C 화면용 근사값 */
   --brand-strong: #006b93;
   --brand-soft: #e6f7fd;
-  --brand-ink: #2f3438;
+  --brand-ink: #333333;
 
   --warm: hsl(42 100% 44%);
   --warm-strong: hsl(42 100% 29%);
@@ -22,10 +22,10 @@
   --overlay: rgba(23, 27, 33, 0.58);
 
   /* ---- 글자 ---- */
-  --ink: #171b21;
-  --ink-body: #343b45;
+  --ink: #333333;
+  --ink-body: #333333;
   --ink-muted: #5b6571;
-  --on-brand: #2f3438;
+  --on-brand: #333333;
   --on-warm: #211800;
 
   /* ---- 3상태 (색만으로 구분 금지 — 항상 아이콘+한글 병기) ---- */
