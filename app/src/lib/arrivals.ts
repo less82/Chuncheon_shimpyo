@@ -90,7 +90,7 @@ export async function getArrival(
     const url =
       "https://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList" +
       `?serviceKey=${encodeURIComponent(key)}` +
-      "&_type=xml&numOfRows=20" +
+      "&_type=xml&numOfRows=20&cityCode=32010" +
       `&nodeId=${encodeURIComponent(stop.tagoNodeId)}`;
     const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) return headwayFallback(stop);
