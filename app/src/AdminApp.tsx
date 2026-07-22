@@ -13,7 +13,7 @@ export default function AdminApp() {
   }, [load, loaded]);
 
   return (
-    <BrowserRouter basename="/admin">
+    <BrowserRouter basename={import.meta.env.DEV ? "/admin" : "/"}>
       <Routes>
         <Route index element={<Dashboard />} />
         <Route path="concepts" element={<AdminConcepts />} />

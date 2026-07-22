@@ -26,7 +26,7 @@ export default function AdminConcepts() {
   const initialConcept = CONCEPTS.some((item) => item.key === requested) ? requested! : "queue";
   const [concept, setConcept] = useState<ConceptKey>(initialConcept);
   return <main className="concept-page">
-    <header className="concept-head"><div><a href="/admin/">← 운영 화면</a><span>쉼표정류장 관리자 웹</span><h1>대시보드 구조 시안 5종</h1></div><nav role="tablist" aria-label="대시보드 구조 시안">{CONCEPTS.map((item) => <button type="button" role="tab" aria-selected={concept === item.key} key={item.key} onClick={() => setConcept(item.key)}>{item.label}</button>)}</nav></header>
+    <header className="concept-head"><div><a href="./">← 운영 화면</a><span>쉼표정류장 관리자 웹</span><h1>대시보드 구조 시안 5종</h1></div><nav role="tablist" aria-label="대시보드 구조 시안">{CONCEPTS.map((item) => <button type="button" role="tab" aria-selected={concept === item.key} key={item.key} onClick={() => setConcept(item.key)}>{item.label}</button>)}</nav></header>
     <section className="concept-canvas">
       <header className="concept-appbar"><b>춘천시 교통행정</b><span>쉼표정류장 운영 대시보드</span><span>관리자</span></header>
       <div className="concept-layout" data-concept={concept}>

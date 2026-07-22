@@ -2,7 +2,6 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { resolve } from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -35,7 +34,6 @@ export default defineConfig({
       workbox: {
         // 빌드 산출물(app shell) + 정류장 데이터 JSON precache.
         globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2}'],
-        globDirectory: 'dist',
         // 샘플 데이터만 precache(항상 존재). 실데이터 stops.json 은 빌드시 없을
         // 수도 있어 런타임 캐시(StaleWhileRevalidate)로 처리 → 오프라인이면
         // loadStops() 가 precache된 sample 로 폴백한다.
@@ -81,13 +79,5 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.ts',
-  },
-  build: {
-    rollupOptions: {
-      input: {
-        citizen: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin/index.html'),
-      },
-    },
   },
 })

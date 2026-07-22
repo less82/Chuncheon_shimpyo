@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "build": "npm run typecheck && npm run build:citizen && npm run build:admin",
+    "build:citizen": "vite build --config vite.citizen.config.ts",
+    "build:admin": "vite build --config vite.admin.config.ts",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
