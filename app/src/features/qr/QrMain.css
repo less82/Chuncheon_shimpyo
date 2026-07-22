@@ -143,7 +143,7 @@
 .qrmain__route-head > p { text-align: right; }
 .qrmain__route-head > p b { display: block; color: var(--brand); font-size: 28px; line-height: 1.15; }
 .qrmain__route-head > p span { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
-.qrmain__arrival-source { display: block; margin-top: 10px; color: var(--ink-muted); font-size: 13px; font-weight: 700; }
+.qrmain__route-head > p em { display: block; margin-top: 7px; color: var(--ink-body); font-size: 13px; font-style: normal; font-weight: 800; }
 .qrmain__report { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 17px; font-weight: 900; }
 .qrmain__state { margin: 48px auto; text-align: center; font-size: 18px; font-weight: 800; line-height: 1.5; }
 .qrmain > .qrmain__state { display: grid; min-height: calc(100svh - 32px); margin: 0; place-items: center; }

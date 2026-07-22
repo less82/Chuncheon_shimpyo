@@ -489,7 +489,7 @@ export default function QrMain() {
 
       {submitted && start && (
         <section className="qrmain__results qrmain__results-page" aria-live="polite" ref={resultsRef}>
-          <div className="qrmain__trip-summary"><div><span>승차 정류장</span><strong>{start.name}</strong><small>{routeChoices[0] ? `${routeChoices[0].directionName} 방면` : stopDirection(start, routes, stops)}</small></div><b aria-hidden="true">→</b><div><span>목적지</span><strong>{submitted}</strong></div></div>
+          <div className="qrmain__trip-summary"><div><span>승차 정류장</span><strong>{start.name}</strong><small>{routeChoices[0] ? `${routeChoices[0].directionName} 방면` : stopDirection(start, routes, stops)}</small></div><b aria-hidden="true">→</b><div><span>목적지</span><strong>{submitted}</strong><small>{results[0] ? `하차 정류장 · ${results[0].destination.name}` : "하차 정류장 확인 중"}</small></div></div>
           {!routes ? (
             <p className="qrmain__state">버스 노선을 확인하는 중…</p>
           ) : results.length === 0 ? (
@@ -499,12 +499,11 @@ export default function QrMain() {
               <div className="qrmain__result-set">
                   {routeChoices.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={routeIndex === 0} key={item.routeNo}>
-                      <p className="qrmain__recommend">{routeIndex === 0 ? "가장 빠른 버스" : "다음 버스"}</p>
+                      <p className="qrmain__recommend">{routeIndex === 0 ? "목적지에 가장 빨리 도착" : "다음 도착 후보"}</p>
                       <div className="qrmain__route-head">
                         <div><strong>{item.routeNo}번</strong></div>
-                        <p><b>{item.waitMin}분 후</b><span>예상 약 {item.totalMin}분</span></p>
+                        <p><b>{item.waitMin}분 후</b><span>{item.live ? "실시간 도착정보" : "배차표 기준 예상"}</span><em>목적지까지 약 {item.totalMin}분</em></p>
                       </div>
-                      <small className="qrmain__arrival-source">{item.live ? "실시간 도착정보" : "배차정보 기준 예상"}</small>
                     </article>
                   ))}
               </div>
