@@ -39,6 +39,7 @@
 .tripview__spacer {
   width: var(--touch);
 }
+.tripview--find { height: 100dvh; min-height: 0; padding-bottom: 0; overflow: hidden; }
 .tripview__find { max-width: 520px; margin: 0 auto; padding: clamp(18px, 6vw, 30px) clamp(16px, 5.5vw, 24px); }
 .tripview__find h2 { margin: 0 0 clamp(16px, 5vw, 26px); font-size: clamp(24px, calc(8px + 5vw), 30px); }
 .tripview__field { margin-bottom: clamp(16px, 5vw, 24px); }

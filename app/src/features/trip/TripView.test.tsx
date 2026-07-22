@@ -30,5 +30,7 @@ describe("<TripView>", () => {
     expect(screen.getByRole("textbox", { name: "어디로 가세요?" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "출발지 말하기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "목적지 말하기" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "출발지 말하기" }));
+    expect(screen.getByRole("status")).toHaveTextContent("이 브라우저는 음성 입력을 지원하지 않습니다.");
   });
 });

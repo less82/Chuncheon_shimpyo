@@ -16,7 +16,7 @@ import { sortByComfort, type SortMode } from "./comfortSort";
 import TripCard from "./TripCard";
 import "./TripView.css";
 
-type SpeechRecognitionConstructor = new () => { lang: string; start: () => void; onresult: (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onerror: () => void };
+type SpeechRecognitionConstructor = new () => { lang: string; start: () => void; onstart: () => void; onend: () => void; onresult: (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onerror: (event: { error: string }) => void };
 
 export default function TripView() {
   const [searchParams] = useSearchParams();
@@ -43,6 +43,7 @@ export default function TripView() {
   const [picked, setPicked] = useState<{ board: Stop | null; dest: Stop | null }>({ board: null, dest: null });
   const [activeField, setActiveField] = useState<"board" | "dest">("board");
   const [voiceMessage, setVoiceMessage] = useState("");
+  const [listeningField, setListeningField] = useState<"board" | "dest" | null>(null);
   const stopQuery = queries[activeField];
 
   const stopMatches = useMemo(() => {
@@ -58,10 +59,19 @@ export default function TripView() {
     if (!Recognition) { setVoiceMessage("이 브라우저는 음성 입력을 지원하지 않습니다."); return; }
     const recognition = new Recognition();
     recognition.lang = "ko-KR";
-    recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); };
-    recognition.onerror = () => setVoiceMessage("음성을 듣지 못했습니다. 다시 눌러주세요.");
+    recognition.onstart = () => { setListeningField(field); setVoiceMessage("듣고 있어요. 정류장 이름을 말해주세요."); };
+    recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); setListeningField(null); };
+    recognition.onerror = (event) => {
+      setListeningField(null);
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") setVoiceMessage("마이크 권한을 허용해주세요.");
+      else if (event.error === "audio-capture") setVoiceMessage("사용할 수 있는 마이크를 확인해주세요.");
+      else if (event.error === "no-speech") setVoiceMessage("정류장 이름을 다시 말해주세요.");
+      else setVoiceMessage("음성 입력을 시작하지 못했습니다. 다시 눌러주세요.");
+    };
+    recognition.onend = () => setListeningField(null);
     setActiveField(field);
-    recognition.start();
+    setVoiceMessage("마이크 연결 중");
+    try { recognition.start(); } catch { setListeningField(null); setVoiceMessage("음성 입력을 시작하지 못했습니다. 다시 눌러주세요."); }
   };
 
   const stopsById = useMemo(() => {
@@ -111,7 +121,7 @@ export default function TripView() {
         {(["board", "dest"] as const).map((field) => <div className="tripview__field" key={field} data-active={activeField === field}>
           <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
           <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
-            <button className="tripview__voice" type="button" onClick={() => listen(field)}>{field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
+            <button className="tripview__voice" type="button" onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
           </div>
         </div>)}
         {voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
