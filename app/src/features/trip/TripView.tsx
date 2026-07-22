@@ -12,6 +12,7 @@ import { useStops } from "../../store/useStops";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { planTrip } from "./planTrip";
 import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
+import { osmEmbedUrl, searchPlaces, type PlaceResult } from "./geocodePlace";
 import TripCard from "./TripCard";
 import "./TripView.css";
 
@@ -64,6 +65,8 @@ export default function TripView() {
   const [manualAvailable, setManualAvailable] = useState({ board: false, dest: false });
   const [inputMode, setInputMode] = useState<"voice" | "manual">("voice");
   const [searchConfirmed, setSearchConfirmed] = useState({ board: false, dest: false });
+  const [originMatches, setOriginMatches] = useState<PlaceResult[]>([]);
+  const [originSearchState, setOriginSearchState] = useState<"idle" | "loading" | "error">("idle");
   const [pendingTrip, setPendingTrip] = useState<{ origin: OriginPlace; dest: Stop } | null>(null);
   const [tripMessage, setTripMessage] = useState("");
   const recognitionRef = useRef<SpeechRecognitionSession | null>(null);
@@ -79,18 +82,23 @@ export default function TripView() {
     if (activeField === "board" || picked.dest) return [];
     return Array.from(new Map(stopMatches.map((stop) => [stop.name.replace(/\s+/g, ""), stop])).values());
   }, [activeField, picked, stopMatches]);
-  const originCandidate = useMemo<OriginPlace | null>(() => {
-    const name = queries.board.trim();
-    const needle = name.replace(/\s+/g, "").toLowerCase();
-    if (needle.length < 2) return null;
-    const anchors = stops.filter((stop) => stop.name.replace(/\s+/g, "").toLowerCase().includes(needle));
-    if (anchors.length === 0) return null;
-    return {
-      name,
-      lat: anchors.reduce((sum, stop) => sum + stop.lat, 0) / anchors.length,
-      lng: anchors.reduce((sum, stop) => sum + stop.lng, 0) / anchors.length,
-    };
-  }, [queries.board, stops]);
+  useEffect(() => {
+    if (!searchConfirmed.board || queries.board.trim().length < 2) return;
+    let alive = true;
+    setOriginSearchState("loading");
+    setOriginMatches([]);
+    searchPlaces(queries.board)
+      .then((places) => {
+        if (!alive) return;
+        setOriginMatches(places);
+        setOriginSearchState(places.length > 0 ? "idle" : "error");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setOriginSearchState("error");
+      });
+    return () => { alive = false; };
+  }, [queries.board, searchConfirmed.board]);
 
   useEffect(() => () => recognitionRef.current?.stop(), []);
 
@@ -254,6 +262,7 @@ export default function TripView() {
     setVoiceField(null);
     setManualFields((value) => ({ ...value, [field]: false }));
     setSearchConfirmed((value) => ({ ...value, [field]: false }));
+    if (field === "board") { setOriginMatches([]); setOriginSearchState("idle"); }
     if (inputMode === "manual") {
       setManualFields((value) => ({ ...value, [field]: true }));
       requestAnimationFrame(() => inputRefs.current[field]?.focus());
@@ -286,12 +295,8 @@ export default function TripView() {
 
   const confirmManualInput = (field: "board" | "dest") => {
     if (field === "board") {
-      if (originCandidate) {
-        setTripMessage("");
-        chooseOrigin(originCandidate);
-      } else {
-        setTripMessage("춘천시 출발 위치를 찾지 못했어요. 장소 이름을 다시 입력해주세요.");
-      }
+      setTripMessage("");
+      setSearchConfirmed((value) => ({ ...value, board: true }));
       return;
     }
     setSearchConfirmed((value) => ({ ...value, dest: true }));
@@ -308,15 +313,22 @@ export default function TripView() {
         {(["board", "dest"] as const).map((field) => {
           const choices = visibleMatches.filter((stop) => stop.name !== picked.board?.name);
           const showChoices = activeField === field && !picked[field] && searchConfirmed[field]
-            && (field === "board" ? Boolean(originCandidate) : choices.length > 0);
+            && (field === "board" || choices.length > 0);
           return <div className="tripview__field" key={field} data-active={activeField === field}>
             {showChoices ? <div className="tripview__choice-stage">
               <p className="tripview__choice-prompt">{field === "board" ? "출발 위치를 확인해주세요" : "목적지 정류장을 선택해주세요"}</p>
-              <div className="tripview__choices">
-                {field === "board" && originCandidate
-                  ? <button type="button" onClick={() => chooseOrigin(originCandidate)}><strong>{originCandidate.name}</strong></button>
-                  : choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseDestination(stop)}><strong>{stop.name}</strong></button>)}
-              </div>
+              {field === "board" ? <>
+                {originSearchState === "loading" && <p className="tripview__place-status" role="status">지도에서 찾고 있어요…</p>}
+                {originSearchState === "error" && <p className="tripview__place-status tripview__place-status--error" role="status">춘천시에서 위치를 찾지 못했어요. 장소 이름이나 주소를 다시 입력해주세요.</p>}
+                {originMatches[0] && <div className="tripview__place">
+                  <iframe title={`${originMatches[0].name} 위치 지도`} src={osmEmbedUrl(originMatches[0])} loading="lazy" />
+                  <p>{originMatches[0].displayName}</p>
+                  <button type="button" onClick={() => chooseOrigin(originMatches[0])}>이 위치에서 출발</button>
+                  <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap 기여자</a>
+                </div>}
+              </> : <div className="tripview__choices">
+                {choices.map((stop) => <button type="button" key={stop.name} onClick={() => chooseDestination(stop)}><strong>{stop.name}</strong></button>)}
+              </div>}
               <div className="tripview__choice-actions">
                 {inputMode === "voice" ? <>
                   <button type="button" onClick={() => resetChoice(field)}>다시 말하기</button>
@@ -331,7 +343,7 @@ export default function TripView() {
               <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 출발하세요?" : "어디로 가세요?"}</label>
               <div className="tripview__field-control">
                 {(inputMode === "manual" || manualFields[field]) && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={queries[field]} onFocus={() => setActiveField(field)} onKeyDown={(event) => { if (event.key === "Enter" && queries[field].trim().length >= 2) confirmManualInput(field); }} onChange={(event) => { setActiveField(field); setSearchConfirmed((value) => ({ ...value, [field]: false })); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder={field === "board" ? "출발할 장소를 입력해주세요" : "목적지 이름을 입력해주세요"} />}
-                {manualFields[field] && <button className="tripview__search" type="button" disabled={queries[field].trim().length < 2} onClick={() => confirmManualInput(field)}>{field === "board" ? "출발지로 설정" : "목적지 찾기"}</button>}
+                {manualFields[field] && <button className="tripview__search" type="button" disabled={queries[field].trim().length < 2} onClick={() => confirmManualInput(field)}>{field === "board" ? "지도에서 찾기" : "목적지 찾기"}</button>}
                 {inputMode === "voice" && <button className="tripview__voice" type="button" aria-pressed={listeningField === field} data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "● 듣고 있어요 · 누르면 중단" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>}
               </div>
               {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}

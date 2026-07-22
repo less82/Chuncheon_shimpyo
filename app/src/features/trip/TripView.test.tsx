@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import TripView from "./TripView";
@@ -6,6 +6,11 @@ import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
+
+vi.mock("./geocodePlace", () => ({
+  searchPlaces: vi.fn(async (query: string) => [{ name: query, displayName: `${query}, 춘천시`, lat: 37.87, lng: 127.74 }]),
+  osmEmbedUrl: vi.fn(() => "https://www.openstreetmap.org/export/embed.html"),
+}));
 
 const stop: Stop = {
   id: "A", stopNo: "1480", name: "강원대후문", lat: 37.88, lng: 127.73,
@@ -35,7 +40,7 @@ describe("<TripView>", () => {
     expect(speechErrorMessage("network")).toBe("음성 인식 서비스 연결 실패 · 직접 입력해주세요.");
   });
 
-  it("출발지와 목적지를 모두 검색하고 각각 음성 입력을 제공한다", () => {
+  it("출발지와 목적지를 모두 검색하고 각각 음성 입력을 제공한다", async () => {
     const screen = render(<MemoryRouter initialEntries={["/go"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
     expect(screen.queryByText("어디서 어디로 가세요?")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "출발지 말하기" })).toBeInTheDocument();
@@ -48,7 +53,9 @@ describe("<TripView>", () => {
     fireEvent.click(screen.getByRole("button", { name: "직접 쓰기" }));
     fireEvent.change(screen.getByRole("textbox", { name: "어디서 출발하세요?" }), { target: { value: "강원대" } });
     expect(screen.queryByRole("button", { name: "강원대" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "출발지로 설정" }));
+    fireEvent.click(screen.getByRole("button", { name: "지도에서 찾기" }));
+    expect(await screen.findByTitle("강원대 위치 지도")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "이 위치에서 출발" }));
     expect(screen.getByText("출발 위치")).toBeInTheDocument();
     expect(screen.getByText("강원대")).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "어디서 출발하세요?" })).not.toBeInTheDocument();
@@ -73,7 +80,7 @@ describe("<TripView>", () => {
     fireEvent.change(originInput, { target: { value: "강원" } });
 
     expect(originInput).toHaveValue("강원");
-    expect(screen.getByRole("button", { name: "출발지로 설정" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "지도에서 찾기" })).toBeInTheDocument();
     expect(screen.queryByText("출발 위치를 확인해주세요")).not.toBeInTheDocument();
   });
 });

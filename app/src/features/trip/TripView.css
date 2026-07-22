@@ -67,6 +67,13 @@
 .tripview__field-control input:focus { border-color: var(--brand); }
 .tripview__search { min-height: clamp(44px, calc(16px + 5dvh), 50px); border: 0; border-radius: 13px; background: var(--brand); color: var(--on-brand); font: inherit; font-size: clamp(15px, calc(3px + 3.8vw), 18px); font-weight: 900; }
 .tripview__search:disabled { background: var(--border-strong); color: var(--ink-muted); }
+.tripview__place { display: grid; gap: 7px; }
+.tripview__place iframe { width: 100%; height: clamp(118px, 24dvh, 150px); border: 1px solid var(--border); border-radius: 13px; }
+.tripview__place p { margin: 0; overflow: hidden; color: var(--ink-body); font-size: clamp(12px, 3.4vw, 14px); font-weight: 700; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.tripview__place button { min-height: 48px; border: 0; border-radius: 13px; background: var(--brand); color: var(--on-brand); font: inherit; font-weight: 900; }
+.tripview__place a { color: var(--ink-muted); font-size: 11px; text-align: right; }
+.tripview__place-status { min-height: 120px; margin: 0; display: grid; place-items: center; color: var(--ink-body); font-weight: 800; text-align: center; }
+.tripview__place-status--error { color: var(--no); }
 .tripview__choice-stage { display: grid; gap: clamp(10px, 2dvh, 14px); }
 .tripview__choice-prompt { margin: 0; color: var(--ink); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
 .tripview__choices { display: grid; gap: clamp(8px, 1.5dvh, 12px); }
