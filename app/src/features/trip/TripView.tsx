@@ -76,6 +76,7 @@ export default function TripView() {
     recognition.onresult = (event) => { setQueries((value) => ({ ...value, [field]: event.results[0][0].transcript })); setVoiceMessage(""); setListeningField(null); };
     recognition.onerror = (event) => {
       setListeningField(null);
+      if (import.meta.env.DEV) console.warn(`[speech-recognition] ${field}: ${event.error}`);
       setVoiceMessage(speechErrorMessage(event.error));
     };
     recognition.onend = () => setListeningField(null);
