@@ -123,10 +123,26 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     fireEvent.click(getByRole("button", { name: /신규 접수/ }));
     expect(getByText("의자가 없어요")).toBeInTheDocument();
     expect(queryByText("안내기가 꺼졌어요")).toBeNull();
-    expect(queryByText("처리 상태")).toBeNull();
+    expect(getByText("처리 상태")).toBeInTheDocument();
   });
 
-  it("제보가 5건을 넘으면 스크롤 대신 페이지를 나눠 표시한다", () => {
+  it("안전 위험과 반복 제보를 요약하고 해당 업무만 필터링한다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "시설물이 파손됐어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+      { id: "r2", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "유리가 깨졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "reviewing" },
+      { id: "r3", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "의자가 없어요", createdAt: "2026-07-21T08:20:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    const signals = utils.getByRole("group", { name: "우선 대응 신호" });
+
+    expect(within(signals).getByRole("button", { name: /안전 위험 높음2/ })).toBeInTheDocument();
+    expect(within(signals).getByRole("button", { name: /반복 발생1/ })).toBeInTheDocument();
+    fireEvent.click(within(signals).getByRole("button", { name: /안전 위험 높음/ }));
+    expect(utils.getByText("시설물이 파손됐어요")).toBeInTheDocument();
+    expect(utils.queryByText("의자가 없어요")).toBeNull();
+  });
+
+  it("제보가 4건을 넘으면 스크롤 대신 페이지를 나눠 표시한다", () => {
     localStorage.setItem("shimpyo:reports", JSON.stringify(Array.from({ length: 7 }, (_, index) => ({
       id: `r${index + 1}`,
       stopId: `25000000${index + 1}`,
@@ -152,6 +168,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "resolved" },
     ]));
     const utils = render(<Dashboard />);
+    fireEvent.click(within(utils.getByRole("group", { name: "제보 처리 단계" })).getByRole("button", { name: /정보 반영/ }));
     expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
     fireEvent.click(utils.getByRole("button", { name: "처리 기록 보기" }));
     expect(utils.getByText("담당자 확인과 정보 반영이 완료되었습니다.")).toBeInTheDocument();

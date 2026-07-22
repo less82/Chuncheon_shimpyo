@@ -2,13 +2,14 @@
 // [1단계 조사 검토 순서] / [2단계 설치 검토 우선순위] / [조건 필터(기존 v1 보존)]
 // 규칙: B2G는 순위·실측이 주인공, 합성 지수는 보조 셀에만. 승차량엔 항상 "양방향 합산 기준".
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStops } from "../../store/useStops";
 import FilterTab from "./FilterTab";
 import SurveyTab from "./SurveyTab";
 import InstallTab from "./InstallTab";
 import DashboardConceptPreview, { type DashboardConceptKey } from "./DashboardConceptPreview";
 import { loadReports, REPORT_CHANGED_EVENT, REPORT_STORAGE_KEY, updateReportStatus, type CitizenReport } from "../report/reportStore";
+import { buildReportInsights } from "./reportInsights";
 import "./Dashboard.css";
 
 type TabKey = "reports" | "survey" | "install" | "filter";
@@ -36,15 +37,21 @@ const REPORT_STATUS = {
 };
 
 function ReportsTab({ reports }: { reports: CitizenReport[] }) {
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 4;
   const [statusFilter, setStatusFilter] = useState<CitizenReport["status"] | null>(null);
+  const [attentionFilter, setAttentionFilter] = useState<"open" | "risk" | "overlap" | "delayed" | null>("open");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checks, setChecks] = useState<[boolean, boolean]>([false, false]);
   const statuses = Object.keys(REPORT_STATUS) as CitizenReport["status"][];
   const counts = (Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status) => reports.filter((report) => report.status === status).length);
-  const visibleReports = statusFilter ? reports.filter((report) => report.status === statusFilter) : reports;
-  const orderedReports = [...visibleReports].reverse();
+  const insights = useMemo(() => buildReportInsights(reports), [reports]);
+  const unresolved = insights.filter(({ report }) => report.status !== "resolved");
+  const repeatedGroups = new Set(unresolved.filter((item) => item.overlap >= 2).map((item) => `${item.report.stopId}:${item.category}`)).size;
+  const visibleInsights = insights
+    .filter(({ report }) => !statusFilter || report.status === statusFilter)
+    .filter((item) => attentionFilter === "open" ? item.report.status !== "resolved" : attentionFilter === "risk" ? item.risk === "높음" && item.report.status !== "resolved" : attentionFilter === "overlap" ? item.overlap >= 2 && item.report.status !== "resolved" : attentionFilter === "delayed" ? item.speed === "지연" && item.report.status !== "resolved" : true);
+  const orderedReports = [...visibleInsights].sort((a, b) => b.priorityScore - a.priorityScore || new Date(b.report.createdAt).getTime() - new Date(a.report.createdAt).getTime());
   const totalPages = Math.max(1, Math.ceil(orderedReports.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageReports = orderedReports.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -52,8 +59,9 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
     const start = Math.min(Math.max(1, currentPage - 2), Math.max(1, totalPages - 4));
     return start + index;
   });
-  const currentLabel = statusFilter ? REPORT_STATUS[statusFilter].label : "전체 제보";
+  const currentLabel = attentionFilter === "open" ? "미처리 제보" : attentionFilter === "risk" ? "안전 위험 제보" : attentionFilter === "overlap" ? "반복 제보" : attentionFilter === "delayed" ? "처리 지연 제보" : statusFilter ? REPORT_STATUS[statusFilter].label : "전체 제보";
   const selected = reports.find((report) => report.id === selectedId) ?? null;
+  const selectedInsight = insights.find(({ report }) => report.id === selectedId) ?? null;
   const reviewItems: Record<CitizenReport["status"], [string, string] | null> = {
     received: ["정류장 식별정보 확인", "시민 원문과 AI 분류 대조"],
     reviewing: ["공식 시설자료 대조", "최근 중복 제보 확인"],
@@ -84,17 +92,23 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   }
 
   return <section className="dash-section report-panel">
+    <div className="report-signals" role="group" aria-label="우선 대응 신호">
+      <button type="button" aria-pressed={attentionFilter === "open"} onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}><span>미처리 제보</span><strong>{unresolved.length}</strong><small>전체 업무량</small></button>
+      <button type="button" data-tone="danger" aria-pressed={attentionFilter === "risk"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "risk" ? "open" : "risk"); setPage(1); }}><span>안전 위험 높음</span><strong>{unresolved.filter((item) => item.risk === "높음").length}</strong><small>우선 확인</small></button>
+      <button type="button" data-tone="repeat" aria-pressed={attentionFilter === "overlap"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "overlap" ? "open" : "overlap"); setPage(1); }}><span>반복 발생</span><strong>{repeatedGroups}</strong><small>정류장·유형 묶음</small></button>
+      <button type="button" data-tone="delay" aria-pressed={attentionFilter === "delayed"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "delayed" ? "open" : "delayed"); setPage(1); }}><span>72시간 이상</span><strong>{unresolved.filter((item) => item.speed === "지연").length}</strong><small>처리 지연</small></button>
+    </div>
     <div className="report-section-head"><div><span className="dash-kicker">업무 현황</span><h3>처리 단계별 제보</h3></div></div>
-    <div className="report-flow" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setStatusFilter((current) => current === status ? null : status); setPage(1); }}><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
-    <div className="report-list-head"><div><span className="dash-kicker">업무 목록</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleReports.length}</strong><span>건</span></div>{statusFilter && <button type="button" onClick={() => { setStatusFilter(null); setPage(1); }}>전체 보기</button>}</div></div>
+    <div className="report-flow" role="group" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setAttentionFilter(null); setStatusFilter((current) => current === status ? null : status); setPage(1); }}><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
+    <div className="report-list-head"><div><span className="dash-kicker">위험·중첩·경과시간 순</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleInsights.length}</strong><span>건</span></div>{(statusFilter || attentionFilter) && <button type="button" onClick={() => { setStatusFilter(null); setAttentionFilter(null); setPage(1); }}>필터 초기화</button>}</div></div>
     <div className="report-workbench"><div className="report-queue">
-        {visibleReports.length === 0 ? <div className="report-empty"><h2>{statusFilter ? `${currentLabel} 업무가 없습니다` : "아직 접수된 제보가 없습니다"}</h2><p>{statusFilter ? "다른 처리 단계를 선택해 확인하세요." : "시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다."}</p></div> :
-          <><div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table" data-filtered={statusFilter ? "true" : "false"}><thead><tr><th>접수시각</th><th>정류장</th><th>제보 내용</th>{!statusFilter && <th>처리 상태</th>}<th>업무</th></tr></thead><tbody>{pageReports.map((report) => { const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="접수시각">{new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(report.createdAt))}</td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="제보 내용"><strong>{report.issue}</strong><span className="dash-stopid">분류 후보 · 시설 불편</span></td>{!statusFilter && <td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td>}<td data-label="업무"><button className="report-action" type="button" onClick={() => openReview(report.id)}>{report.status === "resolved" ? "처리 기록 보기" : "검토 열기"}</button></td></tr>; })}</tbody></table></div>
+        {visibleInsights.length === 0 ? <div className="report-empty"><h2>{statusFilter || attentionFilter ? `${currentLabel}가 없습니다` : "아직 접수된 제보가 없습니다"}</h2><p>{statusFilter || attentionFilter ? "다른 조건을 선택해 확인하세요." : "시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다."}</p></div> :
+          <><div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table"><thead><tr><th>위험도</th><th>정류장</th><th>유형·제보</th><th>중첩</th><th>경과·속도</th><th>처리 상태</th><th>업무</th></tr></thead><tbody>{pageReports.map((item) => { const report = item.report; const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="위험도"><span className="report-risk" data-risk={item.risk}>{item.risk}</span></td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="유형·제보"><span className="report-category">{item.category}</span><strong className="report-issue">{report.issue}</strong></td><td data-label="중첩"><strong className="report-overlap" data-repeat={item.overlap >= 2}>{item.overlap}건</strong><span className="dash-stopid">동일 정류장·유형</span></td><td data-label="경과·속도"><strong>{item.elapsedLabel}</strong><span className="report-speed" data-speed={item.speed}>{item.speed}</span></td><td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td><td data-label="업무"><button className="report-action" type="button" onClick={() => openReview(report.id)}>{report.status === "resolved" ? "처리 기록 보기" : "검토 열기"}</button></td></tr>; })}</tbody></table></div>
           {totalPages > 1 && <nav className="report-pagination" aria-label="제보 목록 페이지"><button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>이전</button>{pageNumbers.map((pageNumber) => <button type="button" key={pageNumber} aria-current={pageNumber === currentPage ? "page" : undefined} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}<button type="button" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>다음</button></nav>}</>}
       </div></div>
       {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" role="dialog" aria-modal="true" aria-label="제보 검토">
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div><button type="button" onClick={() => setSelectedId(null)} aria-label="검토 팝업 닫기">×</button></header>
-          <div className="report-review-body"><section className="report-case"><span className="report-label">시민 제보</span><p className="report-quote">“{selected.issue}”</p>{selected.photoDataUrl && <img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} />}</section><section className="report-facts"><h4>판단 근거</h4><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>AI 분류</dt><dd>시설 불편 후보 <small>담당자 확정 전</small></dd></div><div><dt>공식자료</dt><dd>{selected.status === "received" ? "대조 전" : "담당자 확인 통과"}</dd></div></dl></section></div>
+          <div className="report-review-body"><section className="report-case"><span className="report-label">시민 제보</span><p className="report-quote">“{selected.issue}”</p>{selected.photoDataUrl && <img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} />}</section><section className="report-facts"><h4>판단 근거</h4><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형 후보</dt><dd>{selectedInsight?.category ?? "기타"} <small>규칙 기반 · 담당자 확정 전</small></dd></div><div><dt>안전 위험도</dt><dd><span className="report-risk" data-risk={selectedInsight?.risk}>{selectedInsight?.risk ?? "일반"}</span></dd></div><div><dt>반복 발생</dt><dd>{selectedInsight?.overlap ?? 1}건 <small>동일 정류장·유형 기준</small></dd></div><div><dt>처리 경과</dt><dd>{selectedInsight?.elapsedLabel} · {selectedInsight?.speed}</dd></div><div><dt>공식자료</dt><dd>{selected.status === "received" ? "대조 전" : "담당자 확인 통과"}</dd></div></dl></section></div>
           <footer className="report-review-footer">{requiredChecks ? <fieldset className="report-checks"><legend>다음 단계 전 확인</legend>{requiredChecks.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={(event) => setChecks((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value) as [boolean, boolean])}/><span>{label}</span></label>)}</fieldset> : <p className="report-complete">담당자 확인과 정보 반영이 완료되었습니다.</p>}{selectedState?.next && <button className="report-confirm" type="button" disabled={!checks.every(Boolean)} onClick={advanceSelected}>{selectedState.action}</button>}</footer>
       </aside></div>}
   </section>;
