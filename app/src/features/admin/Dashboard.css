@@ -76,7 +76,7 @@
 .report-pagination { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 52px; border: 1px solid var(--border); border-top: 0; background: white; }
 .report-pagination button { min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid transparent; background: transparent; color: var(--ink-body); font-size: 12px; font-weight: 800; cursor: pointer; }
 .report-pagination button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-2); }
-.report-pagination button[aria-current="page"] { border-color: var(--brand); background: var(--brand); color: white; }
+.report-pagination button[aria-current="page"] { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
 .report-pagination button:disabled { color: var(--border-strong); cursor: not-allowed; }
 .report-summary { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-4); padding: 16px 20px; border-radius: 14px; background: var(--brand-strong); color: white; }
 .report-summary div { display: flex; flex-direction: column; }
@@ -130,7 +130,7 @@
 .report-review-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .report-cancel, .report-confirm { min-width: 120px; min-height: 40px; padding: 0 18px; font-family: inherit; font-weight: 900; cursor: pointer; }
 .report-cancel { border: 1px solid var(--border-strong); background: white; color: var(--ink); }
-.report-confirm { border: 0; background: var(--brand); color: white; }
+.report-confirm { border: 0; background: var(--brand); color: var(--on-brand); }
 .report-confirm:disabled { background: var(--border-strong); cursor: not-allowed; }
 .report-complete { margin: 0; padding: 12px; border-left: 4px solid var(--yes); background: var(--yes-bg); font-size: 12px; }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
@@ -37,11 +37,12 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
 }
 
 export default function CitizenHome() {
+  const [searchParams] = useSearchParams();
   const stops = useStops((state) => state.stops);
   const journeys = useFavorites((state) => state.journeys);
 
   return (
-    <main className="apphome">
+    <main className="apphome" data-safe-preview={searchParams.get("safePreview") === "1" || undefined}>
       <ImportOnLoad />
 
       <nav className="apphome__tasks" aria-label="주요 기능">

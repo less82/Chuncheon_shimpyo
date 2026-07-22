@@ -35,16 +35,16 @@
 .appreport__stop-chip svg { width: 17px; }
 .appreport__issues { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 22px; }
 .appreport__issues button { min-height: 76px; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: white; color: var(--ink); font-size: 16px; font-weight: 900; }
-.appreport__issues button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: white; }
+.appreport__issues button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
 .appreport__bottom-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin-top: auto; }
 .appreport__primary,
 .appreport__secondary,
 .appreport__home { display: inline-flex; min-height: 56px; padding: 0 14px; align-items: center; justify-content: center; border-radius: 15px; font-size: 16px; font-weight: 900; text-decoration: none; }
-.appreport__primary { border: 0; background: var(--brand); color: white; }
+.appreport__primary { border: 0; background: var(--brand); color: var(--on-brand); }
 .appreport__primary:disabled { background: var(--border-strong); }
 .appreport__secondary { border: 2px solid var(--border-strong); background: white; color: var(--ink); }
 .appreport__panel > .appreport__secondary { margin-top: auto; }
-.appreport__home { width: 100%; margin-top: 28px; gap: 8px; background: var(--brand); color: white; }
+.appreport__home { width: 100%; margin-top: 28px; gap: 8px; background: var(--brand); color: var(--on-brand); }
 .appreport__home svg { width: 20px; }
 @media (max-height: 680px) { .appreport__panel { padding-top: 18px; } .appreport h1 { font-size: 26px; } .appreport__issues button { min-height: 62px; } .appreport__stop { margin-top: 14px; min-height: 90px; padding: 12px; } }
 @media (max-height: 600px) {

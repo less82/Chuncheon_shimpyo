@@ -46,7 +46,7 @@ const baseStyle = (
 
 const selectedStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
   radius: 15,
-  color: "#26344a",
+  color: "#00a3e0",
   weight: 4,
   fillColor: MARKER_HEX[color],
   fillOpacity: 1,

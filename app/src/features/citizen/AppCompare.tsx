@@ -14,7 +14,7 @@ export default function AppCompare() {
           <section className="appcompare__item" key={screen.key}>
             <div className="appcompare__label"><h2>{screen.title}</h2><span>{screen.note}</span></div>
             <div className="appcompare__device" style={{ width: screen.width + 16, height: screen.height + 16 }}>
-              <iframe title={`${screen.title} 앱 화면`} src="/app?single=1" width={screen.width} height={screen.height} allow="microphone" />
+              <iframe title={`${screen.title} 앱 화면`} src="/app?single=1&safePreview=1" width={screen.width} height={screen.height} allow="microphone" />
             </div>
           </section>
         ))}
