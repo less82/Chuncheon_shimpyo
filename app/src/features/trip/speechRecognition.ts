@@ -19,7 +19,7 @@ function comparable(value: string): string {
 /** 전체 발화에서 정류장을 특정하는 이름 또는 번호만 남긴다. */
 export function extractStopKeyword(transcript: string, stopNames: string[]): string {
   const stopNumber = transcript.match(/\d{4,}/)?.[0];
-  if (stopNumber) return stopNumber;
+  if (stopNumber && stopNames.includes(stopNumber)) return stopNumber;
 
   const spoken = comparable(transcript);
   const matchedName = [...stopNames]
@@ -43,5 +43,5 @@ export function extractStopKeyword(transcript: string, stopNames: string[]): str
     .sort((a, b) => b.length - a.length)
     .find((word) => stopNames.some((name) => comparable(name).includes(comparable(word))));
 
-  return knownKeyword ?? words.join(" ");
+  return knownKeyword ?? "";
 }

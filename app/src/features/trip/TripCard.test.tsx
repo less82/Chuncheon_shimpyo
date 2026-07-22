@@ -37,21 +37,9 @@ const directOption: TripOption = {
   legs: [{ routeNos: ["7"], boardStopId: "A", alightStopId: "C" }],
 };
 
-const transferOption: TripOption = {
-  boardStopId: "A",
-  walkMin: 4,
-  walkReal: false,
-  directBus: false,
-  transferStopId: "B",
-  legs: [
-    { routeNos: ["7"], boardStopId: "A", alightStopId: "B" },
-    { routeNos: ["9"], boardStopId: "B", alightStopId: "C" },
-  ],
-};
-
 describe("<TripCard>", () => {
-  it("직행 옵션의 도보시간과 노선번호를 렌더한다", () => {
-    const { getByText } = render(
+  it("경로 설명 없이 버스 도착정보와 목적지를 렌더한다", () => {
+    const { getByText, queryByText } = render(
       <TripCard
         option={directOption}
         stops={stops}
@@ -59,22 +47,10 @@ describe("<TripCard>", () => {
         fromPos={fromPos}
       />,
     );
-    expect(getByText(/걸어서 4분/)).toBeInTheDocument();
     expect(getByText(/7번/)).toBeInTheDocument();
     expect(getByText(/시청앞/)).toBeInTheDocument();
-  });
-
-  it("환승 옵션은 환승 정류장과 두 번째 노선을 표시한다", () => {
-    const { getByText } = render(
-      <TripCard
-        option={transferOption}
-        stops={stops}
-        destStop={dest}
-        fromPos={fromPos}
-      />,
-    );
-    expect(getByText(/중앙시장/)).toBeInTheDocument();
-    expect(getByText(/갈아타기/)).toBeInTheDocument();
-    expect(getByText(/9번/)).toBeInTheDocument();
+    expect(getByText(/요양원 도착/)).toBeInTheDocument();
+    expect(getByText(/배차간격 약 10분/)).toBeInTheDocument();
+    expect(queryByText(/걸어서|갈아타기|중앙시장/)).not.toBeInTheDocument();
   });
 });

@@ -1,15 +1,8 @@
-// 목적지 길찾기 결과 한 건 = 큰 카드.
-// "○○까지 걸어서 4분 → 7번 (약 3분 후) → 목적지" 형태. 한 화면 한 결정.
-// 도보=getWalkRoute(폴백 직선), 도착=getArrival(폴백 배차간격). 무한 스피너 없음.
-
-import { useEffect, useState } from "react";
-import { BusFront, Footprints, MapPin, Repeat2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import type { Stop } from "../../types/stop";
-import type { TripLeg, TripOption } from "../../types/trip";
+import type { TripOption } from "../../types/trip";
 import type { LatLng } from "../../lib/geo";
-import { getWalkRoute } from "../../lib/walking";
-import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
-import { comfortSentence } from "./comfortSort";
+import { getArrival, headwayFallback, type RouteArrival } from "../../lib/arrivals";
 import { useFavorites } from "../../store/useFavorites";
 import "./TripView.css";
 
@@ -20,120 +13,60 @@ interface Props {
   fromPos: LatLng;
 }
 
-function routeLabel(leg: TripLeg): string {
-  const shown = leg.routeNos.slice(0, 3).join("·");
-  const extra = leg.routeNos.length > 3 ? " 외" : "";
-  return `${shown}번${extra}`;
-}
+export default function TripCard({ option, stops, destStop }: Props) {
+  const boardStop = stops.find((stop) => stop.id === option.boardStopId);
+  const routeNos = useMemo(() => option.legs[0]?.routeNos ?? [], [option.legs]);
+  const [arrivals, setArrivals] = useState<RouteArrival[]>([]);
+  const [fallbackText, setFallbackText] = useState(boardStop ? headwayFallback(boardStop).text : "도착정보 없음");
+  const saveJourney = useFavorites((state) => state.saveJourney);
+  const savedJourneys = useFavorites((state) => state.journeys);
 
-export default function TripCard({ option, stops, destStop, fromPos }: Props) {
-  const byId = (id: string) => stops.find((s) => s.id === id);
-  const boardStop = byId(option.boardStopId);
-  const boardName = boardStop?.name ?? "정류장";
-
-  // 도보시간: 초기엔 엔진의 직선 추정(option.walkMin) 즉시 표시 → 실경로로 갱신.
-  const [walkMin, setWalkMin] = useState(option.walkMin);
   useEffect(() => {
     if (!boardStop) return;
     let alive = true;
-    getWalkRoute(fromPos, { lat: boardStop.lat, lng: boardStop.lng }).then(
-      (w) => alive && setWalkMin(w.minutes),
-    );
-    return () => {
-      alive = false;
-    };
-  }, [boardStop, fromPos]);
+    getArrival(boardStop).then((arrival) => {
+      if (!alive) return;
+      const allowed = new Set(routeNos);
+      setArrivals((arrival.byRoute ?? []).filter((item) => allowed.has(item.routeNo)).sort((a, b) => a.min - b.min));
+      setFallbackText(arrival.text);
+    });
+    return () => { alive = false; };
+  }, [boardStop, routeNos]);
 
-  // 첫 구간(승차) 버스 도착: 폴백 즉시 표시 후 실시간(있으면) 갱신.
-  const firstRouteNo = option.legs[0]?.routeNos[0];
-  const saveJourney = useFavorites((s) => s.saveJourney);
-  const journeyId = `${option.boardStopId}:${firstRouteNo}:${destStop.id}`;
-  const saved = useFavorites((s) => s.journeys.some((item) => item.id === journeyId));
-  const firstLeg = option.legs[0];
-  const boardIndex = firstLeg ? stops.findIndex((stop) => stop.id === firstLeg.boardStopId) : -1;
-  const directionStop = boardIndex >= 0 ? stops.find((stop) => stop.id === firstLeg?.alightStopId) : undefined;
-  const [arrival, setArrival] = useState<Arrival>(() =>
-    boardStop ? headwayFallback(boardStop) : { text: "", live: false },
-  );
-  useEffect(() => {
-    if (!boardStop) return;
-    let alive = true;
-    getArrival(boardStop, firstRouteNo).then((a) => alive && setArrival(a));
-    return () => {
-      alive = false;
-    };
-  }, [boardStop, firstRouteNo]);
+  if (!boardStop) return null;
 
-  const transferStop = option.transferStopId
-    ? byId(option.transferStopId)
-    : undefined;
+  const shownBuses = arrivals.length > 0
+    ? arrivals.map((arrival) => ({ routeNo: arrival.routeNo, text: arrival.min <= 0 ? "곧 도착" : `${arrival.min}분 후 도착` }))
+    : routeNos.map((routeNo) => ({ routeNo, text: fallbackText }));
+  const primaryRouteNo = shownBuses[0]?.routeNo;
+  const journeyId = primaryRouteNo ? `${boardStop.id}:${primaryRouteNo}:${destStop.id}` : "";
+  const saved = savedJourneys.some((item) => item.id === journeyId);
 
   return (
-    <article
-      className="tripcard"
-      aria-label={`${boardName}에서 ${destStop.name}까지 ${
-        option.directBus ? "직행" : "환승"
-      } 경로`}
-    >
-      <ol className="tripcard__steps">
-        <li className="tripcard__step tripcard__step--walk">
-          <span className="tripcard__icon" aria-hidden="true"><Footprints /></span>
-          <span className="tripcard__text">
-            <b className="tripcard__place">{boardName}</b>
-            <span className="tripcard__walk">까지 걸어서 {walkMin}분</span>
-          </span>
-        </li>
+    <article className="tripcard" aria-label={`${boardStop.name} 출발 ${destStop.name} 도착 예정 버스`}>
+      <header className="tripcard__heading">
+        <strong>{boardStop.name}</strong>
+        <span>출발 · {destStop.name} 도착</span>
+      </header>
 
-        <li className="tripcard__step tripcard__step--bus">
-          <span className="tripcard__icon" aria-hidden="true"><BusFront /></span>
-          <span className="tripcard__text">
-            <b className="tripcard__route">{routeLabel(option.legs[0])}</b> 버스{" "}
-            <span className="tripcard__arrival">({arrival.text})</span>
-          </span>
-        </li>
+      <ul className="tripcard__arrivals">
+        {shownBuses.map((bus) => (
+          <li key={bus.routeNo}>
+            <strong>{bus.routeNo}번</strong>
+            <b>{bus.text}</b>
+          </li>
+        ))}
+      </ul>
 
-        {!option.directBus && transferStop && option.legs[1] && (
-          <>
-            <li className="tripcard__step tripcard__step--transfer">
-              <span className="tripcard__icon" aria-hidden="true"><Repeat2 /></span>
-              <span className="tripcard__text">
-                <b className="tripcard__place">{transferStop.name}</b>에서{" "}
-                <b>갈아타기</b>
-              </span>
-            </li>
-            <li className="tripcard__step tripcard__step--bus">
-              <span className="tripcard__icon" aria-hidden="true"><BusFront /></span>
-              <span className="tripcard__text">
-                <b className="tripcard__route">{routeLabel(option.legs[1])}</b>{" "}
-                버스
-              </span>
-            </li>
-          </>
-        )}
-
-        <li className="tripcard__step tripcard__step--dest">
-          <span className="tripcard__icon" aria-hidden="true"><MapPin /></span>
-          <span className="tripcard__text">
-            <b className="tripcard__place">{destStop.name}</b> 도착
-          </span>
-        </li>
-      </ol>
-
-      <p className="tripcard__tag">
-        {option.directBus ? "직접 가는 버스" : "한 번 갈아타는 길"}
-      </p>
-      {boardStop && (
-        <p className="tripcard__comfort">{comfortSentence(boardStop)}</p>
-      )}
-      {boardStop && firstRouteNo && (
+      {primaryRouteNo && (
         <section className="tripcard__favorite" aria-label="즐겨찾기 안내">
           <strong>자주 타시는 노선인가요?</strong>
           <span>즐겨찾기하면 다음에도 빠르게 확인할 수 있어요.</span>
           <button className="tripcard__save" type="button" disabled={saved} onClick={() => saveJourney({
             boardStopId: boardStop.id,
             destinationStopId: destStop.id,
-            routeNo: firstRouteNo,
-            direction: `${directionStop?.name ?? destStop.name} 방면`,
+            routeNo: primaryRouteNo,
+            direction: `${destStop.name} 방면`,
           })}>{saved ? "즐겨찾기 저장됨" : "즐겨찾기"}</button>
         </section>
       )}

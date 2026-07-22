@@ -11,7 +11,6 @@ import type { LatLng } from "../../lib/geo";
 import { useStops } from "../../store/useStops";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { planTrip } from "./planTrip";
-import { sortByComfort, type SortMode } from "./comfortSort";
 import { extractStopKeyword, speechErrorMessage } from "./speechRecognition";
 import TripCard from "./TripCard";
 import "./TripView.css";
@@ -47,7 +46,6 @@ export default function TripView() {
   const requestedBoardId = searchParams.get("board");
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
-  const [sortMode, setSortMode] = useState<SortMode>("comfort");
   const [queries, setQueries] = useState({ board: "", dest: "" });
   const [picked, setPicked] = useState<{ board: Stop | null; dest: Stop | null }>({ board: null, dest: null });
   const [activeField, setActiveField] = useState<"board" | "dest">("board");
@@ -97,10 +95,16 @@ export default function TripView() {
     recognition.onaudioend = () => speechDevLog(field, "audio-end", "마이크 입력 종료");
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      const keyword = extractStopKeyword(transcript, stops.map((stop) => stop.name));
+      const keyword = extractStopKeyword(transcript, stops.flatMap((stop) => [stop.name, stop.stopNo]));
       speechDevLog(field, "keyword", keyword || "추출 실패");
-      setQueries((value) => ({ ...value, [field]: keyword }));
-      setVoiceMessage("");
+      if (keyword) {
+        setQueries((value) => ({ ...value, [field]: keyword }));
+        setVoiceMessage("");
+      } else {
+        setQueries((value) => ({ ...value, [field]: "" }));
+        setVoiceField(field);
+        setVoiceMessage("춘천시 정류장을 찾지 못했어요. 다시 말해주세요.");
+      }
       setListeningField(null);
       if (recognitionRef.current === recognition) recognitionRef.current = null;
     };
@@ -119,12 +123,6 @@ export default function TripView() {
       setVoiceMessage(error instanceof DOMException && error.name === "InvalidStateError" ? "이미 음성을 듣고 있습니다." : "브라우저가 음성 입력을 시작하지 못했습니다.");
     }
   };
-
-  const stopsById = useMemo(() => {
-    const m = new Map<string, Stop>();
-    for (const s of stops) m.set(s.id, s);
-    return m;
-  }, [stops]);
 
   // 노선 그래프 로드(로컬 routes.json — 오프라인 동작). 실패해도 화면은 살아있다.
   useEffect(() => {
@@ -151,9 +149,12 @@ export default function TripView() {
 
   const options = useMemo(() => {
     if (!destStop || !routes) return [];
-    const planned = planTrip(fromPos, destStop, stops, routes.routes, requestedBoardId ? { boardStopId: requestedBoardId, walkRadiusM: Number.MAX_SAFE_INTEGER } : undefined);
-    return sortByComfort(planned, stopsById, sortMode);
-  }, [destStop, routes, fromPos, stops, stopsById, sortMode, requestedBoardId]);
+    return planTrip(fromPos, destStop, stops, routes.routes, requestedBoardId ? {
+      boardStopId: requestedBoardId,
+      walkRadiusM: Number.MAX_SAFE_INTEGER,
+      maxTransfers: 0,
+    } : undefined);
+  }, [destStop, routes, fromPos, stops, requestedBoardId]);
 
   const openArrivals = (boardChoice: Stop, destinationChoice: Stop) => {
     const boardCandidates = stops.filter((stop) => stop.name === boardChoice.name);
@@ -242,33 +243,6 @@ export default function TripView() {
         <h1 className="tripview__title">목적지행 버스</h1>
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
-
-      <section
-              className="tripview__sort"
-              aria-label="정렬 기준 선택"
-            >
-              <p className="tripview__sort-sub">
-                확인된 시설이 있는 길을 우선 보여드려요
-              </p>
-              <div className="tripview__sort-toggle" role="group">
-                <button
-                  type="button"
-                  className="tripview__sort-btn"
-                  aria-pressed={sortMode === "comfort"}
-                  onClick={() => setSortMode("comfort")}
-                >
-                  시설 확인된 곳 우선
-                </button>
-                <button
-                  type="button"
-                  className="tripview__sort-btn"
-                  aria-pressed={sortMode === "nearest"}
-                  onClick={() => setSortMode("nearest")}
-                >
-                  가까운 순
-                </button>
-              </div>
-      </section>
 
       <section className="tripview__results" aria-live="polite">
             {!routes ? (
