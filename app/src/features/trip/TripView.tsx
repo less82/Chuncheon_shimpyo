@@ -59,6 +59,7 @@ export default function TripView() {
     const speechWindow = window as typeof window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
     if (!Recognition) { setVoiceMessage("이 브라우저는 음성 입력을 지원하지 않습니다."); return; }
+    if (!window.isSecureContext) { setVoiceMessage("음성 입력은 보안 연결에서만 사용할 수 있습니다."); return; }
     const recognition = new Recognition();
     recognition.lang = "ko-KR";
     recognition.onstart = () => { setListeningField(field); setVoiceMessage("듣고 있어요. 정류장 이름을 말해주세요."); };
@@ -68,12 +69,18 @@ export default function TripView() {
       if (event.error === "not-allowed" || event.error === "service-not-allowed") setVoiceMessage("마이크 권한을 허용해주세요.");
       else if (event.error === "audio-capture") setVoiceMessage("사용할 수 있는 마이크를 확인해주세요.");
       else if (event.error === "no-speech") setVoiceMessage("정류장 이름을 다시 말해주세요.");
+      else if (event.error === "network") setVoiceMessage("네트워크 연결을 확인해주세요.");
+      else if (event.error === "language-not-supported") setVoiceMessage("이 기기에서는 한국어 음성 입력을 지원하지 않습니다.");
+      else if (event.error === "aborted") setVoiceMessage("음성 입력이 중단됐습니다. 다시 눌러주세요.");
       else setVoiceMessage("음성 입력을 시작하지 못했습니다. 다시 눌러주세요.");
     };
     recognition.onend = () => setListeningField(null);
     setActiveField(field);
     setVoiceMessage("마이크 연결 중");
-    try { recognition.start(); } catch { setListeningField(null); setVoiceMessage("음성 입력을 시작하지 못했습니다. 다시 눌러주세요."); }
+    try { recognition.start(); } catch (error) {
+      setListeningField(null);
+      setVoiceMessage(error instanceof DOMException && error.name === "InvalidStateError" ? "이미 음성을 듣고 있습니다." : "브라우저가 음성 입력을 시작하지 못했습니다.");
+    }
   };
 
   const stopsById = useMemo(() => {
@@ -123,7 +130,7 @@ export default function TripView() {
         {(["board", "dest"] as const).map((field) => <div className="tripview__field" key={field} data-active={activeField === field}>
           <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
           <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
-            <button className="tripview__voice" type="button" onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
+            <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
           </div>
           {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
         </div>)}
