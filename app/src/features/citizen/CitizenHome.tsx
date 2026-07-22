@@ -45,7 +45,7 @@ export default function CitizenHome() {
       <ImportOnLoad />
 
       <nav className="apphome__tasks" aria-label="주요 기능">
-        <Link className="apphome-task apphome-task--route" to="/go" aria-label="목적지행 버스 도착 예정시간">
+        <Link className="apphome-task apphome-task--route" to="/go" aria-label="버스 정류장 찾기">
           <strong>버스</strong>
         </Link>
         <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">

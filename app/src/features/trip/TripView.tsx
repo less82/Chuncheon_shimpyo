@@ -3,8 +3,8 @@
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Star } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { ChevronLeft, MapPin, Search, Star } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import type { LatLng } from "../../lib/geo";
@@ -18,6 +18,7 @@ import "./TripView.css";
 
 export default function TripView() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const stops = useStops((s) => s.stops);
   const cityCenter = useStops((s) => s.cityCenter);
   const favIds = useFavorites((s) => s.ids);
@@ -36,6 +37,13 @@ export default function TripView() {
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
   const [sortMode, setSortMode] = useState<SortMode>("comfort");
+  const [stopQuery, setStopQuery] = useState("");
+
+  const stopMatches = useMemo(() => {
+    const needle = stopQuery.replace(/\s+/g, "").toLowerCase();
+    if (!needle) return [];
+    return stops.filter((stop) => stop.name.replace(/\s+/g, "").toLowerCase().includes(needle) || stop.stopNo.includes(needle)).slice(0, 4);
+  }, [stopQuery, stops]);
 
   const stopsById = useMemo(() => {
     const m = new Map<string, Stop>();
@@ -64,13 +72,6 @@ export default function TripView() {
     );
   }, [cityCenter]);
 
-  // 첫 즐겨찾기를 기본 선택(탭 한 번 덜 하도록).
-  useEffect(() => {
-    if (!favStops.some((stop) => stop.id === destId) && favStops.length > 0) {
-      setDestId(favStops[0].id);
-    }
-  }, [destId, favStops]);
-
   const destStop = favStops.find((s) => s.id === destId) ?? null;
 
   const options = useMemo(() => {
@@ -78,6 +79,21 @@ export default function TripView() {
     const planned = planTrip(fromPos, destStop, stops, routes.routes, requestedBoardId ? { boardStopId: requestedBoardId, walkRadiusM: Number.MAX_SAFE_INTEGER } : undefined);
     return sortByComfort(planned, stopsById, sortMode);
   }, [destStop, routes, fromPos, stops, stopsById, sortMode, requestedBoardId]);
+
+  if (!requestedBoardId) return (
+    <main className="tripview tripview--find">
+      <header className="tripview__bar">
+        <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
+        <h1 className="tripview__title">버스 정류장 찾기</h1>
+        <span className="tripview__spacer" aria-hidden="true" />
+      </header>
+      <section className="tripview__find">
+        <h2>어디서 타세요?</h2>
+        <label className="tripview__search"><Search aria-hidden="true" /><span className="sr-only">정류장 검색</span><input autoFocus value={stopQuery} onChange={(event) => setStopQuery(event.target.value)} placeholder="정류장 이름 또는 번호" /></label>
+        <div className="tripview__matches">{stopMatches.map((stop) => <button type="button" key={stop.id} onClick={() => navigate(`/go?board=${encodeURIComponent(stop.id)}`)}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stop.stopNo ? `정류장 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}</div>
+      </section>
+    </main>
+  );
 
   return (
     <main className="tripview">
