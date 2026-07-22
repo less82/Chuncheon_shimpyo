@@ -48,11 +48,10 @@ describe("<TripView>", () => {
     fireEvent.click(screen.getByRole("button", { name: "직접 쓰기" }));
     fireEvent.change(screen.getByRole("textbox", { name: "어디서 출발하세요?" }), { target: { value: "강원대" } });
     expect(screen.queryByRole("button", { name: "강원대" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "위치 확인" }));
-    const result = screen.getByRole("button", { name: "강원대" });
-    expect(result).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "강원대" })).toHaveLength(1);
-    expect(within(result.closest(".tripview__field") as HTMLElement).queryByRole("textbox", { name: "어디서 출발하세요?" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "출발지로 설정" }));
+    expect(screen.getByText("출발 위치")).toBeInTheDocument();
+    expect(screen.getByText("강원대")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "어디서 출발하세요?" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "어디로 가세요?" })).not.toBeInTheDocument();
   });
 
@@ -74,7 +73,7 @@ describe("<TripView>", () => {
     fireEvent.change(originInput, { target: { value: "강원" } });
 
     expect(originInput).toHaveValue("강원");
-    expect(screen.getByRole("button", { name: "위치 확인" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "출발지로 설정" })).toBeInTheDocument();
     expect(screen.queryByText("출발 위치를 확인해주세요")).not.toBeInTheDocument();
   });
 });
