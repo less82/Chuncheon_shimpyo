@@ -38,7 +38,7 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
 
 export default function CitizenHome() {
   const [searchParams] = useSearchParams();
-  const safePreview = searchParams.get("safePreview") === "1";
+  const safePreview = searchParams.get("safePreview") === "1" || window.self !== window.top;
   const stops = useStops((state) => state.stops);
   const journeys = useFavorites((state) => state.journeys);
 

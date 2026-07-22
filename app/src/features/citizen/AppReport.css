@@ -1,6 +1,6 @@
 .appreport { width: min(390px, 100vw); height: min(844px, 100svh); min-height: 0; margin: 0 auto; overflow: hidden; background: #f5f6f8; color: var(--ink); }
 .appreport__bar { display: grid; height: 64px; padding: 8px 14px; grid-template-columns: 44px 1fr 44px; align-items: center; border-bottom: 1px solid var(--border); background: white; }
-.appreport__bar a { display: inline-flex; min-height: 44px; align-items: center; color: var(--brand); font-size: 15px; font-weight: 900; text-decoration: none; }
+.appreport__bar a { display: inline-flex; min-height: 44px; align-items: center; color: var(--ink); font-size: 15px; font-weight: 900; text-decoration: none; }
 .appreport__bar a svg { width: 21px; }
 .appreport__bar strong { text-align: center; font-size: 17px; white-space: nowrap; }
 .appreport__panel,

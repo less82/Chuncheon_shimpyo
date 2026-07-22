@@ -9,11 +9,11 @@
   --brand-soft: #e6f7fd;
   --brand-ink: #333333;
 
-  --warm: hsl(42 100% 44%);
-  --warm-strong: hsl(42 100% 29%);
-  --warm-soft: hsl(42 88% 95%);
-  --warning: hsl(42 100% 44%);
-  --warning-bg: hsl(42 88% 95%);
+  --warm: #9e6a00;
+  --warm-strong: #614100;
+  --warm-soft: #fff3db;
+  --warning: #9e6a00;
+  --warning-bg: #fff3db;
 
   /* ---- 표면 / 배경 ---- */
   --bg: #f5f6f8;
@@ -29,10 +29,10 @@
   --on-warm: #211800;
 
   /* ---- 3상태 (색만으로 구분 금지 — 항상 아이콘+한글 병기) ---- */
-  --yes: hsl(145 100% 44%);
-  --yes-bg: hsl(145 88% 95%);
-  --no: hsl(0 100% 44%);
-  --no-bg: hsl(0 88% 95%);
+  --yes: #228738;
+  --yes-bg: #eaf6ec;
+  --no: #de3412;
+  --no-bg: #fdefec;
   --unknown: #565d66;
   --unknown-bg: #eceff2;
 

@@ -23,7 +23,7 @@
   min-height: var(--touch);
   padding: 0 var(--sp-3);
   border-radius: var(--radius);
-  color: var(--brand-strong);
+  color: var(--ink);
   font-size: var(--fs-base);
   font-weight: 800;
   text-decoration: none;

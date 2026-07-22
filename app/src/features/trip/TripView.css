@@ -29,7 +29,7 @@
   min-height: var(--touch);
   padding: 0 var(--sp-3);
   border-radius: var(--radius-pill);
-  color: var(--brand);
+  color: var(--ink);
   font-size: var(--fs-base);
   font-weight: 800;
   text-decoration: none;
@@ -71,7 +71,9 @@
 .tripview__trip-message { margin-top: -8px; color: var(--no); font-size: 14px; font-weight: 800; line-height: 1.4; text-align: center; }
 .tripview__voice { display: flex; width: 100%; min-height: clamp(46px, calc(18px + 6dvh), 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: var(--on-brand); font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
 .tripview__voice:focus, .tripview__voice:focus-visible { outline: none; box-shadow: none; }
-.tripview__voice[data-listening="true"] { border-color: var(--no); background: var(--no); color: white; }
+.tripview__voice[data-listening="true"] { border-color: var(--no); background: var(--no); color: white; animation: tripview-listening 1.2s ease-in-out infinite; }
+@keyframes tripview-listening { 50% { box-shadow: 0 0 0 6px var(--no-bg); } }
+@media (prefers-reduced-motion: reduce) { .tripview__voice[data-listening="true"] { animation: none; box-shadow: 0 0 0 4px var(--no-bg); } }
 .tripview__voice-message { position: absolute; right: 2px; bottom: -22px; left: 2px; margin: 0; color: var(--no); font-size: clamp(12px, 3.5vw, 14px); font-weight: 700; line-height: 1; text-align: center; }
 .tripview__manual { display: block; width: 100%; min-height: 46px; margin-top: 26px; border: 2px solid var(--brand); border-radius: 15px; background: var(--surface); color: var(--brand); font: inherit; font-weight: 900; }
 .tripview__find-submit { width: 100%; min-height: clamp(48px, calc(18px + 7dvh), 58px); margin-top: clamp(8px, 1.7dvh, 14px); border: 0; border-radius: 15px; background: var(--brand); color: var(--on-brand); font-size: clamp(16px, calc(4px + 4vw), 19px); font-weight: 900; }

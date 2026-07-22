@@ -44,7 +44,7 @@ export default function TripView() {
   const cityCenter = useStops((s) => s.cityCenter);
   const requestedDestId = searchParams.get("dest");
   const requestedBoardId = searchParams.get("board");
-  const safePreview = searchParams.get("safePreview") === "1";
+  const safePreview = searchParams.get("safePreview") === "1" || window.self !== window.top;
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [fromPos, setFromPos] = useState<LatLng>(cityCenter);
   const [queries, setQueries] = useState({ board: "", dest: "" });
@@ -258,7 +258,7 @@ export default function TripView() {
               <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
               <div className="tripview__field-control">
                 {manualFields[field] && <input ref={(node) => { inputRefs.current[field] = node; }} id={`trip-${field}`} value={queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />}
-                <button className="tripview__voice" type="button" data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "듣고 있어요" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
+                <button className="tripview__voice" type="button" aria-pressed={listeningField === field} data-listening={listeningField === field} onClick={() => listen(field)}>{listeningField === field ? "● 듣고 있어요 · 누르면 중단" : field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
               </div>
               {voiceField === field && voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
               {voiceField === field && manualAvailable[field] && !manualFields[field] && <button className="tripview__manual" type="button" onClick={() => openManualInput(field)}>직접 쓰기</button>}
