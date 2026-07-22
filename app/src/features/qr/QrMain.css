@@ -67,9 +67,7 @@
 
 /* 홈 */
 .qrmain__welcome { display: flex; min-height: calc(100svh - 32px); flex-direction: column; justify-content: center; text-align: left; }
-.qrmain__hello { margin-top: 0; }
-.qrmain__hello h1 { font-size: 36px; line-height: 1.2; letter-spacing: -1.2px; }
-.qrmain__choices { display: grid; gap: 16px; margin-top: 40px; }
+.qrmain__choices { display: grid; width: 100%; gap: 16px; }
 .qrmain__choices button { min-height: 96px; padding: 16px; border: 2px solid var(--brand); border-radius: 16px; background: var(--brand); color: white; cursor: pointer; }
 .qrmain__choices button:last-child { background: white; color: var(--brand); }
 .qrmain__choices strong { font-size: 22px; line-height: 1.35; }
@@ -175,8 +173,7 @@
   .qrmain p { font-size: 15px; line-height: 1.45; }
 
   .qrmain__welcome { justify-content: center; }
-  .qrmain__hello h1 { font-size: 28px; }
-  .qrmain__choices { gap: 10px; margin-top: 24px; }
+  .qrmain__choices { gap: 10px; }
   .qrmain__choices button { min-height: 72px; padding: 10px; border-radius: 12px; }
   .qrmain__choices strong { font-size: 19px; }
 

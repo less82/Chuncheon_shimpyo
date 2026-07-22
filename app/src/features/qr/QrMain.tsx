@@ -408,15 +408,12 @@ export default function QrMain() {
     return (
       <main className="qrmain">
         <section className="qrmain__welcome">
-          <div className="qrmain__hello">
-            <h1>무엇을 하시겠어요?</h1>
-          </div>
           <div className="qrmain__choices">
             <button type="button" onClick={openDestination}>
-              <strong>버스 노선 길찾기</strong>
+              <strong>버스 도착 예정시간 확인</strong>
             </button>
             <button type="button" onClick={locateForReport}>
-              <strong>정류장 민원 접수</strong>
+              <strong>정류장 시설 민원 접수</strong>
             </button>
           </div>
         </section>
