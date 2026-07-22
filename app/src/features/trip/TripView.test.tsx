@@ -29,6 +29,14 @@ beforeEach(() => {
 });
 
 describe("<TripView>", () => {
+  it("즐겨찾기 결과로 바로 들어오면 데이터 로드 전에 입력 화면으로 되돌리지 않는다", () => {
+    useStops.setState({ stops: [], loaded: false });
+    const screen = render(<MemoryRouter initialEntries={["/go?board=A&dest=B"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
+
+    expect(screen.getByText("버스 정보를 준비하고 있어요")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "출발지 말하기" })).not.toBeInTheDocument();
+  });
+
   it("전체 발화 대신 정류장을 특정하는 이름이나 번호만 추출한다", () => {
     expect(extractStopKeyword("출발지는 강원대학교 후문 정류장에서 탈게요", ["강원대후문", "춘천역"])).toBe("강원대후문");
     expect(extractStopKeyword("안녕하세요 반갑습니다 강원대학교", ["강원대후문", "강원대병원"])).toBe("강원대");

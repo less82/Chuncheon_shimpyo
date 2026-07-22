@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
-import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import { getArrival, type Arrival } from "../../lib/arrivals";
 import type { Stop } from "../../types/stop";
 import type { FavoriteJourney } from "../../store/useFavorites";
 import "./CitizenHome.css";
@@ -12,7 +12,7 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
   const board = stops.find((stop) => stop.id === journey.boardStopId) ?? null;
   const destination = stops.find((stop) => stop.id === journey.destinationStopId) ?? null;
   const routeNo = journey.routeNo;
-  const [arrival, setArrival] = useState<Arrival>(() => board ? headwayFallback(board) : { text: "도착정보 미확인", live: false });
+  const [arrival, setArrival] = useState<Arrival>(() => ({ text: "도착정보 확인 중", live: false }));
 
   useEffect(() => {
     if (!board) {
@@ -20,8 +20,8 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
       return;
     }
     let alive = true;
-    setArrival(headwayFallback(board));
-    getArrival(board, routeNo).then((value) => alive && setArrival(value));
+    setArrival({ text: "도착정보 확인 중", live: false });
+    getArrival(board, routeNo).then((value) => alive && setArrival(value.live ? value : { text: "실시간 도착정보 없음", live: false }));
     return () => { alive = false; };
   }, [board, routeNo]);
 

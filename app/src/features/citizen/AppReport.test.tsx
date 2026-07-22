@@ -43,7 +43,7 @@ describe("<AppReport>", () => {
     fireEvent.click(screen.getByRole("button", { name: /춘천역/ }));
     fireEvent.click(screen.getByRole("button", { name: "네, 맞아요" }));
     fireEvent.click(screen.getByRole("button", { name: "의자가 파손됐어요" }));
-    fireEvent.click(screen.getByRole("button", { name: "민원 접수하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "내용 보내기" }));
 
     expect(screen.getByText(/알려주셔서/)).toBeInTheDocument();
     expect(localStorage.getItem(REPORT_STORAGE_KEY)).toContain("의자가 파손됐어요");

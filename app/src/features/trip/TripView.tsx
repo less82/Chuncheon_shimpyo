@@ -43,6 +43,7 @@ export default function TripView() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const stops = useStops((s) => s.stops);
+  const stopsLoaded = useStops((s) => s.loaded);
   const cityCenter = useStops((s) => s.cityCenter);
   const requestedDestId = searchParams.get("dest");
   const requestedBoardId = searchParams.get("board");
@@ -357,6 +358,17 @@ export default function TripView() {
     </main>
   );
 
+  if (!stopsLoaded) return (
+    <main className="tripview" data-safe-preview={safePreview || undefined}>
+      <header className="tripview__bar">
+        <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
+        <h1 className="tripview__title">버스 도착정보</h1>
+        <span className="tripview__spacer" aria-hidden="true" />
+      </header>
+      <section className="tripview__results"><p className="tripview__msg" role="status">버스 정보를 준비하고 있어요</p></section>
+    </main>
+  );
+
   if (!requestedDestId || !destStop) return <Navigate to={safePreview ? "/go?safePreview=1" : "/go"} replace />;
 
   return (
@@ -366,7 +378,7 @@ export default function TripView() {
           <ChevronLeft aria-hidden="true" />
           메인
         </Link>
-        <h1 className="tripview__title">목적지행 버스</h1>
+        <h1 className="tripview__title">버스 도착정보</h1>
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
 
@@ -378,7 +390,7 @@ export default function TripView() {
                 이 위치 주변에서 목적지로 가는 버스의 도착정보가 없습니다.
               </p>
             ) : (
-              options.map((opt, i) => (
+              options.slice(0, 1).map((opt, i) => (
                 <TripCard
                   key={`${opt.boardStopId}-${opt.directBus ? "d" : "t"}-${i}`}
                   option={opt}
