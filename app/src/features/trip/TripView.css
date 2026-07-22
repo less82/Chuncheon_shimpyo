@@ -48,7 +48,7 @@
 .tripview__find { display: grid; max-width: 520px; min-height: calc(var(--available-height) - 72px); margin: 0 auto; padding: clamp(14px, 3dvh, 26px) clamp(16px, 5.5vw, 24px); align-content: center; }
 
 @media (min-width: 601px) {
-  .tripview { --safe-top: 18px; --safe-bottom: 16px; }
+  .tripview { --safe-top: 24px; --safe-bottom: 48px; }
 }
 .tripview__field { position: relative; margin-bottom: clamp(22px, 3.4dvh, 28px); }
 .tripview__field-label { display: block; margin-bottom: clamp(6px, 2vw, 9px); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
