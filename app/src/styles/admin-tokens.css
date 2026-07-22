@@ -1,0 +1,59 @@
+/* 행정 화면 전용 토큰. 시민 앱의 브랜드·접근성 테마와 독립적으로 관리한다. */
+:root {
+  --brand: #26344a;
+  --brand-strong: #182334;
+  --brand-soft: #eef1f5;
+  --brand-ink: #171f2d;
+
+  --warm: #8a4b08;
+  --warm-strong: #653604;
+  --warm-soft: #fff1d6;
+  --warning: #8a4b08;
+  --warning-bg: #fff1d6;
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --overlay: rgba(23, 27, 33, 0.58);
+
+  --ink: #171b21;
+  --ink-body: #343b45;
+  --ink-muted: #5b6571;
+  --on-brand: #ffffff;
+  --on-warm: #ffffff;
+
+  --yes: #146c5a;
+  --yes-bg: #e4f3ee;
+  --no: #b4232c;
+  --no-bg: #fdebec;
+  --unknown: #565d66;
+  --unknown-bg: #eceff2;
+
+  --border: #dce1e7;
+  --border-strong: #bbc4cf;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  --fs-sm: 16px;
+  --fs-base: 19px;
+  --fs-md: 22px;
+  --fs-lg: 27px;
+  --fs-xl: 34px;
+  --fs-2xl: 44px;
+
+  --font-sans: "Nanum Gothic", "나눔고딕", "Malgun Gothic", system-ui, sans-serif;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+  --shadow-card: 0 2px 4px rgba(23, 27, 33, 0.06), 0 8px 24px rgba(23, 27, 33, 0.08);
+  --shadow-float: 0 6px 16px rgba(23, 27, 33, 0.14), 0 16px 40px rgba(23, 27, 33, 0.12);
+  --touch: 48px;
+  --touch-lg: 60px;
+}

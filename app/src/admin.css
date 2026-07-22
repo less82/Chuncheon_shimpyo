@@ -1,0 +1,28 @@
+@import "./styles/admin-tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#admin-root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 1024px;
+  background: var(--bg);
+  color: var(--ink-body);
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

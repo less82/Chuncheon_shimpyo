@@ -2,6 +2,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { resolve } from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -45,6 +46,7 @@ export default defineConfig({
           { url: '/data/routes.json', revision: null },
         ],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/admin(?:\/|$)/],
         runtimeCaching: [
           {
             // CARTO Voyager 지도 타일 런타임 캐시(오프라인 재방문 시 캐시 폴백).
@@ -79,5 +81,13 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.ts',
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        citizen: resolve(__dirname, 'index.html'),
+        admin: resolve(__dirname, 'admin/index.html'),
+      },
+    },
   },
 })
