@@ -130,7 +130,6 @@ export default function TripView() {
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
       <section className="tripview__find">
-        <h2>어디서 어디로 가세요?</h2>
         {(["board", "dest"] as const).map((field) => <div className="tripview__field" key={field} data-active={activeField === field}>
           <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
           <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
