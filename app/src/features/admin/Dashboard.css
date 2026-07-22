@@ -30,18 +30,13 @@
 .dash-sidebar .dash-kicker { display: block; color: #96a6bb; }
 .dash-kicker { display: block; margin-bottom: 5px; color: #96a6bb; font-size: 13px; font-weight: 900; letter-spacing: .08em; }
 .dash-source { margin-top: auto; color: #aeb9c8; font-size: 14px; line-height: 1.5; }
-.dash-workspace { min-width: 0; height: 100%; padding: 22px clamp(24px, 3.5vw, 50px) 56px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: #f4f6f8; container-type: inline-size; container-name: dashboard-workspace; }
+.dash-workspace { min-width: 0; height: 100%; padding: 18px clamp(24px, 3vw, 42px) 24px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: #f4f6f8; container-type: inline-size; container-name: dashboard-workspace; }
 .dash-workspace::-webkit-scrollbar, .dash-tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .dash-presets { grid-template-columns: 1fr; }
 
-.dash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
-.dash-head h2 { font-size: 25px; }
+.dash-head { display: flex; min-height: 42px; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.dash-head h2 { margin: 0; font-size: 19px; line-height: 1.2; }
 .dash-today { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
-.dash-concept-tabs { display: flex; min-width: 0; margin-bottom: 16px; border: 1px solid var(--border-strong); background: var(--surface); overflow-x: auto; scrollbar-width: none; }
-.dash-concept-tabs::-webkit-scrollbar { display: none; }
-.dash-concept-tabs button { display: inline-flex; min-height: 36px; flex: 0 0 auto; align-items: center; padding: 0 11px; border: 0; border-right: 1px solid var(--border); border-bottom: 3px solid transparent; background: white; color: var(--ink-body); font-size: 11px; font-weight: 800; cursor: pointer; }
-.dash-concept-tabs button:hover { background: var(--surface-2); color: var(--brand); }
-.dash-concept-tabs button[aria-pressed="true"] { border-bottom-color: var(--warm); background: var(--brand-strong); color: white; }
 .report-section-head, .report-list-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
 .report-command { display: flex; min-width: 0; align-items: stretch; justify-content: space-between; gap: 18px; margin-bottom: 8px; padding: 10px 0; border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong); }
 .report-command button { font-family: inherit; cursor: pointer; }
@@ -64,15 +59,18 @@
 .report-total span { font-size: 12px; font-weight: 800; }
 .report-list-tools { display: flex; align-items: center; gap: 12px; }
 .report-list-tools > button { min-height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--brand); font-size: 12px; font-weight: 800; cursor: pointer; }
-.report-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 16px; border: 1px solid var(--border-strong); background: white; }
-.report-flow > button { display: flex; min-width: 0; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border: 0; border-right: 1px solid var(--border); border-bottom: 3px solid transparent; background: white; color: var(--ink-body); text-align: left; cursor: pointer; }
-.report-flow > button:last-child { border-right: 0; }
-.report-flow > button:hover { background: var(--surface-2); }
-.report-flow > button[aria-pressed="true"] { border-bottom-color: var(--brand); background: var(--brand-soft); }
+.report-flow { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 10px; padding: 4px 0 8px; overflow: hidden; }
+.report-flow::before { content: ""; position: absolute; z-index: 0; top: 21px; right: 8%; left: 8%; height: 2px; background: var(--border-strong); }
+.report-flow > button { position: relative; z-index: 1; display: grid; min-width: 0; min-height: 40px; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 0 12px; border: 0; background: transparent; color: var(--ink-body); text-align: left; cursor: pointer; }
+.report-flow > button i { display: grid; width: 24px; height: 24px; place-items: center; border: 2px solid var(--border-strong); border-radius: 50%; background: #f4f6f8; color: var(--ink-muted); font-size: 10px; font-style: normal; font-weight: 900; }
+.report-flow > button:hover .report-flow-copy b { color: var(--brand); }
+.report-flow > button[aria-pressed="true"] i { border-color: var(--brand); background: var(--brand); color: white; }
+.report-flow > button[aria-pressed="true"] .report-flow-copy b { color: var(--brand); }
 .report-flow-copy { display: grid; min-width: 0; gap: 2px; }
+.report-flow-copy, .report-flow strong { width: fit-content; padding: 0 3px; background: #f4f6f8; }
 .report-flow-copy small { color: var(--ink-muted); font-size: 10px; font-weight: 800; }
 .report-flow-copy b { overflow-wrap: anywhere; color: var(--ink); font-size: 13px; }
-.report-flow strong { display: flex; align-items: baseline; gap: 2px; color: var(--ink); font-size: 21px; font-variant-numeric: tabular-nums; }
+.report-flow strong { display: flex; align-items: baseline; gap: 2px; color: var(--ink); font-size: 17px; font-variant-numeric: tabular-nums; }
 .report-flow strong small { color: var(--ink-muted); font-size: 10px; }
 .report-pagination { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 52px; border: 1px solid var(--border); border-top: 0; background: white; }
 .report-pagination button { min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid transparent; background: transparent; color: var(--ink-body); font-size: 12px; font-weight: 800; cursor: pointer; }
@@ -150,19 +148,18 @@
 .dash-sub strong {
   color: var(--brand-strong);
 }
-@media (max-width: 900px) { .report-summary { grid-template-columns: 1fr; } .report-flow { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px) { .report-summary { grid-template-columns: 1fr; } }
 
 /* The workspace can become narrow while the browser itself is still wide
    because the navigation occupies part of the available width. */
 @container dashboard-workspace (max-width: 760px) {
-  .report-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-flow { grid-template-columns: repeat(4, minmax(130px, 1fr)); overflow-x: auto; scrollbar-width: none; }
   .report-summary { grid-template-columns: 110px minmax(0, 1fr); }
   .dash-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-head { align-items: flex-start; gap: 12px; }
   .dash-today { text-align: right; }
   .report-section-head { align-items: flex-start; }
   .report-section-head p { max-width: 260px; }
-  .report-flow > button:nth-child(2) { border-right: 0; }
   .report-command { align-items: stretch; }
   .report-command-filters { flex-wrap: wrap; }
   .report-tablewrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
@@ -176,7 +173,6 @@
 }
 
 @container dashboard-workspace (max-width: 600px) {
-  .report-flow,
   .dash-presets,
   .report-summary { grid-template-columns: 1fr; }
   .dash-head { display: grid; }
@@ -591,10 +587,6 @@
   .report-command { display: grid; }
   .report-command-total { min-height: 42px; border-right: 0; border-bottom: 1px solid var(--border); }
   .report-command-filters { justify-content: flex-start; }
-  .report-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .report-flow > button:nth-child(2) { border-right: 0; }
-  .report-flow > button:nth-child(-n + 2) { border-bottom-color: var(--border); }
-  .report-flow > button[aria-pressed="true"] { border-bottom-color: var(--brand); }
   .report-review { max-height: calc(100dvh - 24px); overflow-y: auto; }
   .report-review-body { grid-template-columns: 1fr; }
   .report-case { border-right: 0; border-bottom: 1px solid var(--border); }

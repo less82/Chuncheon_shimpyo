@@ -7,7 +7,6 @@ import { useStops } from "../../store/useStops";
 import FilterTab from "./FilterTab";
 import SurveyTab from "./SurveyTab";
 import InstallTab from "./InstallTab";
-import DashboardConceptPreview, { type DashboardConceptKey } from "./DashboardConceptPreview";
 import { loadReports, REPORT_CHANGED_EVENT, REPORT_STORAGE_KEY, updateReportStatus, type CitizenReport } from "../report/reportStore";
 import { buildReportInsights } from "./reportInsights";
 import "./Dashboard.css";
@@ -20,14 +19,6 @@ const TABS: { key: TabKey; label: string; ariaLabel: string; description: string
   { key: "install", label: "개선 검토", ariaLabel: "시설 개선 후보", description: "후보·예산 검토" },
   { key: "filter", label: "데이터 조회", ariaLabel: "데이터 분석", description: "조건별 목록 추출" },
 ];
-
-const CONCEPT_LINKS = [
-  ["queue", "A. 업무 목록형"],
-  ["desk", "B. 3단 검토형"],
-  ["board", "C. 단계 보드형"],
-  ["evidence", "D. 근거 대조형"],
-  ["control", "E. 운영 관제형"],
-] as const;
 
 const REPORT_STATUS = {
   received: { label: "접수", next: "reviewing" as const, action: "접수 확인 · 담당 배정" },
@@ -60,6 +51,7 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
     return start + index;
   });
   const currentLabel = attentionFilter === "open" ? "미처리 제보" : attentionFilter === "safety" ? "안전 관련 제보" : attentionFilter === "overlap" ? "유사 제보 집중" : statusFilter ? REPORT_STATUS[statusFilter].label : "전체 제보";
+  const hasNarrowFilter = Boolean(statusFilter || (attentionFilter && attentionFilter !== "open"));
   const selected = reports.find((report) => report.id === selectedId) ?? null;
   const selectedInsight = insights.find(({ report }) => report.id === selectedId) ?? null;
   const reviewItems: Record<CitizenReport["status"], [string, string] | null> = {
@@ -93,14 +85,14 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
 
   return <section className="dash-section report-panel">
     <div className="report-section-head"><div><span className="dash-kicker">처리 현황</span><h3>업무 단계</h3></div></div>
-    <div className="report-flow" role="group" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setAttentionFilter(null); setStatusFilter((current) => current === status ? null : status); setPage(1); }}><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
-    <div className="report-list-head"><div><span className="dash-kicker">접수 오래된 순</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleInsights.length}</strong><span>건</span></div>{(statusFilter || attentionFilter) && <button type="button" onClick={() => { setStatusFilter(null); setAttentionFilter(null); setPage(1); }}>필터 초기화</button>}</div></div>
+    <div className="report-flow" role="group" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setAttentionFilter(null); setStatusFilter((current) => current === status ? null : status); setPage(1); }}><i aria-hidden="true">{index + 1}</i><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
+    <div className="report-list-head"><div><span className="dash-kicker">접수 오래된 순</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleInsights.length}</strong><span>건</span></div>{hasNarrowFilter && <button type="button" onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}>필터 초기화</button>}</div></div>
     <div className="report-command" role="group" aria-label="목록 범위 선택">
       <button className="report-command-total" type="button" aria-pressed={attentionFilter === "open"} onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}><span>미처리 전체</span><strong>{unresolved.length}<small>건</small></strong></button>
       <div className="report-command-filters"><span>목록 좁히기</span><button type="button" data-tone="danger" aria-pressed={attentionFilter === "safety"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "safety" ? "open" : "safety"); setPage(1); }}>안전 관련 후보 <b>{unresolved.filter((item) => item.safety === "안전 관련").length}</b></button><button type="button" data-tone="repeat" aria-pressed={attentionFilter === "overlap"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "overlap" ? "open" : "overlap"); setPage(1); }}>유사 제보 집중 <b>{repeatedGroups}</b></button></div>
     </div>
     <div className="report-workbench"><div className="report-queue">
-        {visibleInsights.length === 0 ? <div className="report-empty"><h2>{statusFilter || attentionFilter ? `${currentLabel}가 없습니다` : "아직 접수된 제보가 없습니다"}</h2><p>{statusFilter || attentionFilter ? "다른 조건을 선택해 확인하세요." : "시민 화면에서 불편 항목을 제출하면 이곳에 바로 표시됩니다."}</p></div> :
+        {visibleInsights.length === 0 ? <div className="report-empty"><h2>{hasNarrowFilter ? `${currentLabel}가 없습니다` : attentionFilter === "open" ? "현재 처리할 제보가 없습니다" : "아직 접수된 제보가 없습니다"}</h2><p>{hasNarrowFilter ? "다른 조건을 선택해 확인하세요." : "새 제보가 접수되면 이곳에 표시됩니다."}</p></div> :
           <><div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table"><thead><tr><th>신고 성격</th><th>정류장</th><th>유형·제보</th><th>유사 제보</th><th>접수 경과</th><th>처리 상태</th><th>업무</th></tr></thead><tbody>{pageReports.map((item) => { const report = item.report; const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row" key={report.id} aria-selected={selectedId === report.id}><td data-label="신고 성격"><span className="report-risk" data-risk={item.safety}>{item.safety}</span></td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="유형·제보"><span className="report-category">{item.category}</span><strong className="report-issue">{report.issue}</strong></td><td data-label="유사 제보"><strong className="report-overlap" data-repeat={item.overlap >= 2}>{item.overlap}건</strong><span className="dash-stopid">동일 정류장·유형</span></td><td data-label="접수 경과"><strong>{item.elapsedLabel}</strong>{report.status === "resolved" && <span className="report-speed" data-speed={item.speed}>{item.speed}</span>}</td><td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td><td data-label="업무"><button className="report-action" type="button" onClick={() => openReview(report.id)}>{report.status === "resolved" ? "처리 기록 보기" : "검토 열기"}</button></td></tr>; })}</tbody></table></div>
           {totalPages > 1 && <nav className="report-pagination" aria-label="제보 목록 페이지"><button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>이전</button>{pageNumbers.map((pageNumber) => <button type="button" key={pageNumber} aria-current={pageNumber === currentPage ? "page" : undefined} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}<button type="button" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>다음</button></nav>}</>}
       </div></div>
@@ -116,7 +108,6 @@ export default function Dashboard() {
   const stops = useStops((s) => s.stops);
   const loaded = useStops((s) => s.loaded);
   const [tab, setTab] = useState<TabKey>("reports");
-  const [concept, setConcept] = useState<DashboardConceptKey | null>(null);
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {
@@ -143,16 +134,13 @@ export default function Dashboard() {
         </nav>
       </aside>
       <section className="dash-workspace">
-        <nav className="dash-concept-tabs" aria-label="대시보드 시안 비교"><button type="button" aria-pressed={concept === null} onClick={() => setConcept(null)}>운영 화면</button>{CONCEPT_LINKS.map(([key, label]) => <button type="button" key={key} aria-pressed={concept === key} onClick={() => setConcept(key)}>{label}</button>)}</nav>
-        {concept ? <DashboardConceptPreview concept={concept} reports={reports}/> : <>
-          <header className="dash-head"><div><span className="dash-kicker">{TABS.find((item) => item.key === tab)?.description}</span><h2>{TABS.find((item) => item.key === tab)?.label}</h2></div></header>
+          <header className="dash-head"><h2>{TABS.find((item) => item.key === tab)?.label}</h2></header>
           <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
             {tab === "reports" && <ReportsTab reports={reports} />}
             {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}
             {tab === "install" && <InstallTab stops={stops} loaded={loaded} />}
             {tab === "filter" && <FilterTab stops={stops} loaded={loaded} />}
           </div>
-        </>}
       </section>
       </div>
       </div>
