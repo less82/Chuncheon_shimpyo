@@ -50,7 +50,7 @@
 .report-command-filters button b { margin-left: 8px; color: var(--ink); font-size: 13px; }
 .report-command-filters button:hover { background: var(--surface-2); }
 .report-command-filters button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
-.report-section-head { margin-bottom: 14px; }
+.report-section-head { margin-bottom: 8px; }
 .report-section-head h3, .report-list-head h3 { margin: 0; color: var(--ink); font-size: 18px; line-height: 1.3; }
 .report-section-head p { max-width: 400px; color: var(--ink-muted); font-size: 13px; text-align: right; }
 .report-list-head { margin: 18px 0 8px; padding-top: 16px; border-top: 1px solid var(--border); }
@@ -59,15 +59,16 @@
 .report-total span { font-size: 12px; font-weight: 800; }
 .report-list-tools { display: flex; align-items: center; gap: 12px; }
 .report-list-tools > button { min-height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--brand); font-size: 12px; font-weight: 800; cursor: pointer; }
-.report-flow { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 10px; padding: 4px 0 8px; overflow: hidden; }
-.report-flow::before { content: ""; position: absolute; z-index: 0; top: 21px; right: 8%; left: 8%; height: 2px; background: var(--border-strong); }
-.report-flow > button { position: relative; z-index: 1; display: grid; min-width: 0; min-height: 40px; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 0 12px; border: 0; background: transparent; color: var(--ink-body); text-align: left; cursor: pointer; }
-.report-flow > button i { display: grid; width: 24px; height: 24px; place-items: center; border: 2px solid var(--border-strong); border-radius: 50%; background: #f4f6f8; color: var(--ink-muted); font-size: 10px; font-style: normal; font-weight: 900; }
-.report-flow > button:hover .report-flow-copy b { color: var(--brand); }
-.report-flow > button[aria-pressed="true"] i { border-color: var(--brand); background: var(--brand); color: white; }
+.report-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 10px; border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong); background: white; }
+.report-flow > button { position: relative; display: flex; min-width: 0; min-height: 48px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px; border: 0; border-right: 1px solid var(--border); background: white; color: var(--ink-body); text-align: left; cursor: pointer; }
+.report-flow > button:last-child { border-right: 0; }
+.report-flow > button::after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; background: transparent; }
+.report-flow > button:hover { background: var(--surface-2); }
+.report-flow > button[aria-pressed="true"] { background: var(--brand-soft); }
+.report-flow > button[aria-pressed="true"]::after { background: var(--brand); }
 .report-flow > button[aria-pressed="true"] .report-flow-copy b { color: var(--brand); }
 .report-flow-copy { display: grid; min-width: 0; gap: 2px; }
-.report-flow-copy, .report-flow strong { width: fit-content; padding: 0 3px; background: #f4f6f8; }
+.report-flow-copy, .report-flow strong { width: fit-content; }
 .report-flow-copy small { color: var(--ink-muted); font-size: 10px; font-weight: 800; }
 .report-flow-copy b { overflow-wrap: anywhere; color: var(--ink); font-size: 13px; }
 .report-flow strong { display: flex; align-items: baseline; gap: 2px; color: var(--ink); font-size: 17px; font-variant-numeric: tabular-nums; }

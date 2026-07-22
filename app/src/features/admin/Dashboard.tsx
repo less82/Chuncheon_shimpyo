@@ -84,12 +84,12 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
   }
 
   return <section className="dash-section report-panel">
-    <div className="report-section-head"><div><span className="dash-kicker">처리 현황</span><h3>업무 단계</h3></div></div>
-    <div className="report-flow" role="group" aria-label="제보 처리 단계">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setAttentionFilter(null); setStatusFilter((current) => current === status ? null : status); setPage(1); }}><i aria-hidden="true">{index + 1}</i><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
-    <div className="report-list-head"><div><span className="dash-kicker">접수 오래된 순</span><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleInsights.length}</strong><span>건</span></div>{hasNarrowFilter && <button type="button" onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}>필터 초기화</button>}</div></div>
+    <div className="report-section-head"><h3>처리 현황</h3></div>
+    <div className="report-flow" role="group" aria-label="처리 상태별 제보 목록">{statuses.map((status, index) => <button type="button" key={status} aria-pressed={statusFilter === status} onClick={() => { setAttentionFilter(null); setStatusFilter((current) => current === status ? null : status); setPage(1); }}><span className="report-flow-copy"><b>{REPORT_STATUS[status].label}</b></span><strong>{counts[index]}<small>건</small></strong></button>)}</div>
+    <div className="report-list-head"><div><h3>{currentLabel}</h3></div><div className="report-list-tools"><div className="report-total"><strong>{visibleInsights.length}</strong><span>건</span></div>{hasNarrowFilter && <button type="button" onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}>필터 초기화</button>}</div></div>
     <div className="report-command" role="group" aria-label="목록 범위 선택">
       <button className="report-command-total" type="button" aria-pressed={attentionFilter === "open"} onClick={() => { setStatusFilter(null); setAttentionFilter("open"); setPage(1); }}><span>미처리 전체</span><strong>{unresolved.length}<small>건</small></strong></button>
-      <div className="report-command-filters"><span>목록 좁히기</span><button type="button" data-tone="danger" aria-pressed={attentionFilter === "safety"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "safety" ? "open" : "safety"); setPage(1); }}>안전 관련 후보 <b>{unresolved.filter((item) => item.safety === "안전 관련").length}</b></button><button type="button" data-tone="repeat" aria-pressed={attentionFilter === "overlap"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "overlap" ? "open" : "overlap"); setPage(1); }}>유사 제보 집중 <b>{repeatedGroups}</b></button></div>
+      <div className="report-command-filters"><button type="button" data-tone="danger" aria-pressed={attentionFilter === "safety"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "safety" ? "open" : "safety"); setPage(1); }}>안전 관련 후보 <b>{unresolved.filter((item) => item.safety === "안전 관련").length}</b></button><button type="button" data-tone="repeat" aria-pressed={attentionFilter === "overlap"} onClick={() => { setStatusFilter(null); setAttentionFilter(attentionFilter === "overlap" ? "open" : "overlap"); setPage(1); }}>유사 제보 집중 <b>{repeatedGroups}</b></button></div>
     </div>
     <div className="report-workbench"><div className="report-queue">
         {visibleInsights.length === 0 ? <div className="report-empty"><h2>{hasNarrowFilter ? `${currentLabel}가 없습니다` : attentionFilter === "open" ? "현재 처리할 제보가 없습니다" : "아직 접수된 제보가 없습니다"}</h2><p>{hasNarrowFilter ? "다른 조건을 선택해 확인하세요." : "새 제보가 접수되면 이곳에 표시됩니다."}</p></div> :
@@ -134,7 +134,7 @@ export default function Dashboard() {
         </nav>
       </aside>
       <section className="dash-workspace">
-          <header className="dash-head"><h2>{TABS.find((item) => item.key === tab)?.label}</h2></header>
+          {tab !== "reports" && <header className="dash-head"><h2>{TABS.find((item) => item.key === tab)?.label}</h2></header>}
           <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
             {tab === "reports" && <ReportsTab reports={reports} />}
             {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}

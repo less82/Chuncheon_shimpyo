@@ -101,7 +101,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
   it("실제 운영 화면에는 개발용 시안 비교 탭을 노출하지 않는다", () => {
     const utils = render(<Dashboard />);
     expect(utils.queryByRole("navigation", { name: "대시보드 시안 비교" })).toBeNull();
-    expect(utils.getByRole("heading", { name: "시민 제보" })).toBeInTheDocument();
+    expect(utils.getByRole("heading", { name: "처리 현황" })).toBeInTheDocument();
   });
 
   it("시민 앱에서 저장한 불편 제보를 기본 화면에 표시한다", () => {
@@ -167,7 +167,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "resolved" },
     ]));
     const utils = render(<Dashboard />);
-    fireEvent.click(within(utils.getByRole("group", { name: "제보 처리 단계" })).getByRole("button", { name: /처리 완료/ }));
+    fireEvent.click(within(utils.getByRole("group", { name: "처리 상태별 제보 목록" })).getByRole("button", { name: /처리 완료/ }));
     expect(utils.queryByRole("button", { name: "검토 열기" })).toBeNull();
     fireEvent.click(utils.getByRole("button", { name: "처리 기록 보기" }));
     expect(utils.getByText("담당자 확인과 처리 결과 등록이 완료되었습니다.")).toBeInTheDocument();
