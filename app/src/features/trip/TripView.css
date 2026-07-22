@@ -53,7 +53,6 @@
 .tripview__matches button strong { overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
 .tripview__matches button small { color: var(--ink-muted); font-size: 13px; font-weight: 700; }
 .tripview__voice { display: flex; width: 100%; min-height: clamp(46px, 13vw, 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: white; color: var(--brand); font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
-.tripview__voice svg { width: clamp(20px, 6vw, 25px); }
 .tripview__voice-message { margin: -10px 0 12px; color: var(--no); font-size: 14px; font-weight: 700; }
 .tripview__find-submit { width: 100%; min-height: 58px; margin-top: 14px; border: 0; border-radius: 15px; background: var(--brand); color: white; font-size: 19px; font-weight: 900; }
 .tripview__find-submit:disabled { background: var(--border-strong); color: var(--ink-muted); }

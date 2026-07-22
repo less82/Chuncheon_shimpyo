@@ -3,7 +3,7 @@
 // 즐겨찾기가 없으면 별표 저장 안내. 결과 없으면 정직하게 "찾지 못했습니다".
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, MapPin, Mic, Star } from "lucide-react";
+import { ChevronLeft, MapPin, Star } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
@@ -103,20 +103,20 @@ export default function TripView() {
     <main className="tripview tripview--find">
       <header className="tripview__bar">
         <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
-        <h1 className="tripview__title">버스 정류장 찾기</h1>
+        <h1 className="tripview__title">버스 도착정보</h1>
         <span className="tripview__spacer" aria-hidden="true" />
       </header>
       <section className="tripview__find">
-        <h2>정류장을 선택하세요</h2>
+        <h2>어디서 어디로 가세요?</h2>
         {(["board", "dest"] as const).map((field) => <div className="tripview__field" key={field} data-active={activeField === field}>
-          <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "출발 정류장" : "목적지 정류장"}</label>
+          <label className="tripview__field-label" htmlFor={`trip-${field}`}>{field === "board" ? "어디서 타세요?" : "어디로 가세요?"}</label>
           <div className="tripview__field-control"><input id={`trip-${field}`} autoFocus={field === "board"} value={picked[field]?.name ?? queries[field]} onFocus={() => setActiveField(field)} onChange={(event) => { setActiveField(field); setPicked((value) => ({ ...value, [field]: null })); setQueries((value) => ({ ...value, [field]: event.target.value })); }} placeholder="정류장 이름 또는 번호를 입력해주세요" />
-            <button className="tripview__voice" type="button" onClick={() => listen(field)} aria-label={`${field === "board" ? "출발" : "목적지"} 정류장 음성 입력`}><Mic aria-hidden="true" /><span>음성으로 입력</span></button>
+            <button className="tripview__voice" type="button" onClick={() => listen(field)}>{field === "board" ? "출발지 말하기" : "목적지 말하기"}</button>
           </div>
         </div>)}
         {voiceMessage && <p className="tripview__voice-message" role="status">{voiceMessage}</p>}
         <div className="tripview__matches">{visibleMatches.filter((stop) => stop.id !== picked[activeField === "board" ? "dest" : "board"]?.id).map((stop) => <button type="button" key={stop.id} onClick={() => { setPicked((value) => ({ ...value, [activeField]: stop })); setQueries((value) => ({ ...value, [activeField]: stop.name })); if (activeField === "board") setActiveField("dest"); }}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stop.stopNo ? `정류장 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}</div>
-        <button className="tripview__find-submit" type="button" disabled={!picked.board || !picked.dest} onClick={() => picked.board && picked.dest && navigate(`/go?board=${encodeURIComponent(picked.board.id)}&dest=${encodeURIComponent(picked.dest.id)}`)}>버스 확인</button>
+        <button className="tripview__find-submit" type="button" disabled={!picked.board || !picked.dest} onClick={() => picked.board && picked.dest && navigate(`/go?board=${encodeURIComponent(picked.board.id)}&dest=${encodeURIComponent(picked.dest.id)}`)}>도착 예정시간 확인</button>
       </section>
     </main>
   );
