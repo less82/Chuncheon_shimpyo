@@ -203,6 +203,13 @@ def main() -> None:
     ap.add_argument("--preview", action="store_true", help="박스 그린 눈검사 이미지 생성")
     ap.add_argument("--limit", type=int, default=0, help="앞 N장만(디버그)")
     ap.add_argument(
+        "--only",
+        default="",
+        help="쉼표로 구분한 파일명만 처리(예: 111.png). 나중에 추가된 사진용. "
+        "기존 splits.json 을 갈아엎지 않고 **train 쪽에만 덧붙인다** "
+        "(val은 손검수를 마친 고정 집합이라 건드리면 안 됨).",
+    )
+    ap.add_argument(
         "--force",
         action="store_true",
         help="labels/ 를 자동라벨로 덮어쓴다. 검수 결과가 날아가므로 기본은 보존.",
@@ -219,7 +226,13 @@ def main() -> None:
         [p for p in photos.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg"}],
         key=lambda p: (len(p.stem), p.stem),
     )
-    if args.limit:
+    only = {n.strip() for n in args.only.split(",") if n.strip()}
+    if only:
+        missing = only - {p.name for p in imgs}
+        if missing:
+            raise SystemExit(f"사진을 찾을 수 없습니다: {sorted(missing)}")
+        imgs = [p for p in imgs if p.name in only]
+    elif args.limit:
         imgs = imgs[: args.limit]
     if not imgs:
         raise SystemExit(f"사진이 없습니다: {photos}")
@@ -251,8 +264,18 @@ def main() -> None:
         if i % 20 == 0 or i == len(imgs):
             print(f"  {i}/{len(imgs)}")
 
-    splits = make_splits([p.name for p in imgs])
-    (out / "splits.json").write_text(
+    splits_path = out / "splits.json"
+    if only and splits_path.exists():
+        # 추가 사진: 기존 분할을 보존하고 train에만 덧붙인다.
+        splits = json.loads(splits_path.read_text(encoding="utf-8"))
+        known = set(splits["train"]) | set(splits["val"])
+        new = sorted(n for n in only if n not in known)
+        splits["train"] = sorted(set(splits["train"]) | set(new))
+        splits.setdefault("appended", []).extend(new)
+        print(f"[autolabel] train에 추가: {new}  (val은 손검수 완료본이라 건드리지 않음)")
+    else:
+        splits = make_splits([p.name for p in imgs])
+    splits_path.write_text(
         json.dumps(splits, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     (out / "data.yaml").write_text(
