@@ -44,3 +44,6 @@ data/*.zip
 
 # 검수 라벨 렌더 미리보기 — 재생성 가능
 pipeline/vision/preview_reviewed/
+
+# 추론 결과 렌더 — 재생성 가능
+pipeline/vision/predictions/
