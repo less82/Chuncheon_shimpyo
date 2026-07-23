@@ -1,3 +1,4 @@
+# YOLOv8 데이터셋 정의 — train_facility.py 가 dataset/ 을 구성한 뒤 사용
 path: C:/Users/hyeon/Desktop/춘천시/pipeline/vision/dataset
 train: images/train
 val: images/val
