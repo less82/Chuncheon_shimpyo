@@ -11,6 +11,14 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+pipeline/.venv-vision/
+
+# vision: 모델 가중치·학습 산출물 (용량 큼, 재생성 가능)
+# 라벨 txt·splits·metrics 는 커밋한다 — 검수 결과가 팀의 자산이다.
+*.pt
+pipeline/vision/runs/
+pipeline/vision/preview/
+pipeline/vision/dataset/
 
 # env / secrets
 .env
@@ -30,3 +38,6 @@ Thumbs.db
 .superpowers/
 # 로드뷰 캡처(미검수 원본) / POI 원본 — 커밋 금지
 data/roadview_captures/
+
+# 사진 zip — 압축 해제본(data/춘천시 정류장 사진/)이 커밋되므로 중복
+data/*.zip

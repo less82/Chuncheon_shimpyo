@@ -1,0 +1,9 @@
+# 시설 탐지 라벨링·학습 전용 의존성 (별도 venv 권장: pipeline/.venv-vision)
+#
+#   python -m venv .venv-vision
+#   .venv-vision/Scripts/python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   .venv-vision/Scripts/python.exe -m pip install -r requirements-vision.txt
+#
+# torch는 GPU 빌드를 골라야 하므로 위 index-url 로 따로 설치한다(CPU면 index-url 생략).
+# vision_review.py(검수 편집기)는 이 의존성이 전혀 필요 없다 — 표준 라이브러리만 쓴다.
+ultralytics>=8.3
