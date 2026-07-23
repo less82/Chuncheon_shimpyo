@@ -41,3 +41,6 @@ data/roadview_captures/
 
 # 사진 zip — 압축 해제본(data/춘천시 정류장 사진/)이 커밋되므로 중복
 data/*.zip
+
+# 검수 라벨 렌더 미리보기 — 재생성 가능
+pipeline/vision/preview_reviewed/
