@@ -126,10 +126,16 @@
   color: var(--yes);
 }
 
-.maengcoco__result[data-suspected="true"] {
+.maengcoco__result[data-verdict="damage_suspected"] {
   border-color: #c65324;
   background: #fff0e7;
   color: #a83e15;
+}
+
+.maengcoco__result[data-verdict="review_required"] {
+  border-color: #c88a17;
+  background: #fff8db;
+  color: #8a5b00;
 }
 
 .maengcoco__result > svg { width: 29px; height: 29px; }

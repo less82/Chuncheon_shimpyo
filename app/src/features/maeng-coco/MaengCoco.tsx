@@ -63,7 +63,7 @@ export default function MaengCoco() {
     setError("");
     setResult(null);
     try {
-      setResult(await inspectBusStopImage(file, 0.5));
+      setResult(await inspectBusStopImage(file, 0.25));
     } catch (requestError) {
       const message =
         requestError instanceof TypeError
@@ -85,6 +85,7 @@ export default function MaengCoco() {
   };
 
   const suspected = result?.verdict === "damage_suspected";
+  const reviewRequired = result?.verdict === "review_required";
   const bestConfidence = result?.detections.reduce(
     (best, detection) => Math.max(best, detection.confidence),
     0,
@@ -141,10 +142,10 @@ export default function MaengCoco() {
         {result && (
           <section
             className="maengcoco__result"
-            data-suspected={suspected}
+            data-verdict={result.verdict}
             aria-live="polite"
           >
-            {suspected ? (
+            {suspected || reviewRequired ? (
               <AlertTriangle aria-hidden="true" />
             ) : (
               <CheckCircle2 aria-hidden="true" />
@@ -153,11 +154,15 @@ export default function MaengCoco() {
               <strong>
                 {suspected
                   ? "파손 의심 영역이 있습니다"
+                  : reviewRequired
+                    ? "파손 가능성을 확인해주세요"
                   : "파손 의심 영역을 찾지 못했습니다"}
               </strong>
               <p>
                 {suspected
                   ? `${result.detections.length}개 영역 · 최고 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}%`
+                  : reviewRequired
+                    ? `${result.detections.length}개 영역 · 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}% · 사람이 확인해야 합니다.`
                   : "정상 확정이 아니므로 사진을 사람이 다시 확인해주세요."}
               </p>
             </div>
@@ -199,7 +204,7 @@ export default function MaengCoco() {
         </div>
 
         <p className="maengcoco__notice">
-          16장으로 학습한 시험용 모델입니다. 민원 접수나 보수 판단 전에 반드시 사람이 확인해야 합니다.
+          19장으로 학습한 시험용 모델입니다. 민원 접수나 보수 판단 전에 반드시 사람이 확인해야 합니다.
         </p>
       </section>
     </main>

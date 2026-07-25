@@ -4,8 +4,9 @@ export type MaengCocoDetection = {
 };
 
 export type MaengCocoResult = {
-  verdict: "damage_suspected" | "no_damage_detected";
+  verdict: "damage_suspected" | "review_required" | "no_damage_detected";
   threshold: number;
+  damage_threshold: number;
   detections: MaengCocoDetection[];
   annotated_image: string;
   notice: string;
@@ -20,7 +21,7 @@ const apiBase = (
 
 export async function inspectBusStopImage(
   file: File,
-  threshold = 0.5,
+  threshold = 0.25,
   fetcher: FetchLike = fetch,
 ): Promise<MaengCocoResult> {
   const response = await fetcher(

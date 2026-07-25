@@ -56,6 +56,12 @@ def main() -> None:
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    dataset_summary_path = dataset_dir / "dataset_summary.json"
+    dataset_summary = (
+        json.loads(dataset_summary_path.read_text(encoding="utf-8"))
+        if dataset_summary_path.is_file()
+        else {}
+    )
     environment = {
         "python": platform.python_version(),
         "torch": torch.__version__,
@@ -110,8 +116,8 @@ def main() -> None:
         notes={
             "purpose": "bus-stop damage proof of concept",
             "class": "bus_stop_damage",
-            "source_images": 16,
-            "warning": "not for production use; positive-only tiny dataset",
+            "source_images": dataset_summary.get("images"),
+            "warning": "not for production use; tiny dataset",
         },
     )
 

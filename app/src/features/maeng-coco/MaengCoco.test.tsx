@@ -5,7 +5,8 @@ import MaengCoco from "./MaengCoco";
 
 const result = {
   verdict: "damage_suspected",
-  threshold: 0.5,
+  threshold: 0.25,
+  damage_threshold: 0.5,
   detections: [
     { confidence: 0.6408, xyxy: [10, 20, 300, 240] },
   ],
@@ -52,13 +53,38 @@ describe("<MaengCoco>", () => {
     expect(await screen.findByText("파손 의심 영역이 있습니다")).toBeInTheDocument();
     expect(screen.getByText("1개 영역 · 최고 신뢰도 64%")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/maeng-coco?threshold=0.5",
+      "http://127.0.0.1:8000/api/maeng-coco?threshold=0.25",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "image/jpeg" },
         body: file,
       }),
     );
+  });
+
+  it("낮은 신뢰도 후보를 정상으로 표시하지 않고 확인 필요로 분류한다", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ...result,
+        verdict: "review_required",
+        detections: [{ confidence: 0.34, xyxy: [5, 10, 200, 220] }],
+      }),
+    }));
+    const screen = render(
+      <MemoryRouter>
+        <MaengCoco />
+      </MemoryRouter>,
+    );
+    const file = new File(["image"], "review.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(screen.getByLabelText(/정류장 사진 넣기/), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
+
+    expect(await screen.findByText("파손 가능성을 확인해주세요")).toBeInTheDocument();
+    expect(screen.getByText(/신뢰도 34%/)).toBeInTheDocument();
   });
 
   it("지원하지 않는 파일 형식을 검사 전에 거절한다", () => {

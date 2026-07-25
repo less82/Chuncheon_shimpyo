@@ -32,12 +32,14 @@ from rfdetr import RFDETRNano
 
 MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 MAX_RENDER_SIDE = 1600
+CANDIDATE_THRESHOLD = 0.25
+DAMAGE_THRESHOLD = 0.5
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_unfrozen"
+    / "output_v2"
     / "checkpoint_best_total.pth"
 )
 
@@ -114,15 +116,24 @@ class DamageDetector:
         output = io.BytesIO()
         rendered.save(output, "JPEG", quality=90, optimize=True)
         encoded = base64.b64encode(output.getvalue()).decode("ascii")
+        best_confidence = max(
+            (row["confidence"] for row in rows),
+            default=0.0,
+        )
+        if best_confidence >= DAMAGE_THRESHOLD:
+            verdict = "damage_suspected"
+        elif rows:
+            verdict = "review_required"
+        else:
+            verdict = "no_damage_detected"
         return {
-            "verdict": (
-                "damage_suspected" if rows else "no_damage_detected"
-            ),
+            "verdict": verdict,
             "threshold": threshold,
+            "damage_threshold": DAMAGE_THRESHOLD,
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "16장으로 학습한 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
+                "19장으로 학습한 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
             ),
         }
 
@@ -165,7 +176,7 @@ def health() -> dict[str, Any]:
 @app.post("/api/maeng-coco")
 async def inspect_bus_stop(
     request: Request,
-    threshold: float = Query(default=0.5, ge=0.25, le=0.9),
+    threshold: float = Query(default=CANDIDATE_THRESHOLD, ge=0.25, le=0.9),
 ) -> dict[str, Any]:
     content_type = request.headers.get("content-type", "").split(";", 1)[0].lower()
     if content_type not in ALLOWED_CONTENT_TYPES:

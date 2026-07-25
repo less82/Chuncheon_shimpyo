@@ -1,7 +1,7 @@
 param(
   [string]$ModelPath = (
     Join-Path ([Environment]::GetFolderPath("UserProfile")) `
-      "Downloads\busstop_coco_rfdetr\output_unfrozen\checkpoint_best_total.pth"
+      "Downloads\busstop_coco_rfdetr\output_v2\checkpoint_best_total.pth"
   ),
   [int]$ApiPort = 8000
 )

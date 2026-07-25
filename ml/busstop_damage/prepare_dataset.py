@@ -6,7 +6,7 @@ boxes, a provenance manifest, and an annotation contact sheet.
 
 The 16 supplied images are intentionally treated as one class:
 ``bus_stop_damage``. There are too few examples per subtype for a defensible
-multi-class model.
+multi-class model. Images with ``bbox=None`` are explicit normal negatives.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ class Sample:
     output_name: str
     split: str
     subtype: str
-    bbox: tuple[int, int, int, int]
+    bbox: tuple[int, int, int, int] | None
 
 
 # Bounding boxes enclose the visibly damaged component/area, not the whole image.
@@ -116,6 +116,27 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         "roof_glass",
         (37, 0, 582, 207),
     ),
+    Sample(
+        "151893_17318_1425.jpg",
+        "hard_cracked_glass_00.jpg",
+        "train",
+        "side_glass",
+        (24, 90, 420, 295),
+    ),
+    Sample(
+        "정류장_정상.jpg",
+        "normal_negative_00.jpg",
+        "train",
+        "normal_negative",
+        None,
+    ),
+    Sample(
+        "42657_38203_4053.jpg",
+        "normal_negative_01.jpg",
+        "train",
+        "normal_negative",
+        None,
+    ),
 )
 
 CATEGORY: Final[dict[str, object]] = {
@@ -156,6 +177,7 @@ def prepare_split(
     annotations: list[dict[str, object]] = []
     manifest_rows: list[dict[str, object]] = []
 
+    annotation_id = 1
     for index, sample in enumerate(samples, start=1):
         source_path = source_dir / sample.source_name
         if not source_path.is_file():
@@ -164,12 +186,12 @@ def prepare_split(
         with Image.open(source_path) as opened:
             image = ImageOps.exif_transpose(opened).convert("RGB")
             width, height = image.size
-            validate_bbox(sample.bbox, width, height, sample.source_name)
+            if sample.bbox is not None:
+                validate_bbox(sample.bbox, width, height, sample.source_name)
             destination = split_dir / sample.output_name
             image.save(destination, "JPEG", quality=95, optimize=True)
 
         image_id = index
-        annotation_id = index
         images.append(
             {
                 "id": image_id,
@@ -178,20 +200,22 @@ def prepare_split(
                 "height": height,
             }
         )
-        annotations.append(
-            {
-                "id": annotation_id,
-                "image_id": image_id,
-                "category_id": 1,
-                "bbox": list(sample.bbox),
-                "area": sample.bbox[2] * sample.bbox[3],
-                "iscrowd": 0,
-                "attributes": {
-                    "damage_subtype": sample.subtype,
-                    "annotation_status": "reviewed_manual_v1",
-                },
-            }
-        )
+        if sample.bbox is not None:
+            annotations.append(
+                {
+                    "id": annotation_id,
+                    "image_id": image_id,
+                    "category_id": 1,
+                    "bbox": list(sample.bbox),
+                    "area": sample.bbox[2] * sample.bbox[3],
+                    "iscrowd": 0,
+                    "attributes": {
+                        "damage_subtype": sample.subtype,
+                        "annotation_status": "reviewed_manual_v2",
+                    },
+                }
+            )
+            annotation_id += 1
         manifest_rows.append(
             {
                 "split": split,
@@ -200,10 +224,10 @@ def prepare_split(
                 "subtype": sample.subtype,
                 "width": width,
                 "height": height,
-                "bbox_x": sample.bbox[0],
-                "bbox_y": sample.bbox[1],
-                "bbox_width": sample.bbox[2],
-                "bbox_height": sample.bbox[3],
+                "bbox_x": sample.bbox[0] if sample.bbox is not None else "",
+                "bbox_y": sample.bbox[1] if sample.bbox is not None else "",
+                "bbox_width": sample.bbox[2] if sample.bbox is not None else "",
+                "bbox_height": sample.bbox[3] if sample.bbox is not None else "",
                 "source_sha256": sha256(source_path),
                 "output_sha256": sha256(destination),
             }
@@ -236,9 +260,14 @@ def create_contact_sheet(output_dir: Path, samples: tuple[Sample, ...]) -> Path:
         image_path = output_dir / sample.split / sample.output_name
         with Image.open(image_path) as opened:
             image = opened.convert("RGB")
-            draw = ImageDraw.Draw(image)
-            x, y, width, height = sample.bbox
-            draw.rectangle((x, y, x + width, y + height), outline=(255, 40, 40), width=5)
+            if sample.bbox is not None:
+                draw = ImageDraw.Draw(image)
+                x, y, width, height = sample.bbox
+                draw.rectangle(
+                    (x, y, x + width, y + height),
+                    outline=(255, 40, 40),
+                    width=5,
+                )
             image.thumbnail((tile_width, tile_height - 42))
             tile = Image.new("RGB", (tile_width, tile_height), "white")
             tile.paste(
@@ -246,7 +275,11 @@ def create_contact_sheet(output_dir: Path, samples: tuple[Sample, ...]) -> Path:
                 ((tile_width - image.width) // 2, 30 + (tile_height - 42 - image.height) // 2),
             )
             tile_draw = ImageDraw.Draw(tile)
-            label = f"{sample.split} | {sample.output_name} | {sample.subtype}"
+            status = "positive" if sample.bbox is not None else "negative"
+            label = (
+                f"{sample.split} | {sample.output_name} | "
+                f"{sample.subtype} | {status}"
+            )
             tile_draw.text((8, 8), label, fill=(20, 20, 20), font=font)
             tiles.append(tile)
 
@@ -290,15 +323,15 @@ def main() -> None:
     summary = {
         "class": CATEGORY["name"],
         "images": len(SAMPLES),
-        "annotations": len(SAMPLES),
+        "annotations": sum(sample.bbox is not None for sample in SAMPLES),
         "splits": {
             split: sum(sample.split == split for sample in SAMPLES)
             for split in ("train", "valid", "test")
         },
         "limitations": [
-            "positive-only dataset",
-            "16 images",
-            "one bounding box per image",
+            "only 2 normal negative images",
+            "19 images",
+            "one bounding box per positive image",
             "news captions and watermarks in several images",
             "not suitable for production evaluation",
         ],
