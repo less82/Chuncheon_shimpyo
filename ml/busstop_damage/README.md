@@ -82,11 +82,14 @@ GTX 1650 Ti 4GB 기준:
 
 ## 앱에서 maeng_coco 사용
 
-초기 화면의 `버스 / 정류장` 버튼 아래 `maeng_coco`를 누르면 사진 검사 화면으로 이동한다. 아래 명령 하나가 로컬 RF-DETR API와 시민 앱 개발 서버를 함께 실행한다.
+초기 화면의 `버스 / 정류장` 버튼 아래 `maeng_coco`를 누르면 사진 검사 화면으로 이동한다. 이제 기본 개발 명령이 로컬 RF-DETR API와 시민 앱을 함께 실행한다.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\start-maeng-coco.ps1
+cd app
+npm run dev
 ```
+
+프로젝트 루트에서는 `powershell -ExecutionPolicy Bypass -File scripts\start-maeng-coco.ps1`을 직접 실행해도 같다. `npm run dev:citizen`은 모델 API 없이 프런트 화면만 켜는 용도로 남겨둔다.
 
 브라우저에서 `http://127.0.0.1:5173/app`을 열고 다음 순서로 사용한다.
 
