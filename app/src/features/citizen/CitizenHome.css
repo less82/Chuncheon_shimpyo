@@ -10,6 +10,9 @@
 .apphome-task { display: flex; min-width: 0; min-height: 82px; padding: 12px 14px; align-items: center; justify-content: center; border-radius: 18px; text-decoration: none; }
 .apphome-task--route { background: var(--brand); color: var(--on-brand); box-shadow: 0 8px 20px rgba(0, 107, 147, .2); }
 .apphome-task--report { border: 2px solid var(--yes); background: white; color: var(--yes); }
+.apphome-task--coco { grid-column: 1 / -1; min-height: 66px; flex-direction: column; gap: 1px; border: 2px solid #5f45b7; background: #f4f0ff; color: #4f399e; }
+.apphome-task--coco > strong { font-size: 20px; }
+.apphome-task--coco > small { font-size: 12px; font-weight: 800; }
 .apphome-task__copy { display: flex; min-width: 0; flex-direction: column; justify-content: center; }
 .apphome-task__copy strong { font-size: 18px; line-height: 1.25; white-space: nowrap; }
 .apphome-task__copy small { margin-top: 4px; color: inherit; font-size: 14px; font-weight: 700; opacity: .76; white-space: nowrap; }

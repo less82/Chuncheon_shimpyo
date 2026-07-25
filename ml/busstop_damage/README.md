@@ -80,6 +80,32 @@ GTX 1650 Ti 4GB 기준:
   --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_unfrozen
 ```
 
+## 앱에서 maeng_coco 사용
+
+초기 화면의 `버스 / 정류장` 버튼 아래 `maeng_coco`를 누르면 사진 검사 화면으로 이동한다. 아래 명령 하나가 로컬 RF-DETR API와 시민 앱 개발 서버를 함께 실행한다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\start-maeng-coco.ps1
+```
+
+브라우저에서 `http://127.0.0.1:5173/app`을 열고 다음 순서로 사용한다.
+
+1. `maeng_coco` 선택
+2. 정류장 사진 촬영 또는 선택
+3. `검사 시작`
+4. 파손 의심 박스와 신뢰도 확인
+
+기본 판단 임계값은 오탐을 줄이기 위해 `0.5`로 고정했다. API는 `POST /api/maeng-coco?threshold=0.5`에 JPG/PNG/WEBP 원본 바이트를 받고 JSON과 주석 이미지를 반환한다.
+
+모델 위치가 다르면 실행 시 지정한다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\start-maeng-coco.ps1 `
+  -ModelPath C:\모델경로\checkpoint_best_total.pth
+```
+
+이 방식은 현재 PC의 로컬 실행용이다. Vercel 정적 배포만으로는 Python GPU 모델이 실행되지 않으므로, 외부 배포 시 `VITE_MAENG_COCO_API_URL`을 별도의 추론 서버 주소로 설정해야 한다.
+
 ## 실제 서비스 모델로 가기 위한 최소 데이터
 
 - 파손 유형별 학습 이미지 200장 이상

@@ -36,6 +36,7 @@ describe("<CitizenHome>", () => {
     const screen = render(<MemoryRouter><CitizenHome /></MemoryRouter>);
     expect(screen.getByRole("link", { name: "버스 도착 예정시간 확인" })).toHaveAttribute("href", "/go");
     expect(screen.getByRole("link", { name: "정류장 상태 알리기" })).toHaveAttribute("href", "/app/report");
+    expect(screen.getByRole("link", { name: "maeng_coco 정류장 파손 검사" })).toHaveAttribute("href", "/maeng-coco");
     expect(screen.queryByText("주변 정류장")).not.toBeInTheDocument();
     expect(screen.queryByText("QR 스캔")).not.toBeInTheDocument();
     expect(screen.queryByText(/로그인 없이/)).not.toBeInTheDocument();

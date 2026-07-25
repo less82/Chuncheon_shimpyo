@@ -9,6 +9,7 @@ import PrintPoster from "./features/print/PrintPoster";
 import DesignPreview from "./features/design/DesignPreview";
 import QrCompare from "./features/qr/QrCompare";
 import QrEntry from "./features/qr/QrEntry";
+import MaengCoco from "./features/maeng-coco/MaengCoco";
 import { useStops } from "./store/useStops";
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/qr_main" element={<QrEntry />} />
         <Route path="/qr-compare" element={<QrCompare />} />
         <Route path="/app/report" element={<AppReport />} />
+        <Route path="/maeng-coco" element={<MaengCoco />} />
         <Route path="/report" element={<Navigate to="/app/report" replace />} />
         <Route path="/design-preview" element={<DesignPreview />} />
         <Route path="/favorites" element={<Favorites />} />
