@@ -1,7 +1,8 @@
 # 정류장 파손 RF-DETR 개념검증
 
 사용자가 제공한 파손 사진 19장과 정상 사진 2장을
-`side_glass_damage`(외벽 유리)와 `other_bus_stop_damage`(기타 정류장 시설)
+`side_glass_damage`(버스 정류장 외벽 유리)와
+`other_bus_stop_damage`(버스 정류장 시설)
 2개 클래스로 학습하는 최소 파이프라인이다.
 
 ## 판정
@@ -132,7 +133,7 @@ npm run dev
 1. `maeng_coco` 선택
 2. 정류장 사진 촬영 또는 선택
 3. `검사 시작`
-4. 파손 박스와 `(외벽 유리)` 또는 `(정류장 시설)` 모델 라벨 확인
+4. 파손 박스와 `(버스 정류장 외벽 유리)` 또는 `(버스 정류장 시설)` 모델 라벨 확인
 5. `다른 사진` 또는 `확인` 선택
 6. `확인`을 누르면 주석 사진·신뢰도·검출 좌표가 어드민 시민 제보 탭에 접수
 
@@ -145,8 +146,9 @@ API는 `POST /api/maeng-coco?threshold=0.15`에 JPG/PNG/WEBP 원본 바이트를
 
 접수 API는 `POST /api/maeng-coco/reports`, 목록은 `GET /api/maeng-coco/reports`, 처리 상태 변경은 `PATCH /api/maeng-coco/reports/{id}`다. 기본 저장 파일은 `C:\Users\user\Downloads\busstop_coco_rfdetr\maeng_coco_reports.json`이며 `MAENG_COCO_REPORT_STORE_PATH` 환경변수로 바꿀 수 있다. 사진만으로 정류장 위치를 확정하지 않으므로 자동 접수는 `정류장 위치 미확인` 상태로 전달한다.
 
-현재 모델은 외벽 유리 파손만 별도 클래스로 구분한다. 화면의 `(외벽 유리)`는
-`side_glass_damage`, `(정류장 시설)`은 `other_bus_stop_damage`의 한글 표시다.
+현재 모델은 외벽 유리 파손만 별도 클래스로 구분한다. 화면의
+`(버스 정류장 외벽 유리)`는 `side_glass_damage`,
+`(버스 정류장 시설)`은 `other_bus_stop_damage`의 한글 표시다.
 안내판·의자·천장 유리 같은 나머지 세부 부위 자동 표기는 유형별 데이터가
 충분히 추가된 뒤에만 분리해야 한다.
 

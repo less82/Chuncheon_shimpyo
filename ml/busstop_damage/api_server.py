@@ -41,18 +41,22 @@ DAMAGE_THRESHOLD = 0.22
 MODEL_LABELS: dict[int, dict[str, str]] = {
     0: {
         "label": "side_glass_damage",
-        "label_display": "외벽 유리",
-        "annotation_label": "side glass",
+        "label_display": "버스 정류장 외벽 유리",
+        "annotation_label": "bus stop side glass",
     },
     1: {
         "label": "other_bus_stop_damage",
-        "label_display": "정류장 시설",
-        "annotation_label": "other damage",
+        "label_display": "버스 정류장 시설",
+        "annotation_label": "bus stop facility",
     },
 }
 MODEL_LABELS_BY_NAME = {
     label["label"]: label
     for label in MODEL_LABELS.values()
+}
+LEGACY_LABEL_DISPLAYS = {
+    "side_glass_damage": {"외벽 유리"},
+    "other_bus_stop_damage": {"정류장 시설"},
 }
 NO_DETECTION_LABEL = {
     "label": "unclassified_damage",
@@ -79,6 +83,14 @@ DEFAULT_REFERENCE_MODEL_PATH = (
 def configured_model_path() -> Path:
     raw = os.environ.get("MAENG_COCO_MODEL_PATH", "").strip()
     return Path(raw).expanduser().resolve() if raw else DEFAULT_MODEL_PATH.resolve()
+
+
+def valid_label_display(label: str, display: str) -> bool:
+    model_label = MODEL_LABELS_BY_NAME.get(label)
+    return model_label is not None and (
+        display == model_label["label_display"]
+        or display in LEGACY_LABEL_DISPLAYS.get(label, set())
+    )
 
 
 def configured_reference_model_path() -> Path:
@@ -440,7 +452,10 @@ def list_damage_reports() -> list[dict[str, Any]]:
 @app.post("/api/maeng-coco/reports", status_code=201)
 def create_damage_report(payload: DamageReportPayload) -> dict[str, Any]:
     model_label = MODEL_LABELS_BY_NAME.get(payload.label)
-    if model_label is None or payload.label_display != model_label["label_display"]:
+    if model_label is None or not valid_label_display(
+        payload.label,
+        payload.label_display,
+    ):
         raise HTTPException(status_code=422, detail="현재 모델 라벨과 일치하지 않습니다.")
     if not payload.detections:
         raise HTTPException(status_code=422, detail="검출된 파손 영역이 없습니다.")
@@ -453,7 +468,10 @@ def create_damage_report(payload: DamageReportPayload) -> dict[str, Any]:
         detection_label = MODEL_LABELS_BY_NAME.get(detection.label)
         if (
             detection_label is None
-            or detection.label_display != detection_label["label_display"]
+            or not valid_label_display(
+                detection.label,
+                detection.label_display,
+            )
         ):
             raise HTTPException(
                 status_code=422,

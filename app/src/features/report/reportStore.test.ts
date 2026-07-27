@@ -32,7 +32,7 @@ describe("reportStore 처리 시각", () => {
       stopId: "unidentified:maeng-coco-r1",
       stopNo: "미확인",
       stopName: "정류장 위치 미확인",
-      issue: "(정류장 시설) 파손이 확인되었습니다.",
+      issue: "(버스 정류장 시설) 파손이 확인되었습니다.",
       createdAt: "2026-07-27T01:00:00.000Z",
       status: "received" as const,
       source: "maeng_coco" as const,
