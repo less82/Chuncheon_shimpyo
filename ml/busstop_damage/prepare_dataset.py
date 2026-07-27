@@ -36,6 +36,7 @@ class Sample:
     crop_xyxy: tuple[int, int, int, int] | None = None
     reference_only: bool = False
     augmentation_seed: int | None = None
+    additional_bboxes: tuple[tuple[int, int, int, int], ...] = ()
 
 
 # Bounding boxes enclose the visibly damaged component/area, not the whole image.
@@ -284,6 +285,14 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         (373, 415, 287, 205),
     ),
     Sample(
+        "파손/159339_61595_832.jpg",
+        "hard_missing_side_glass_with_shards_00.jpg",
+        "train",
+        "side_glass_missing_panel",
+        (205, 53, 227, 422),
+        additional_bboxes=((205, 420, 170, 55),),
+    ),
+    Sample(
         "정류장_정상.jpg",
         "normal_negative_00.jpg",
         "train",
@@ -329,7 +338,17 @@ def categories_for(
 def category_id_for(sample: Sample, separate_bus_information: bool) -> int:
     if separate_bus_information and sample.subtype == "bus_information_system":
         return 3
-    return 1 if sample.subtype == "side_glass" else 2
+    return 1 if sample.subtype.startswith("side_glass") else 2
+
+
+def bboxes_for(sample: Sample) -> tuple[tuple[int, int, int, int], ...]:
+    if sample.bbox is None:
+        if sample.additional_bboxes:
+            raise ValueError(
+                f"{sample.output_name}: additional boxes require a primary box"
+            )
+        return ()
+    return (sample.bbox, *sample.additional_bboxes)
 
 
 def augmentation_seed_for(sample: Sample, index: int) -> int:
@@ -370,6 +389,7 @@ def expand_bus_information_augmentations(
                     bbox=sample.bbox,
                     crop_xyxy=sample.crop_xyxy,
                     augmentation_seed=augmentation_seed_for(sample, index),
+                    additional_bboxes=sample.additional_bboxes,
                 )
             )
     return tuple(expanded)
@@ -386,15 +406,14 @@ def expand_other_damage_augmentations(
         return tuple(expanded)
 
     augmented_sources: set[str] = set()
-    excluded_subtypes = {
-        "side_glass",
-        "bus_information_system",
-        "normal_negative",
-    }
     for sample in samples:
         if (
             sample.split != "train"
-            or sample.subtype in excluded_subtypes
+            or sample.subtype.startswith("side_glass")
+            or sample.subtype in {
+                "bus_information_system",
+                "normal_negative",
+            }
             or sample.bbox is None
             or sample.source_name in augmented_sources
         ):
@@ -414,6 +433,7 @@ def expand_other_damage_augmentations(
                         sample,
                         10_000 + index,
                     ),
+                    additional_bboxes=sample.additional_bboxes,
                 )
             )
     return tuple(expanded)
@@ -452,16 +472,56 @@ def expand_distant_structure_augmentations(
                         sample,
                         20_000 + index,
                     ),
+                    additional_bboxes=sample.additional_bboxes,
                 )
             )
     return tuple(expanded)
 
 
-def augment_image_and_bbox(
+def expand_missing_side_glass_augmentations(
+    samples: tuple[Sample, ...],
+    copies_per_training_image: int,
+) -> tuple[Sample, ...]:
+    """Oversample a missing panel while retaining opening and shard boxes."""
+    if copies_per_training_image < 0:
+        raise ValueError("--augment-missing-side-glass must be zero or greater")
+    expanded = list(samples)
+    if copies_per_training_image == 0:
+        return tuple(expanded)
+
+    for sample in samples:
+        if (
+            sample.split != "train"
+            or sample.subtype != "side_glass_missing_panel"
+            or sample.bbox is None
+            or sample.augmentation_seed is not None
+        ):
+            continue
+        stem = Path(sample.output_name).stem
+        for index in range(1, copies_per_training_image + 1):
+            expanded.append(
+                Sample(
+                    source_name=sample.source_name,
+                    output_name=f"{stem}_missing_aug_{index:02d}.jpg",
+                    split=sample.split,
+                    subtype=sample.subtype,
+                    bbox=sample.bbox,
+                    crop_xyxy=sample.crop_xyxy,
+                    augmentation_seed=augmentation_seed_for(
+                        sample,
+                        30_000 + index,
+                    ),
+                    additional_bboxes=sample.additional_bboxes,
+                )
+            )
+    return tuple(expanded)
+
+
+def augment_image_and_bboxes(
     image: Image.Image,
-    bbox: tuple[int, int, int, int],
+    bboxes: tuple[tuple[int, int, int, int], ...],
     seed: int,
-) -> tuple[Image.Image, tuple[int, int, int, int]]:
+) -> tuple[Image.Image, tuple[tuple[int, int, int, int], ...]]:
     transform = A.Compose(
         [
             A.Affine(
@@ -514,22 +574,23 @@ def augment_image_and_bbox(
     )
     transformed = transform(
         image=np.asarray(image),
-        bboxes=[bbox],
-        category_ids=[1],
+        bboxes=list(bboxes),
+        category_ids=[1] * len(bboxes),
     )
     transformed_boxes = transformed["bboxes"]
-    if len(transformed_boxes) != 1:
-        raise ValueError(f"augmentation seed {seed} removed the damage box")
+    if len(transformed_boxes) != len(bboxes):
+        raise ValueError(f"augmentation seed {seed} removed a damage box")
 
     array = transformed["image"]
     height, width = array.shape[:2]
-    x, y, box_width, box_height = transformed_boxes[0]
-    x1 = max(0, min(width - 1, round(x)))
-    y1 = max(0, min(height - 1, round(y)))
-    x2 = max(x1 + 1, min(width, round(x + box_width)))
-    y2 = max(y1 + 1, min(height, round(y + box_height)))
-    output_bbox = (x1, y1, x2 - x1, y2 - y1)
-    return Image.fromarray(array).convert("RGB"), output_bbox
+    output_bboxes: list[tuple[int, int, int, int]] = []
+    for x, y, box_width, box_height in transformed_boxes:
+        x1 = max(0, min(width - 1, round(x)))
+        y1 = max(0, min(height - 1, round(y)))
+        x2 = max(x1 + 1, min(width, round(x + box_width)))
+        y2 = max(y1 + 1, min(height, round(y + box_height)))
+        output_bboxes.append((x1, y1, x2 - x1, y2 - y1))
+    return Image.fromarray(array).convert("RGB"), tuple(output_bboxes)
 
 
 def sha256(path: Path) -> str:
@@ -592,19 +653,19 @@ def prepare_split(
                         f"image dimensions {source_width}x{source_height}"
                     )
                 image = image.crop(sample.crop_xyxy)
-            output_bbox = sample.bbox
+            output_bboxes = bboxes_for(sample)
             if sample.augmentation_seed is not None:
-                if output_bbox is None:
+                if not output_bboxes:
                     raise ValueError(
                         f"{sample.output_name}: augmentation requires a bbox"
                     )
-                image, output_bbox = augment_image_and_bbox(
+                image, output_bboxes = augment_image_and_bboxes(
                     image,
-                    output_bbox,
+                    output_bboxes,
                     sample.augmentation_seed,
                 )
             width, height = image.size
-            if output_bbox is not None:
+            for output_bbox in output_bboxes:
                 validate_bbox(output_bbox, width, height, sample.output_name)
             destination = split_dir / sample.output_name
             image.save(destination, "JPEG", quality=95, optimize=True)
@@ -618,7 +679,7 @@ def prepare_split(
                 "height": height,
             }
         )
-        if output_bbox is not None:
+        for output_bbox in output_bboxes:
             annotations.append(
                 {
                     "id": annotation_id,
@@ -639,6 +700,7 @@ def prepare_split(
                 }
             )
             annotation_id += 1
+        primary_bbox = output_bboxes[0] if output_bboxes else None
         manifest_rows.append(
             {
                 "split": split,
@@ -647,10 +709,15 @@ def prepare_split(
                 "subtype": sample.subtype,
                 "width": width,
                 "height": height,
-                "bbox_x": output_bbox[0] if output_bbox is not None else "",
-                "bbox_y": output_bbox[1] if output_bbox is not None else "",
-                "bbox_width": output_bbox[2] if output_bbox is not None else "",
-                "bbox_height": output_bbox[3] if output_bbox is not None else "",
+                "bbox_x": primary_bbox[0] if primary_bbox is not None else "",
+                "bbox_y": primary_bbox[1] if primary_bbox is not None else "",
+                "bbox_width": primary_bbox[2] if primary_bbox is not None else "",
+                "bbox_height": primary_bbox[3] if primary_bbox is not None else "",
+                "additional_bboxes_json": json.dumps(
+                    output_bboxes[1:],
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ),
                 "crop_x1": (
                     sample.crop_xyxy[0] if sample.crop_xyxy is not None else ""
                 ),
@@ -695,7 +762,10 @@ def create_contact_sheet(output_dir: Path, samples: tuple[Sample, ...]) -> Path:
     tiles: list[Image.Image] = []
     tile_width, tile_height = 384, 300
     font = ImageFont.load_default()
-    annotation_boxes: dict[tuple[str, str], tuple[float, float, float, float]] = {}
+    annotation_boxes: dict[
+        tuple[str, str],
+        list[tuple[float, float, float, float]],
+    ] = {}
     for split in ("train", "valid", "test"):
         annotation_path = output_dir / split / "_annotations.coco.json"
         coco = json.loads(annotation_path.read_text(encoding="utf-8"))
@@ -704,23 +774,30 @@ def create_contact_sheet(output_dir: Path, samples: tuple[Sample, ...]) -> Path:
             for image in coco["images"]
         }
         for annotation in coco["annotations"]:
-            annotation_boxes[
-                (split, image_names[annotation["image_id"]])
-            ] = tuple(annotation["bbox"])
+            annotation_boxes.setdefault(
+                (split, image_names[annotation["image_id"]]),
+                [],
+            ).append(tuple(annotation["bbox"]))
 
     for sample in samples:
         image_path = output_dir / sample.split / sample.output_name
         with Image.open(image_path) as opened:
             image = opened.convert("RGB")
-            bbox = annotation_boxes.get((sample.split, sample.output_name))
-            if bbox is not None:
+            bboxes = annotation_boxes.get((sample.split, sample.output_name), [])
+            if bboxes:
                 draw = ImageDraw.Draw(image)
-                x, y, width, height = bbox
-                draw.rectangle(
-                    (x, y, x + width, y + height),
-                    outline=(255, 40, 40),
-                    width=5,
-                )
+                for bbox_index, (x, y, width, height) in enumerate(bboxes):
+                    draw.rectangle(
+                        (x, y, x + width, y + height),
+                        outline=(255, 40, 40),
+                        width=5,
+                    )
+                    draw.text(
+                        (x + 4, y + 4),
+                        str(bbox_index + 1),
+                        fill=(255, 40, 40),
+                        font=font,
+                    )
             image.thumbnail((tile_width, tile_height - 42))
             tile = Image.new("RGB", (tile_width, tile_height), "white")
             tile.paste(
@@ -728,7 +805,7 @@ def create_contact_sheet(output_dir: Path, samples: tuple[Sample, ...]) -> Path:
                 ((tile_width - image.width) // 2, 30 + (tile_height - 42 - image.height) // 2),
             )
             tile_draw = ImageDraw.Draw(tile)
-            status = "positive" if bbox is not None else "negative"
+            status = f"positive:{len(bboxes)}" if bboxes else "negative"
             label = (
                 f"{sample.split} | {sample.output_name} | "
                 f"{sample.subtype} | {status}"
@@ -796,6 +873,16 @@ def main() -> None:
             "occluded collision-structure damage."
         ),
     )
+    parser.add_argument(
+        "--augment-missing-side-glass",
+        type=int,
+        default=0,
+        metavar="COPIES",
+        help=(
+            "Create this many deterministic copies of a missing side-glass "
+            "panel with separate opening and shard boxes."
+        ),
+    )
     args = parser.parse_args()
     if args.augment_bus_information and not args.separate_bus_information:
         parser.error(
@@ -825,8 +912,14 @@ def main() -> None:
         selected_samples,
         args.augment_distant_structure,
     )
+    selected_samples = expand_missing_side_glass_augmentations(
+        selected_samples,
+        args.augment_missing_side_glass,
+    )
     categories = categories_for(args.separate_bus_information)
-    if args.separate_bus_information and args.augment_distant_structure:
+    if args.separate_bus_information and args.augment_missing_side_glass:
+        annotation_version = "14r" if args.include_reference_regression else "14"
+    elif args.separate_bus_information and args.augment_distant_structure:
         annotation_version = "13r" if args.include_reference_regression else "13"
     elif args.separate_bus_information and args.augment_other_damage:
         annotation_version = "12r" if args.include_reference_regression else "12"
@@ -863,7 +956,8 @@ def main() -> None:
     limitations = [
         "only 2 independent normal source images plus 4 intact-panel crops",
         f"{unique_source_images} unique source images",
-        "one bounding box per positive image",
+        "most positive images have one box; the missing-panel image has separate opening and shard boxes",
+        "missing side-glass subtype has only one independent source image",
         "distant collision-structure subtype has only one independent source image",
         "all supplied side-glass images are training data; no independent side-glass holdout",
         "three difficult side-glass sources are oversampled for app regression",
@@ -904,7 +998,7 @@ def main() -> None:
             for sample in selected_samples
         ),
         "annotations": sum(
-            sample.bbox is not None for sample in selected_samples
+            len(bboxes_for(sample)) for sample in selected_samples
         ),
         "splits": {
             split: sum(sample.split == split for sample in selected_samples)
@@ -919,6 +1013,9 @@ def main() -> None:
             ),
             "distant_structure_copies_per_training_image": (
                 args.augment_distant_structure
+            ),
+            "missing_side_glass_copies_per_training_image": (
+                args.augment_missing_side_glass
             ),
             "validation_or_test_augmented": False,
             "deterministic": True,

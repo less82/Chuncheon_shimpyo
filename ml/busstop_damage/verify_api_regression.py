@@ -44,6 +44,7 @@ def main() -> None:
             source / "151893_17318_1425.jpg",
             source / "images.jpg",
             source / "파손" / "images (1).jpg",
+            source / "파손" / "159339_61595_832.jpg",
         ],
         "other_bus_stop_damage": [
             source / "정류장_기둥형파손",

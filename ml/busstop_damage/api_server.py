@@ -74,7 +74,7 @@ DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v13_distant_app"
+    / "output_v14_glass_evidence_app"
     / "checkpoint_selected_app.pth"
 )
 DEFAULT_REFERENCE_MODEL_PATH = (
@@ -369,8 +369,8 @@ class DamageDetector:
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "고유 원본 22장과 버스정보시스템 18장·기타 시설 26장 "
-                "증식본 기반의 3종 개념검증 모델입니다. "
+                "고유 원본 23장과 증식본 54장 기반의 "
+                "3종 개념검증 모델입니다. "
                 "결과를 사람이 확인해야 합니다."
             ),
         }
