@@ -8,6 +8,7 @@ export interface FavoriteJourney {
   id: string;
   boardStopId: string;
   destinationStopId: string;
+  destinationName?: string;
   routeNo: string;
   direction: string;
 }
@@ -39,7 +40,8 @@ function readJourneys(): FavoriteJourney[] {
     return parsed.filter((item): item is FavoriteJourney =>
       item && typeof item.id === "string" && typeof item.boardStopId === "string" &&
       typeof item.destinationStopId === "string" && typeof item.routeNo === "string" &&
-      typeof item.direction === "string");
+      typeof item.direction === "string" &&
+      (item.destinationName === undefined || typeof item.destinationName === "string"));
   } catch { return []; }
 }
 

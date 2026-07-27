@@ -1,6 +1,7 @@
 """Task 6.2 - 정류장(관리번호) ↔ TAGO nodeid 매핑.
 
-빌드 시점에만 네트워크를 쓴다(런타임 산출물은 정적). env `TAGO_KEY`가 있으면
+빌드 시점에만 네트워크를 쓴다(런타임 산출물은 정적). env `TAGO_KEY` 또는
+앱과 동일한 `VITE_TAGO_KEY`가 있으면
 국토부 TAGO 정류소정보(도시코드 32010=춘천)를 수집해 좌표 최근접(≤50m)으로
 매핑한다. 키가 없거나 네트워크가 실패하면 절대 죽지 않고 `{}`를 반환한다.
 
@@ -23,20 +24,28 @@ def nearest_tago(stops, tago_stops, radius: float = 50.0) -> dict:
     반경 내 후보가 없으면 그 정류장은 결과에 넣지 않는다(미확인, 절대 추측 금지).
     """
     mapping: dict[str, str] = {}
+    used_nodeids: set[str] = set()
     for s in stops:
         slat, slng = float(s["lat"]), float(s["lng"])
         best_id = None
         best_d = radius
-        for t in tago_stops:
+        stop_id = str(s["id"])
+        exact = [t for t in tago_stops if str(t.get("nodeid", "")).endswith(stop_id)]
+        candidates = exact or tago_stops
+        for t in candidates:
+            nodeid = str(t.get("nodeid", ""))
+            if not nodeid or nodeid in used_nodeids:
+                continue
             try:
                 d = haversine(slat, slng, float(t["lat"]), float(t["lng"]))
             except (TypeError, ValueError):
                 continue
             if d <= best_d:
                 best_d = d
-                best_id = t["nodeid"]
+                best_id = nodeid
         if best_id is not None:
-            mapping[str(s["id"])] = str(best_id)
+            mapping[stop_id] = best_id
+            used_nodeids.add(best_id)
     return mapping
 
 
@@ -78,11 +87,11 @@ def _fetch_tago_stops(key: str) -> list[dict]:
 
 
 def build_tago_mapping(stops) -> dict:
-    """env TAGO_KEY 있으면 TAGO 수집 후 매핑, 없으면/실패 시 `{}`.
+    """env TAGO_KEY/VITE_TAGO_KEY가 있으면 TAGO 수집 후 매핑한다.
 
     **키가 없어도, 네트워크가 실패해도 예외를 던지지 않는다.**
     """
-    key = os.environ.get("TAGO_KEY")
+    key = os.environ.get("TAGO_KEY") or os.environ.get("VITE_TAGO_KEY")
     if not key:
         print("TAGO 키 없음 - 매핑 skip")
         return {}

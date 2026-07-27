@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planTrip } from "./planTrip";
+import { planTrip, planTripToPlace } from "./planTrip";
 import type { Stop } from "../../types/stop";
 import type { RouteInfo } from "../../types/route";
 import { makeUnknown } from "../../types/stop";
@@ -26,10 +26,11 @@ function mkStop(id: string, lat: number, lng: number): Stop {
 const A = mkStop("A", 37.8800, 127.7300); // 출발 도보권
 const B = mkStop("B", 37.8850, 127.7350); // 환승역
 const C = mkStop("C", 37.8900, 127.7400); // 목적지
+const E = mkStop("E", 37.8905, 127.7400); // 목적지에서 걸어갈 수 있는 하차 정류장
 const D = mkStop("D", 37.8830, 127.7280); // 또다른 출발 도보권
 const FAR = mkStop("FAR", 38.5000, 128.5000); // 도보권 밖
 
-const stops = [A, B, C, D, FAR];
+const stops = [A, B, C, D, E, FAR];
 const fromPos = { lat: 37.8801, lng: 127.7301 }; // A 바로 옆
 
 describe("planTrip", () => {
@@ -88,5 +89,21 @@ describe("planTrip", () => {
     if (firstTransferIdx !== -1) {
       expect(lastDirectIdx).toBeLessThan(firstTransferIdx);
     }
+  });
+
+  it("목적지와 같은 이름의 정류장에 노선이 없어도 주변 하차 정류장으로 찾는다", () => {
+    const routes: RouteInfo[] = [
+      { routeId: "r1", routeNo: "15", stops: ["A", "E"] },
+    ];
+
+    expect(planTrip(fromPos, C, stops, routes, { maxTransfers: 0 })).toEqual([]);
+    const options = planTripToPlace(fromPos, C, stops, routes, {
+      maxTransfers: 0,
+      destinationWalkRadiusM: 200,
+    });
+
+    expect(options[0].destinationStopId).toBe("E");
+    expect(options[0].legs[0].routeNos).toContain("15");
+    expect(options[0].destinationWalkMin).toBeGreaterThan(0);
   });
 });

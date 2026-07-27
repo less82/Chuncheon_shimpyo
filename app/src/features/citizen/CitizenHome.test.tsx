@@ -34,8 +34,9 @@ beforeEach(() => {
 describe("<CitizenHome>", () => {
   it("첫 화면에서 두 핵심 업무를 가장 먼저 제공하고 주변 정류장 선택을 요구하지 않는다", () => {
     const screen = render(<MemoryRouter><CitizenHome /></MemoryRouter>);
-    expect(screen.getByRole("link", { name: "목적지행 버스 도착 예정시간" })).toHaveAttribute("href", "/go");
+    expect(screen.getByRole("link", { name: "버스 도착 예정시간 확인" })).toHaveAttribute("href", "/go");
     expect(screen.getByRole("link", { name: "정류장 상태 알리기" })).toHaveAttribute("href", "/app/report");
+    expect(screen.getByRole("link", { name: "maeng_coco 정류장 파손 검사" })).toHaveAttribute("href", "/maeng-coco");
     expect(screen.queryByText("주변 정류장")).not.toBeInTheDocument();
     expect(screen.queryByText("QR 스캔")).not.toBeInTheDocument();
     expect(screen.queryByText(/로그인 없이/)).not.toBeInTheDocument();
@@ -45,11 +46,12 @@ describe("<CitizenHome>", () => {
 });
 
 describe("<FavoriteStopCard>", () => {
-  it("승차 정류장·방면·버스·목적지를 한 카드에서 확인한다", () => {
+  it("승차 정류장·방면·버스·목적지를 한 카드에서 확인한다", async () => {
     const screen = render(<MemoryRouter><FavoriteStopCard journey={journey} stops={[board, stop]} /></MemoryRouter>);
     expect(screen.getByText("강원대후문")).toBeInTheDocument();
     expect(screen.getByText("춘천역 방면")).toBeInTheDocument();
-    expect(screen.getByText("12번 · 배차간격 약 12분")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "춘천역 즐겨찾기 버스 정보" })).toHaveAttribute("href", "/go?dest=250001&board=250010");
+    expect(await screen.findByText("12번 · 실시간 도착정보 없음")).toBeInTheDocument();
+    expect(screen.queryByText(/배차간격/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "춘천역 즐겨찾기 버스 정보" })).toHaveAttribute("href", "/go?dest=250001&board=250010&to=%EC%B6%98%EC%B2%9C%EC%97%AD");
   });
 });

@@ -7,7 +7,18 @@ import { useStops } from "../../store/useStops";
 import FilterTab from "./FilterTab";
 import SurveyTab from "./SurveyTab";
 import InstallTab from "./InstallTab";
-import { loadReports, REPORT_CHANGED_EVENT, REPORT_STORAGE_KEY, updateReportStatus, type CitizenReport } from "../report/reportStore";
+import {
+  loadReports,
+  REPORT_CHANGED_EVENT,
+  REPORT_STORAGE_KEY,
+  updateReportStatus,
+  upsertReport,
+  type CitizenReport,
+} from "../report/reportStore";
+import {
+  loadMaengCocoReports,
+  updateMaengCocoReportStatus,
+} from "../maeng-coco/maengCocoApi";
 import { buildReportInsights } from "./reportInsights";
 import "./Dashboard.css";
 
@@ -27,7 +38,16 @@ const REPORT_STATUS = {
   resolved: { label: "처리 완료", next: null, action: "완료" },
 };
 
-function ReportsTab({ reports }: { reports: CitizenReport[] }) {
+function ReportsTab({
+  reports,
+  onAdvance,
+}: {
+  reports: CitizenReport[];
+  onAdvance: (
+    report: CitizenReport,
+    status: CitizenReport["status"],
+  ) => void;
+}) {
   const PAGE_SIZE = 4;
   const [statusFilter, setStatusFilter] = useState<CitizenReport["status"] | null>(null);
   const [attentionFilter, setAttentionFilter] = useState<"open" | "safety" | "overlap" | null>(null);
@@ -79,7 +99,7 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
 
   function advanceSelected() {
     if (!selected || !selectedState?.next || !checks.every(Boolean)) return;
-    updateReportStatus(selected.id, selectedState.next);
+    onAdvance(selected, selectedState.next);
     setChecks([false, false]);
   }
 
@@ -98,7 +118,7 @@ function ReportsTab({ reports }: { reports: CitizenReport[] }) {
       </div></div>
       {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" role="dialog" aria-modal="true" aria-label="제보 검토">
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div></header>
-          <div className="report-review-body"><section className="report-case"><span className="report-label">제보 내용</span><p className="report-quote">“{selected.issue}”</p>{selected.photoDataUrl && <img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} />}</section><section className="report-facts"><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형</dt><dd>{selectedInsight?.category ?? "기타"}</dd></div><div><dt>신고 성격</dt><dd><span className="report-risk" data-risk={selectedInsight?.safety}>{selectedInsight?.safety ?? "일반 불편"}</span></dd></div><div><dt>유사 제보</dt><dd>{selectedInsight?.overlap ?? 1}건</dd></div><div><dt>접수 경과</dt><dd>{selectedInsight?.elapsedLabel}</dd></div><div><dt>처리 상태</dt><dd>{selectedState?.label}</dd></div></dl></section></div>
+          <div className="report-review-body"><section className="report-case"><span className="report-label">제보 내용</span><p className="report-quote">“{selected.issue}”</p>{selected.source === "maeng_coco" && <p className="report-ai-evidence"><b>AI 검사 자료</b><span>라벨 {selected.modelLabelDisplay ?? selected.modelLabel ?? "미확인"} · 신뢰도 {Math.round((selected.modelConfidence ?? 0) * 100)}% · {selected.detectionCount ?? 0}개 영역</span></p>}{selected.photoDataUrl && <img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} />}</section><section className="report-facts"><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형</dt><dd>{selectedInsight?.category ?? "기타"}</dd></div><div><dt>신고 성격</dt><dd><span className="report-risk" data-risk={selectedInsight?.safety}>{selectedInsight?.safety ?? "일반 불편"}</span></dd></div><div><dt>유사 제보</dt><dd>{selectedInsight?.overlap ?? 1}건</dd></div><div><dt>접수 경과</dt><dd>{selectedInsight?.elapsedLabel}</dd></div><div><dt>처리 상태</dt><dd>{selectedState?.label}</dd></div></dl></section></div>
           <footer className="report-review-footer">{requiredChecks ? <fieldset className="report-checks"><legend>접수 확인 항목</legend>{requiredChecks.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={(event) => setChecks((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value) as [boolean, boolean])}/><span>{label}</span></label>)}</fieldset> : <p className="report-complete">처리가 완료된 제보입니다.</p>}<div className="report-review-actions"><button className="report-cancel" type="button" onClick={() => setSelectedId(null)}>취소</button>{selectedState?.next ? <button className="report-confirm" type="button" disabled={!checks.every(Boolean)} onClick={advanceSelected}>{selectedState.action}</button> : <button className="report-confirm" type="button" onClick={() => setSelectedId(null)}>확인</button>}</div></footer>
       </aside></div>}
   </section>;
@@ -111,17 +131,57 @@ export default function Dashboard() {
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {
-    const refresh = () => setReports(loadReports());
+    const mergeReports = (
+      localReports: CitizenReport[],
+      remoteReports: CitizenReport[],
+    ) => {
+      const merged = new Map(localReports.map((report) => [report.id, report]));
+      remoteReports.forEach((report) => merged.set(report.id, report));
+      return [...merged.values()];
+    };
+    const refresh = () => {
+      const localReports = loadReports();
+      setReports(localReports);
+      if (import.meta.env.MODE === "test") return;
+      void loadMaengCocoReports()
+        .then((remoteReports) => setReports(mergeReports(localReports, remoteReports)))
+        .catch(() => undefined);
+    };
     const onStorage = (event: StorageEvent) => {
       if (event.key === REPORT_STORAGE_KEY) refresh();
     };
+    refresh();
+    const intervalId = window.setInterval(refresh, 5_000);
     window.addEventListener("storage", onStorage);
     window.addEventListener(REPORT_CHANGED_EVENT, refresh);
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(REPORT_CHANGED_EVENT, refresh);
     };
   }, []);
+
+  const advanceReport = (
+    report: CitizenReport,
+    status: CitizenReport["status"],
+  ) => {
+    if (report.source !== "maeng_coco") {
+      updateReportStatus(report.id, status);
+      return;
+    }
+    void updateMaengCocoReportStatus(report.id, status)
+      .then((updated) => {
+        try {
+          upsertReport(updated);
+        } catch {
+          setReports((current) => [
+            ...current.filter((item) => item.id !== updated.id),
+            updated,
+          ]);
+        }
+      })
+      .catch(() => undefined);
+  };
 
   return (
     <main className="dash">
@@ -136,7 +196,7 @@ export default function Dashboard() {
       <section className="dash-workspace">
           {tab !== "reports" && <header className="dash-head"><h2>{TABS.find((item) => item.key === tab)?.label}</h2></header>}
           <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-            {tab === "reports" && <ReportsTab reports={reports} />}
+            {tab === "reports" && <ReportsTab reports={reports} onAdvance={advanceReport} />}
             {tab === "survey" && <SurveyTab stops={stops} loaded={loaded} />}
             {tab === "install" && <InstallTab stops={stops} loaded={loaded} />}
             {tab === "filter" && <FilterTab stops={stops} loaded={loaded} />}

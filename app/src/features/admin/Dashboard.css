@@ -76,7 +76,7 @@
 .report-pagination { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 52px; border: 1px solid var(--border); border-top: 0; background: white; }
 .report-pagination button { min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid transparent; background: transparent; color: var(--ink-body); font-size: 12px; font-weight: 800; cursor: pointer; }
 .report-pagination button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-2); }
-.report-pagination button[aria-current="page"] { border-color: var(--brand); background: var(--brand); color: white; }
+.report-pagination button[aria-current="page"] { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
 .report-pagination button:disabled { color: var(--border-strong); cursor: not-allowed; }
 .report-summary { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-4); padding: 16px 20px; border-radius: 14px; background: var(--brand-strong); color: white; }
 .report-summary div { display: flex; flex-direction: column; }
@@ -116,6 +116,9 @@
 .report-case { padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .report-label { color: var(--ink-muted); font-size: 11px; font-weight: 900; letter-spacing: .06em; }
 .report-quote { margin: 8px 0 0; color: var(--ink); font-size: 18px; font-weight: 800; line-height: 1.4; }
+.report-ai-evidence { display: grid; gap: 3px; margin: 12px 0 0; padding: 10px 12px; border-left: 4px solid var(--brand); background: var(--brand-soft); }
+.report-ai-evidence b { color: var(--brand); font-size: 11px; }
+.report-ai-evidence span { color: var(--ink); font-size: 12px; font-weight: 800; }
 .report-facts { padding: 14px 20px; background: var(--surface-2); }
 .report-facts dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; margin: 0; }
 .report-facts dl > div { display: grid; gap: 4px; }
@@ -130,7 +133,7 @@
 .report-review-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .report-cancel, .report-confirm { min-width: 120px; min-height: 40px; padding: 0 18px; font-family: inherit; font-weight: 900; cursor: pointer; }
 .report-cancel { border: 1px solid var(--border-strong); background: white; color: var(--ink); }
-.report-confirm { border: 0; background: var(--brand); color: white; }
+.report-confirm { border: 0; background: var(--brand); color: var(--on-brand); }
 .report-confirm:disabled { background: var(--border-strong); cursor: not-allowed; }
 .report-complete { margin: 0; padding: 12px; border-left: 4px solid var(--yes); background: var(--yes-bg); font-size: 12px; }
 

@@ -39,18 +39,19 @@ const renderFav = () =>
   );
 
 describe("<Favorites>", () => {
-  it("저장한 정류장을 검색 없는 목적지 단추로 보여준다", () => {
+  it("저장한 이동을 검색 없는 즐겨찾기 카드로 보여준다", async () => {
     useFavorites.setState({ ids: ["A", "B"] });
     useFavorites.setState({ journeys: [
       { id: "A:1:B", boardStopId: "A", destinationStopId: "B", routeNo: "1", direction: "상공회의소 방면" },
       { id: "B:1:A", boardStopId: "B", destinationStopId: "A", routeNo: "1", direction: "장학교차로 방면" },
     ] });
-    const { getAllByText, getAllByRole } = renderFav();
+    const { findAllByText, getAllByText, getAllByRole } = renderFav();
     expect(getAllByText("장학교차로").length).toBeGreaterThan(0);
     expect(getAllByText("상공회의소").length).toBeGreaterThan(0);
     const links = getAllByRole("link", { name: /즐겨찾기 버스 정보/ });
     expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAttribute("href", "/go?dest=B&board=A");
+    expect(links[0]).toHaveAttribute("href", "/go?dest=B&board=A&to=%EC%83%81%EA%B3%B5%ED%9A%8C%EC%9D%98%EC%86%8C");
+    expect(await findAllByText(/실시간 도착정보 없음/)).toHaveLength(2);
   });
 
   it("즐겨찾기가 없으면 안내 문구를 보여준다", () => {

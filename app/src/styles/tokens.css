@@ -4,16 +4,16 @@
  * 시각 언어: 고휘도 중성 배경 + 저채도 먹남색 + 명확한 의미 상태색. */
 
 :root {
-  --brand: #26344a;
-  --brand-strong: #182334;
-  --brand-soft: #eef1f5;
-  --brand-ink: #171f2d;
+  --brand: #00a3e0; /* 춘천 도시브랜드 PANTONE 299 C 화면용 근사값 */
+  --brand-strong: #006b93;
+  --brand-soft: #e6f7fd;
+  --brand-ink: #333333;
 
-  --warm: #26344a;
-  --warm-strong: #182334;
-  --warm-soft: #eef1f5;
-  --warning: #8a4b08;
-  --warning-bg: #fff1d6;
+  --warm: #9e6a00;
+  --warm-strong: #614100;
+  --warm-soft: #fff3db;
+  --warning: #9e6a00;
+  --warning-bg: #fff3db;
 
   /* ---- 표면 / 배경 ---- */
   --bg: #f5f6f8;
@@ -22,17 +22,17 @@
   --overlay: rgba(23, 27, 33, 0.58);
 
   /* ---- 글자 ---- */
-  --ink: #171b21;
-  --ink-body: #343b45;
+  --ink: #333333;
+  --ink-body: #333333;
   --ink-muted: #5b6571;
-  --on-brand: #ffffff;
-  --on-warm: #ffffff;
+  --on-brand: #333333;
+  --on-warm: #211800;
 
   /* ---- 3상태 (색만으로 구분 금지 — 항상 아이콘+한글 병기) ---- */
-  --yes: #146c5a;
-  --yes-bg: #e4f3ee;
-  --no: #b4232c;
-  --no-bg: #fdebec;
+  --yes: #228738;
+  --yes-bg: #eaf6ec;
+  --no: #de3412;
+  --no-bg: #fdefec;
   --unknown: #565d66;
   --unknown-bg: #eceff2;
 

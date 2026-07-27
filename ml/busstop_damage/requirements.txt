@@ -1,0 +1,5 @@
+rfdetr[train,loggers]==1.8.3
+numpy==2.3.5
+fastapi>=0.140,<1
+uvicorn>=0.51,<1
+msvc-runtime==14.44.35112; sys_platform == "win32"

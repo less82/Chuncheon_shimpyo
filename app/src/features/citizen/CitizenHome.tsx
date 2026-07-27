@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
-import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import { getArrival, type Arrival } from "../../lib/arrivals";
 import type { Stop } from "../../types/stop";
 import type { FavoriteJourney } from "../../store/useFavorites";
 import "./CitizenHome.css";
@@ -11,8 +11,9 @@ import "./CitizenHome.css";
 export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney; stops: Stop[] }) {
   const board = stops.find((stop) => stop.id === journey.boardStopId) ?? null;
   const destination = stops.find((stop) => stop.id === journey.destinationStopId) ?? null;
+  const destinationName = journey.destinationName ?? destination?.name ?? "목적지";
   const routeNo = journey.routeNo;
-  const [arrival, setArrival] = useState<Arrival>(() => board ? headwayFallback(board) : { text: "도착정보 미확인", live: false });
+  const [arrival, setArrival] = useState<Arrival>(() => ({ text: "도착정보 확인 중", live: false }));
 
   useEffect(() => {
     if (!board) {
@@ -20,14 +21,14 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
       return;
     }
     let alive = true;
-    setArrival(headwayFallback(board));
-    getArrival(board, routeNo).then((value) => alive && setArrival(value));
+    setArrival({ text: "도착정보 확인 중", live: false });
+    getArrival(board, routeNo).then((value) => alive && setArrival(value.live ? value : { text: "실시간 도착정보 없음", live: false }));
     return () => { alive = false; };
   }, [board, routeNo]);
 
   return (
-    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(journey.destinationStopId)}&board=${encodeURIComponent(journey.boardStopId)}`} aria-label={`${destination?.name ?? "목적지"} 즐겨찾기 버스 정보`}>
-      <span className="apphome-favorite__top"><strong>{board?.name ?? "정류장"}</strong><i>→</i><strong>{destination?.name ?? "목적지"}</strong></span>
+    <Link className="apphome-favorite" to={`/go?dest=${encodeURIComponent(journey.destinationStopId)}&board=${encodeURIComponent(journey.boardStopId)}&to=${encodeURIComponent(destinationName)}`} aria-label={`${destinationName} 즐겨찾기 버스 정보`}>
+      <span className="apphome-favorite__top"><strong>{board?.name ?? "정류장"}</strong><i>→</i><strong>{destinationName}</strong></span>
       <span className="apphome-favorite__direction">{journey.direction}</span>
       <span className="apphome-favorite__arrival" data-live={arrival.live}>
         <b>{routeNo ? `${routeNo}번 · ` : ""}{arrival.text}</b>
@@ -37,19 +38,25 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
 }
 
 export default function CitizenHome() {
+  const [searchParams] = useSearchParams();
+  const safePreview = searchParams.get("safePreview") === "1" || window.self !== window.top;
   const stops = useStops((state) => state.stops);
   const journeys = useFavorites((state) => state.journeys);
 
   return (
-    <main className="apphome">
+    <main className="apphome" data-safe-preview={safePreview || undefined}>
       <ImportOnLoad />
 
       <nav className="apphome__tasks" aria-label="주요 기능">
-        <Link className="apphome-task apphome-task--route" to="/go" aria-label="목적지행 버스 도착 예정시간">
+        <Link className="apphome-task apphome-task--route" to={safePreview ? "/go?safePreview=1" : "/go"} aria-label="버스 도착 예정시간 확인">
           <strong>버스</strong>
         </Link>
         <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">
           <strong>정류장</strong>
+        </Link>
+        <Link className="apphome-task apphome-task--coco" to="/maeng-coco" aria-label="maeng_coco 정류장 파손 검사">
+          <strong>maeng_coco</strong>
+          <small>사진으로 파손 검사</small>
         </Link>
       </nav>
 
@@ -62,9 +69,7 @@ export default function CitizenHome() {
           <div className="apphome__saved-list">
             {journeys.slice(0, 2).map((journey) => <FavoriteStopCard key={journey.id} journey={journey} stops={stops} />)}
           </div>
-        ) : (
-          <Link className="apphome__saved-empty" to="/favorites"><strong>즐겨찾기 등록</strong></Link>
-        )}
+        ) : null}
       </section>
 
     </main>

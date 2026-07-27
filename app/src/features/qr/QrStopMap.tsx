@@ -23,7 +23,7 @@ export default function QrStopMap({ stop }: { stop: Stop }) {
       radius: 10,
       color: "#fff",
       weight: 3,
-      fillColor: "#26344a",
+      fillColor: "#00a3e0",
       fillOpacity: 1,
     }).addTo(map);
     return () => {

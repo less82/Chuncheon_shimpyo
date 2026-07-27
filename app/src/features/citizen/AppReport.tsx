@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { haversine } from "../../lib/geo";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { saveReport } from "../report/reportStore";
@@ -26,6 +26,8 @@ export function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop
 }
 
 export default function AppReport() {
+  const [searchParams] = useSearchParams();
+  const requestedStopId = searchParams.get("stop");
   const stops = useStops((state) => state.stops);
   const loaded = useStops((state) => state.loaded);
   const [step, setStep] = useState<Step>("locating");
@@ -62,10 +64,17 @@ export default function AppReport() {
   };
 
   useEffect(() => {
-    if (loaded) locate();
+    if (!loaded) return;
+    const requestedStop = stops.find((stop) => stop.id === requestedStopId);
+    if (requestedStop) {
+      setSelected(requestedStop);
+      setStep("confirm");
+      return;
+    }
+    locate();
     // 위치 확인은 화면 진입 시 한 번만 실행한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded]);
+  }, [loaded, requestedStopId, stops]);
 
   useEffect(() => {
     let alive = true;
@@ -97,7 +106,7 @@ export default function AppReport() {
     <main className="appreport">
       <header className="appreport__bar">
         <Link to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
-        <strong>정류장 민원 접수</strong>
+        <strong>정류장 상태 알리기</strong>
         <span aria-hidden="true" />
       </header>
 
@@ -147,7 +156,7 @@ export default function AppReport() {
           <h1>어떤 상태인가요?</h1>
           <p>해당하는 항목을 하나 눌러주세요.</p>
           <div className="appreport__issues">{ISSUES.map((item) => <button type="button" key={item} aria-pressed={issue === item} onClick={() => setIssue(item)}>{item}</button>)}</div>
-          <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("confirm")}>이전</button><button type="button" className="appreport__primary" disabled={!issue} onClick={submit}>민원 접수하기</button></div>
+          <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("confirm")}>이전</button><button type="button" className="appreport__primary" disabled={!issue} onClick={submit}>내용 보내기</button></div>
         </section>
       )}
 

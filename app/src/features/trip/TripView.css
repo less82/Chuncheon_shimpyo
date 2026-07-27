@@ -1,7 +1,23 @@
 .tripview {
-  min-height: 100dvh;
-  background: var(--bg);
-  padding-bottom: var(--sp-7);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-color: #f2cf52;
+  --available-height: calc(100dvh - var(--safe-top) - var(--safe-bottom));
+  display: flex;
+  height: min(844px, 100dvh);
+  min-height: 0;
+  flex-direction: column;
+  background: linear-gradient(to bottom, var(--bg) 0 calc(100% - var(--safe-bottom)), var(--safe-color) calc(100% - var(--safe-bottom)) 100%);
+  padding-bottom: var(--safe-bottom);
+  overflow: hidden;
+}
+/* 전역 body .tripview 배경보다 우선해 하단 안전영역을 유지한다. */
+.tripview.tripview {
+  background: linear-gradient(
+    to bottom,
+    var(--bg) 0 calc(100% - var(--safe-bottom)),
+    var(--safe-color) calc(100% - var(--safe-bottom)) 100%
+  );
 }
 
 /* 상단 바 */
@@ -12,10 +28,11 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
+  gap: clamp(8px, 2.5vw, 12px);
+  min-height: clamp(58px, calc(22px + 6dvh), 72px);
+  padding: calc(clamp(6px, 1.5dvh, 12px) + var(--safe-top)) clamp(12px, 4vw, 16px) clamp(6px, 1.5dvh, 12px);
+  background: linear-gradient(to bottom, var(--safe-color) 0 var(--safe-top), var(--surface) var(--safe-top) 100%);
+  box-shadow: none;
 }
 .tripview__back {
   display: inline-flex;
@@ -24,7 +41,7 @@
   min-height: var(--touch);
   padding: 0 var(--sp-3);
   border-radius: var(--radius-pill);
-  color: var(--brand);
+  color: var(--ink);
   font-size: var(--fs-base);
   font-weight: 800;
   text-decoration: none;
@@ -32,13 +49,59 @@
 .tripview__title {
   margin: 0;
   text-align: center;
-  font-size: var(--fs-xl);
+  font-size: clamp(22px, min(7vw, 4dvh), 30px);
   font-weight: 900;
   color: var(--ink);
 }
 .tripview__spacer {
   width: var(--touch);
 }
+.tripview--find { height: min(844px, 100dvh); }
+.tripview__find { display: grid; width: 100%; max-width: 520px; min-height: 0; margin: 0 auto; padding: clamp(14px, 3dvh, 26px) clamp(16px, 5.5vw, 24px); flex: 1 1 auto; align-content: center; }
+
+@media (min-width: 601px) {
+  .tripview { --safe-top: 24px; --safe-bottom: 48px; }
+}
+.tripview[data-safe-preview="true"] { --safe-top: 24px; --safe-bottom: 48px; }
+.tripview__field { position: relative; margin-bottom: clamp(22px, 3.4dvh, 28px); }
+.tripview__field-label { display: block; margin-bottom: clamp(6px, 2vw, 9px); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
+.tripview__field[data-active="true"] .tripview__field-label { color: var(--ink); }
+.tripview__field-control { display: grid; grid-template-columns: 1fr; gap: clamp(7px, 2vw, 10px); }
+.tripview__field-control input { min-width: 0; height: clamp(50px, calc(20px + 6dvh), 58px); padding: 0 clamp(12px, 4vw, 16px); border: 2px solid var(--border-strong); border-radius: 15px; outline: 0; background: white; color: var(--ink); font-size: clamp(14px, calc(2px + 4vw), 18px); font-weight: 700; }
+.tripview__field-control input:focus { border-color: var(--brand); }
+.tripview__search { min-height: clamp(44px, calc(16px + 5dvh), 50px); border: 0; border-radius: 13px; background: var(--brand); color: var(--on-brand); font: inherit; font-size: clamp(15px, calc(3px + 3.8vw), 18px); font-weight: 900; }
+.tripview__search:disabled { background: var(--border-strong); color: var(--ink-muted); }
+.tripview__place { display: grid; gap: 7px; }
+.tripview__place iframe { width: 100%; height: clamp(118px, 24dvh, 150px); border: 1px solid var(--border); border-radius: 13px; }
+.tripview__place p { margin: 0; overflow: hidden; color: var(--ink-body); font-size: clamp(12px, 3.4vw, 14px); font-weight: 700; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.tripview__place button { min-height: 48px; border: 0; border-radius: 13px; background: var(--brand); color: var(--on-brand); font: inherit; font-weight: 900; }
+.tripview__place a { color: var(--ink-muted); font-size: 11px; text-align: right; }
+.tripview__place-status { min-height: 120px; margin: 0; display: grid; place-items: center; color: var(--ink-body); font-weight: 800; text-align: center; }
+.tripview__place-status--error { color: var(--no); }
+.tripview__choice-stage { display: grid; gap: clamp(10px, 2dvh, 14px); }
+.tripview__choice-prompt { margin: 0; color: var(--ink); font-size: clamp(19px, calc(5px + 4.5vw), 23px); font-weight: 900; }
+.tripview__choices { display: grid; gap: clamp(8px, 1.5dvh, 12px); }
+.tripview__choices button { min-height: clamp(58px, calc(22px + 7dvh), 70px); padding: 8px 16px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: var(--on-brand); text-align: center; }
+.tripview__choices button strong { font-size: clamp(18px, calc(5px + 4vw), 21px); }
+.tripview__choice-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tripview__choice-actions button { min-height: 44px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); color: var(--ink-body); font: inherit; font-size: clamp(14px, calc(3px + 3.5vw), 17px); font-weight: 800; }
+.tripview__choice-actions .tripview__choice-action-wide { grid-column: 1 / -1; }
+.tripview__selected { display: grid; grid-template-columns: auto 1fr auto; min-height: 68px; padding: 8px 4px; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+.tripview__selected span { padding: 5px 8px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 900; }
+.tripview__selected strong { color: var(--ink); font-size: clamp(18px, calc(5px + 4vw), 21px); }
+.tripview__selected button { min-height: 40px; padding: 0 8px; border: 0; background: transparent; color: var(--ink-muted); font: inherit; font-size: 14px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.tripview__trip-message { margin-top: -8px; color: var(--no); font-size: 14px; font-weight: 800; line-height: 1.4; text-align: center; }
+.tripview__voice { display: flex; width: 100%; min-height: clamp(46px, calc(18px + 6dvh), 54px); align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--brand); border-radius: 15px; background: var(--brand); color: var(--on-brand); font-size: clamp(15px, calc(3px + 4vw), 18px); font-weight: 900; }
+.tripview__voice:focus, .tripview__voice:focus-visible { outline: none; box-shadow: none; }
+.tripview__voice[data-listening="true"] { border-color: var(--no); background: var(--no); color: white; animation: tripview-listening 1.2s ease-in-out infinite; }
+@keyframes tripview-listening { 50% { box-shadow: 0 0 0 6px var(--no-bg); } }
+@media (prefers-reduced-motion: reduce) { .tripview__voice[data-listening="true"] { animation: none; box-shadow: 0 0 0 4px var(--no-bg); } }
+.tripview__voice-message { position: absolute; right: 2px; bottom: -22px; left: 2px; margin: 0; color: var(--no); font-size: clamp(12px, 3.5vw, 14px); font-weight: 700; line-height: 1; text-align: center; }
+.tripview__manual { display: block; width: 100%; min-height: 46px; margin-top: 26px; border: 2px solid var(--brand); border-radius: 15px; background: var(--surface); color: var(--brand); font: inherit; font-weight: 900; }
+.tripview__input-mode { width: 100%; min-height: 48px; margin-top: clamp(2px, 1dvh, 8px); border: 0; background: transparent; color: var(--ink); font: inherit; font-size: clamp(15px, calc(3px + 3.8vw), 18px); font-weight: 800; text-decoration: underline; text-underline-offset: 5px; }
+.tripview__input-mode:focus, .tripview__input-mode:focus-visible { outline: none; box-shadow: none; }
+.tripview__find-submit { width: 100%; min-height: clamp(48px, calc(18px + 7dvh), 58px); margin-top: clamp(8px, 1.7dvh, 14px); border: 0; border-radius: 15px; background: var(--brand); color: var(--on-brand); font-size: clamp(16px, calc(4px + 4vw), 19px); font-weight: 900; }
+.tripview__find-submit:disabled { background: var(--border-strong); color: var(--ink-muted); }
 
 /* 목적지 고르기 */
 .tripview__dests {
@@ -117,14 +180,7 @@
 }
 
 /* 결과 영역 */
-.tripview__results {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
-  max-width: 760px;
-  margin: 0 auto;
-}
+.tripview__results { display: flex; width: 100%; max-width: 760px; min-height: 0; margin: 0 auto; padding: clamp(8px, 2dvh, 14px) var(--sp-4); flex: 1 1 auto; flex-direction: column; justify-content: center; overflow: hidden; }
 .tripview__msg {
   margin: var(--sp-5) 0;
   text-align: center;
@@ -179,72 +235,25 @@
 
 /* 경로 카드 */
 .tripcard {
-  padding: var(--sp-5);
-  border-radius: var(--radius-lg);
+  padding: clamp(14px, 3dvh, 20px);
+  border-radius: 20px;
   background: var(--surface);
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border);
 }
-.tripcard__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-.tripcard__step {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  font-size: var(--fs-md);
-  font-weight: 700;
-  color: var(--ink);
-}
-.tripcard__icon {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--brand);
-}
-.tripcard__icon svg { width: 23px; height: 23px; }
-.tripcard__step--bus .tripcard__icon {
-  background: var(--brand-soft);
-}
-.tripcard__step--dest .tripcard__icon {
-  background: var(--brand-soft);
-}
-.tripcard__text {
-  line-height: 1.4;
-}
-.tripcard__place {
-  color: var(--brand);
-}
-.tripcard__route {
-  color: var(--brand-strong);
-}
-.tripcard__arrival {
-  color: var(--ink-body);
-  font-weight: 700;
-}
-.tripcard__tag {
-  margin: var(--sp-4) 0 0;
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--border);
-  font-size: var(--fs-base);
-  font-weight: 800;
-  color: var(--ink-muted);
-}
-.tripcard__comfort {
-  margin: var(--sp-2) 0 0;
-  font-size: var(--fs-base);
-  font-weight: 700;
-  color: var(--brand-strong);
-}
-.tripcard__save { width: 100%; min-height: 48px; margin-top: 12px; border: 0; border-radius: 14px; background: var(--brand); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.tripcard__heading { display: grid; gap: 4px; }
+.tripcard__heading strong { color: var(--ink); font-size: clamp(20px, calc(6px + 4.5vw), 24px); }
+.tripcard__heading span { color: var(--ink-body); font-size: clamp(14px, calc(3px + 3.6vw), 17px); font-weight: 700; }
+.tripcard__heading b { color: var(--brand-strong); font-size: clamp(14px, calc(3px + 3.6vw), 17px); }
+.tripcard__arrivals { display: grid; gap: 0; margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
+.tripcard__arrivals li { display: flex; min-height: clamp(58px, 11dvh, 68px); align-items: center; justify-content: space-between; gap: var(--sp-3); border-top: 1px solid var(--border); }
+.tripcard__arrivals li strong { color: var(--brand-strong); font-size: clamp(22px, calc(6px + 5vw), 28px); white-space: nowrap; }
+.tripcard__arrivals li b { color: var(--ink); font-size: clamp(24px, calc(7px + 5.5vw), 31px); text-align: right; white-space: nowrap; }
+.tripcard__status { display: grid; min-height: clamp(92px, 18dvh, 116px); margin: 14px 0 0; place-items: center; border-block: 1px solid var(--border); color: var(--ink-body); font-size: clamp(15px, calc(3px + 3.8vw), 18px); font-weight: 800; text-align: center; }
+.tripcard__status--unavailable { align-content: center; gap: 7px; }
+.tripcard__status--unavailable span { color: var(--ink-muted); font-size: 14px; }
+.tripcard__favorite { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 12px; padding-top: 12px; align-items: center; border-top: 1px solid var(--border); text-align: left; }
+.tripcard__favorite span { color: var(--ink-body); font-size: clamp(12px, calc(2px + 3.3vw), 15px); font-weight: 700; line-height: 1.35; }
+.tripcard__save { min-width: 88px; min-height: 44px; border: 0; border-radius: 12px; background: var(--brand); color: var(--on-brand); font: inherit; font-weight: 800; cursor: pointer; }
 .tripcard__save:disabled { background: var(--border-strong); color: var(--ink-muted); cursor: default; }
+.tripcard__report { display: flex; min-height: 44px; margin-top: 8px; align-items: center; justify-content: center; color: var(--ink); font-size: 14px; font-weight: 800; text-underline-offset: 4px; }

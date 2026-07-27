@@ -68,7 +68,7 @@
 /* 홈 */
 .qrmain__welcome { display: flex; min-height: calc(100svh - 32px); flex-direction: column; justify-content: center; text-align: left; }
 .qrmain__choices { display: grid; width: 100%; gap: 16px; }
-.qrmain__choices button { min-height: 96px; padding: 16px; border: 2px solid var(--brand); border-radius: 16px; background: var(--brand); color: white; cursor: pointer; }
+.qrmain__choices button { min-height: 96px; padding: 16px; border: 2px solid var(--brand); border-radius: 16px; background: var(--brand); color: var(--on-brand); cursor: pointer; }
 .qrmain__choices button:last-child { background: white; color: var(--brand); }
 .qrmain__choices strong { font-size: 22px; line-height: 1.35; }
 
@@ -77,17 +77,17 @@
 .qrmain__error .qrmain__locate-icon { width: 40px; height: 40px; margin-bottom: 24px; color: var(--brand); }
 .qrmain__error h1 { margin-bottom: 12px; }
 .qrmain__location-recovery { width: 100%; min-height: 48px; padding: 8px; border: 0; background: transparent; color: var(--ink); text-align: center; text-decoration: underline; text-underline-offset: 4px; font-size: 16px; font-weight: 800; cursor: pointer; }
-.qrmain__retry { min-height: 48px; margin: 16px auto 0; padding: 0 16px; border: 0; border-radius: 12px; background: var(--brand); color: white; font-size: 16px; font-weight: 900; }
+.qrmain__retry { min-height: 48px; margin: 16px auto 0; padding: 0 16px; border: 0; border-radius: 12px; background: var(--brand); color: var(--on-brand); font-size: 16px; font-weight: 900; }
 
 /* 출발지·목적지 입력 */
 .qrmain__destination-page, .qrmain__manual-stop { display: grid; gap: var(--qr-gap); }
 .qrmain__destination-page > h2, .qrmain__manual-stop label { margin-top: 32px; color: var(--ink); font-size: 28px; line-height: 1.3; font-weight: 900; letter-spacing: -.6px; word-break: keep-all; }
-.qrmain__mic { display: flex; width: 100%; min-height: var(--qr-control); align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 19px; font-weight: 900; cursor: pointer; }
+.qrmain__mic { display: flex; width: 100%; min-height: var(--qr-control); align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 14px; background: var(--brand); color: var(--on-brand); font-size: 19px; font-weight: 900; cursor: pointer; }
 .qrmain__mic[data-listening="true"] { box-shadow: 0 0 0 3px var(--brand-soft); }
 .qrmain__mic svg { width: 24px; height: 24px; }
 .qrmain__manual-input, .qrmain__form input { width: 100%; min-width: 0; min-height: var(--qr-control); padding: 0 16px; border: 2px solid var(--border-strong); border-radius: 14px; background: white; color: var(--ink); font-size: 18px; }
 .qrmain__form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-.qrmain__form button { min-width: 76px; min-height: var(--qr-control); padding: 0 16px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 17px; font-weight: 900; }
+.qrmain__form button { min-width: 76px; min-height: var(--qr-control); padding: 0 16px; border: 0; border-radius: 14px; background: var(--brand); color: var(--on-brand); font-size: 17px; font-weight: 900; }
 .qrmain__manual-stop ul { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .qrmain__manual-stop li button { display: flex; width: 100%; min-height: 58px; align-items: center; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: left; }
 .qrmain__location-proof { overflow: hidden; margin-top: 8px; border-radius: 14px; }
@@ -105,7 +105,7 @@
 .qrmain__stop-confirm > h2 { margin-top: 32px; }
 .qrmain__confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
 .qrmain__confirm-actions button { min-height: var(--qr-control); border: 2px solid var(--brand); border-radius: 14px; background: white; color: var(--brand); font-size: 18px; font-weight: 900; }
-.qrmain__confirm-actions button:first-child { background: var(--brand); color: white; }
+.qrmain__confirm-actions button:first-child { background: var(--brand); color: var(--on-brand); }
 .qrmain__nearby { display: grid; margin-top: 32px; }
 .qrmain__nearby > span { margin-bottom: 8px; color: var(--ink-muted); font-size: 15px; font-weight: 800; }
 .qrmain__nearby button { min-height: 52px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border); background: white; color: var(--ink); text-align: left; font-weight: 800; }
@@ -113,11 +113,11 @@
 .qrmain__report-start > p { margin-top: 8px; }
 .qrmain__quick-report { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; }
 .qrmain__quick-report button { min-height: 64px; padding: 8px; border: 2px solid var(--border); border-radius: 14px; background: white; color: var(--ink); font-size: 16px; font-weight: 900; }
-.qrmain__quick-report button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: white; }
+.qrmain__quick-report button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
 .qrmain__photo-input { display: flex; align-items: center; justify-content: center; min-height: 50px; margin-top: 12px; border: 2px solid var(--brand); border-radius: 14px; color: var(--brand); font-size: 16px; font-weight: 900; cursor: pointer; }
 .qrmain__photo-input input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .qrmain__photo-preview { display: block; width: 100%; max-height: 180px; margin-top: 10px; border-radius: 12px; object-fit: cover; }
-.qrmain__report-submit { width: 100%; min-height: var(--qr-control); margin-top: 16px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 18px; font-weight: 900; }
+.qrmain__report-submit { width: 100%; min-height: var(--qr-control); margin-top: 16px; border: 0; border-radius: 14px; background: var(--brand); color: var(--on-brand); font-size: 18px; font-weight: 900; }
 .qrmain__report-submit:disabled { background: var(--border-strong); cursor: not-allowed; }
 .qrmain__report-complete { margin-top: 0; }
 .qrmain__report-complete p { margin-top: 12px; }
@@ -134,7 +134,7 @@
 .qrmain__route-head > p b { display: block; color: var(--brand); font-size: 28px; line-height: 1.15; }
 .qrmain__route-head > p span { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
 .qrmain__route-head > p em { display: block; margin-top: 7px; color: var(--ink-body); font-size: 13px; font-style: normal; font-weight: 800; }
-.qrmain__report { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--brand); color: white; font-size: 17px; font-weight: 900; }
+.qrmain__report { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--brand); color: var(--on-brand); font-size: 17px; font-weight: 900; }
 .qrmain__state { margin: 48px auto; text-align: center; font-size: 18px; font-weight: 800; line-height: 1.5; }
 .qrmain > .qrmain__state { display: grid; min-height: calc(100svh - 32px); margin: 0; place-items: center; }
 

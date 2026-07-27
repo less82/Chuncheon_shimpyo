@@ -30,8 +30,19 @@ def test_nearest_tago_picks_closest():
 
 def test_build_tago_mapping_returns_empty_without_key(monkeypatch, capsys):
     monkeypatch.delenv("TAGO_KEY", raising=False)
+    monkeypatch.delenv("VITE_TAGO_KEY", raising=False)
     stops = [{"id": "250000001", "lat": 37.8813, "lng": 127.7300}]
     m = build_tago_mapping(stops)
     assert m == {}
     out = capsys.readouterr().out
     assert "TAGO" in out and "skip" in out
+
+
+def test_build_tago_mapping_accepts_app_key(monkeypatch):
+    monkeypatch.delenv("TAGO_KEY", raising=False)
+    monkeypatch.setenv("VITE_TAGO_KEY", "app-key")
+    monkeypatch.setattr("tago_map._fetch_tago_stops", lambda key: [
+        {"nodeid": "GWB111", "lat": 37.8813, "lng": 127.7300},
+    ])
+    stops = [{"id": "250000001", "lat": 37.8813, "lng": 127.7300}]
+    assert build_tago_mapping(stops) == {"250000001": "GWB111"}

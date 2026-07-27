@@ -10,6 +10,8 @@ export interface TripOption {
   boardStopId: string; // 최초 승차 정류장 = 걸어갈 정류장
   walkMin: number; // 현위치 → boardStop 도보(분)
   walkReal: boolean; // 도보시간 실측 여부(현재는 직선 기준 false)
+  destinationStopId?: string; // 장소 검색일 때 실제 하차할 정류장
+  destinationWalkMin?: number; // 하차 정류장 → 목적지 도보(분)
   legs: TripLeg[]; // 1개=직행, 2개=1환승
   transferStopId?: string; // 환승 정류장(관리번호) — legs 2개일 때만
   directBus: boolean; // 직행(환승 없음) 여부

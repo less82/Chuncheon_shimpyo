@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { getArrival, headwayFallback } from "./arrivals";
+import { arrivalsForRoutes, getArrival, headwayFallback } from "./arrivals";
 import type { Stop } from "../types/stop";
 import { makeUnknown } from "../types/stop";
 
@@ -37,6 +37,21 @@ describe("headwayFallback", () => {
   });
   it("headwayMin 없으면 15분 기본", () => {
     expect(headwayFallback(makeStop()).text).toBe("배차간격 약 15분");
+  });
+});
+
+describe("arrivalsForRoutes", () => {
+  it("괄호가 붙은 내부 노선명도 TAGO 노선번호와 연결한다", () => {
+    const result = arrivalsForRoutes({
+      text: "약 4분 후 도착",
+      live: true,
+      byRoute: [
+        { routeNo: "15", min: 4, seq: 2 },
+        { routeNo: "300", min: 7, seq: 4 },
+      ],
+    }, ["15(갈때편도)"]);
+
+    expect(result).toEqual([{ routeNo: "15", min: 4, seq: 2 }]);
   });
 });
 

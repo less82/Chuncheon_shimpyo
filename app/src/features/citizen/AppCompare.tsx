@@ -2,7 +2,7 @@ import "./AppCompare.css";
 
 const screens = [
   { key: "current", title: "현재 앱 화면", note: "390 × 844 CSS px", width: 390, height: 844 },
-  { key: "folder", title: "스마트 폴더폰", note: "320 × 533 CSS px · 갤럭시 폴더2 기준", width: 320, height: 533 },
+  { key: "folder", title: "스마트 폴더폰", note: "전체 320 × 533 · 안전영역 제외 앱 화면 320 × 461", width: 320, height: 533 },
 ] as const;
 
 export default function AppCompare() {
@@ -14,7 +14,7 @@ export default function AppCompare() {
           <section className="appcompare__item" key={screen.key}>
             <div className="appcompare__label"><h2>{screen.title}</h2><span>{screen.note}</span></div>
             <div className="appcompare__device" style={{ width: screen.width + 16, height: screen.height + 16 }}>
-              <iframe title={`${screen.title} 앱 화면`} src="/app?single=1" width={screen.width} height={screen.height} />
+              <iframe title={`${screen.title} 앱 화면`} src="/app?single=1&safePreview=1" width={screen.width} height={screen.height} allow="microphone" />
             </div>
           </section>
         ))}

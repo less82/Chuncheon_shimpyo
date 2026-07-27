@@ -6,8 +6,8 @@
       Content-Security-Policy (정적 웹앱 하드닝).
       - default-src 'self'        : 기본은 동일 출처만.
       - img-src ... data: CARTO   : Leaflet 마커 data URI + CARTO Voyager 타일.
-      - connect-src ... CARTO/TAGO/OSRM : 타일 런타임 캐시 fetch + TAGO 도착정보(apis.data.go.kr)
-                                    + OSRM 도보경로(router.project-osrm.org).
+      - connect-src ... CARTO/TAGO/OSRM/로컬 AI : 타일 런타임 캐시 fetch + TAGO 도착정보
+                                    + OSRM 도보경로 + maeng_coco 로컬 추론 API.
       - style-src 'unsafe-inline' : Leaflet/인라인 스타일(정적 CSS 문자열, 스크립트 아님).
       - script-src 'self'         : 외부 스크립트 전면 차단(번들·registerSW 모두 동일 출처).
       - worker-src 'self'         : PWA 서비스워커(sw.js).
@@ -15,10 +15,10 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data: https://*.basemaps.cartocdn.com; connect-src 'self' https://*.basemaps.cartocdn.com http://apis.data.go.kr https://apis.data.go.kr https://router.project-osrm.org; frame-src 'self' https://www.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'"
+      content="default-src 'self'; img-src 'self' data: https://*.basemaps.cartocdn.com; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://*.basemaps.cartocdn.com http://apis.data.go.kr https://apis.data.go.kr https://router.project-osrm.org https://nominatim.openstreetmap.org; frame-src 'self' https://www.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#26344a" />
     <meta name="description" content="춘천시 버스정류장 그늘·의자·조명·도착안내기 정보를 3상태로 보여주는 고령자용 웹앱" />
     <title>춘천 정류장 안내</title>

@@ -18,7 +18,7 @@ export default defineConfig({
         description:
           '춘천시 버스정류장 그늘·의자·조명·도착안내기 정보를 3상태로 보여주는 고령자용 웹앱',
         lang: 'ko',
-        start_url: '/',
+        start_url: '/app',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#26344a',
@@ -34,7 +34,6 @@ export default defineConfig({
       workbox: {
         // 빌드 산출물(app shell) + 정류장 데이터 JSON precache.
         globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2}'],
-        globDirectory: 'dist',
         // 샘플 데이터만 precache(항상 존재). 실데이터 stops.json 은 빌드시 없을
         // 수도 있어 런타임 캐시(StaleWhileRevalidate)로 처리 → 오프라인이면
         // loadStops() 가 precache된 sample 로 폴백한다.
@@ -45,6 +44,7 @@ export default defineConfig({
           { url: '/data/routes.json', revision: null },
         ],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/admin(?:\/|$)/],
         runtimeCaching: [
           {
             // CARTO Voyager 지도 타일 런타임 캐시(오프라인 재방문 시 캐시 폴백).

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import { makeUnknown } from "../../types/stop";
 import type { TripOption } from "../../types/trip";
@@ -37,44 +38,21 @@ const directOption: TripOption = {
   legs: [{ routeNos: ["7"], boardStopId: "A", alightStopId: "C" }],
 };
 
-const transferOption: TripOption = {
-  boardStopId: "A",
-  walkMin: 4,
-  walkReal: false,
-  directBus: false,
-  transferStopId: "B",
-  legs: [
-    { routeNos: ["7"], boardStopId: "A", alightStopId: "B" },
-    { routeNos: ["9"], boardStopId: "B", alightStopId: "C" },
-  ],
-};
-
 describe("<TripCard>", () => {
-  it("직행 옵션의 도보시간과 노선번호를 렌더한다", () => {
-    const { getByText } = render(
-      <TripCard
+  it("실시간 도착정보가 없을 때 배차간격을 도착예정처럼 표시하지 않는다", async () => {
+    const { getByText, findByText, queryByText } = render(
+      <MemoryRouter><TripCard
         option={directOption}
         stops={stops}
         destStop={dest}
         fromPos={fromPos}
-      />,
+      /></MemoryRouter>,
     );
-    expect(getByText(/걸어서 4분/)).toBeInTheDocument();
-    expect(getByText(/7번/)).toBeInTheDocument();
     expect(getByText(/시청앞/)).toBeInTheDocument();
-  });
-
-  it("환승 옵션은 환승 정류장과 두 번째 노선을 표시한다", () => {
-    const { getByText } = render(
-      <TripCard
-        option={transferOption}
-        stops={stops}
-        destStop={dest}
-        fromPos={fromPos}
-      />,
-    );
-    expect(getByText(/중앙시장/)).toBeInTheDocument();
-    expect(getByText(/갈아타기/)).toBeInTheDocument();
-    expect(getByText(/9번/)).toBeInTheDocument();
+    expect(getByText(/요양원 방면/)).toBeInTheDocument();
+    expect(getByText(/도보 약 4분/)).toBeInTheDocument();
+    expect(await findByText("실시간 도착정보를 불러오지 못했어요")).toBeInTheDocument();
+    expect(queryByText(/배차간격/)).not.toBeInTheDocument();
+    expect(queryByText(/걸어서|갈아타기|중앙시장/)).not.toBeInTheDocument();
   });
 });
