@@ -63,7 +63,7 @@ export default function MaengCoco() {
     setError("");
     setResult(null);
     try {
-      setResult(await inspectBusStopImage(file, 0.25));
+      setResult(await inspectBusStopImage(file, 0.15));
     } catch (requestError) {
       const message =
         requestError instanceof TypeError
@@ -204,7 +204,7 @@ export default function MaengCoco() {
         </div>
 
         <p className="maengcoco__notice">
-          19장으로 학습한 시험용 모델입니다. 민원 접수나 보수 판단 전에 반드시 사람이 확인해야 합니다.
+          21장으로 학습한 시험용 모델입니다. 민원 접수나 보수 판단 전에 반드시 사람이 확인해야 합니다.
         </p>
       </section>
     </main>

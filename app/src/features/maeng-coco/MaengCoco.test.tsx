@@ -5,8 +5,8 @@ import MaengCoco from "./MaengCoco";
 
 const result = {
   verdict: "damage_suspected",
-  threshold: 0.25,
-  damage_threshold: 0.5,
+  threshold: 0.15,
+  damage_threshold: 0.22,
   detections: [
     { confidence: 0.6408, xyxy: [10, 20, 300, 240] },
   ],
@@ -53,7 +53,7 @@ describe("<MaengCoco>", () => {
     expect(await screen.findByText("파손 의심 영역이 있습니다")).toBeInTheDocument();
     expect(screen.getByText("1개 영역 · 최고 신뢰도 64%")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/maeng-coco?threshold=0.25",
+      "http://127.0.0.1:8000/api/maeng-coco?threshold=0.15",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "image/jpeg" },
@@ -68,7 +68,7 @@ describe("<MaengCoco>", () => {
       json: async () => ({
         ...result,
         verdict: "review_required",
-        detections: [{ confidence: 0.34, xyxy: [5, 10, 200, 220] }],
+        detections: [{ confidence: 0.18, xyxy: [5, 10, 200, 220] }],
       }),
     }));
     const screen = render(
@@ -84,7 +84,7 @@ describe("<MaengCoco>", () => {
     fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
 
     expect(await screen.findByText("파손 가능성을 확인해주세요")).toBeInTheDocument();
-    expect(screen.getByText(/신뢰도 34%/)).toBeInTheDocument();
+    expect(screen.getByText(/신뢰도 18%/)).toBeInTheDocument();
   });
 
   it("지원하지 않는 파일 형식을 검사 전에 거절한다", () => {

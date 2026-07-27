@@ -23,7 +23,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--images", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--threshold", type=float, default=0.25)
+    parser.add_argument("--threshold", type=float, default=0.15)
     parser.add_argument("--nms-threshold", type=float, default=0.5)
     args = parser.parse_args()
 

@@ -32,6 +32,13 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--device", choices=("auto", "cuda", "cpu"), default="auto")
     parser.add_argument(
+        "--initial-checkpoint",
+        type=Path,
+        help="Optionally continue fine-tuning from a one-class RF-DETR checkpoint.",
+    )
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--lr-encoder", type=float, default=1e-5)
+    parser.add_argument(
         "--freeze-encoder",
         action="store_true",
         help="Freeze the image encoder to reduce VRAM use (off by default).",
@@ -41,6 +48,11 @@ def main() -> None:
 
     dataset_dir = args.dataset.resolve()
     output_dir = args.output.resolve()
+    initial_checkpoint = (
+        args.initial_checkpoint.resolve() if args.initial_checkpoint else None
+    )
+    if initial_checkpoint is not None and not initial_checkpoint.is_file():
+        raise FileNotFoundError(initial_checkpoint)
     for split in ("train", "valid", "test"):
         annotation_path = dataset_dir / split / "_annotations.coco.json"
         if not annotation_path.is_file():
@@ -69,6 +81,11 @@ def main() -> None:
         "cuda_available": cuda_available,
         "gpu": torch.cuda.get_device_name(0) if cuda_available else None,
         "epochs": args.epochs,
+        "initial_checkpoint": (
+            str(initial_checkpoint) if initial_checkpoint is not None else None
+        ),
+        "lr": args.lr,
+        "lr_encoder": args.lr_encoder,
         "freeze_encoder": args.freeze_encoder,
         "early_stopping_patience": args.early_stopping_patience,
         "dataset": str(dataset_dir),
@@ -81,10 +98,16 @@ def main() -> None:
 
     # Gradient checkpointing, batch size 1 and disabled EMA keep peak memory low
     # enough for a 4 GB GTX 1650 Ti. Encoder freezing remains an opt-in fallback.
-    model = RFDETRNano(
-        gradient_checkpointing=True,
-        freeze_encoder=args.freeze_encoder,
-    )
+    model_kwargs: dict[str, object] = {
+        "gradient_checkpointing": True,
+        "freeze_encoder": args.freeze_encoder,
+    }
+    if initial_checkpoint is not None:
+        model_kwargs.update(
+            pretrain_weights=str(initial_checkpoint),
+            num_classes=1,
+        )
+    model = RFDETRNano(**model_kwargs)
     model.train(
         dataset_dir=str(dataset_dir),
         output_dir=str(output_dir),
@@ -92,8 +115,8 @@ def main() -> None:
         batch_size=1,
         grad_accum_steps=4,
         resolution=384,
-        lr=1e-4,
-        lr_encoder=1e-5,
+        lr=args.lr,
+        lr_encoder=args.lr_encoder,
         use_ema=False,
         multi_scale=False,
         expanded_scales=False,
@@ -116,7 +139,12 @@ def main() -> None:
         notes={
             "purpose": "bus-stop damage proof of concept",
             "class": "bus_stop_damage",
-            "source_images": dataset_summary.get("images"),
+            "source_images": dataset_summary.get(
+                "source_images", dataset_summary.get("images")
+            ),
+            "training_records": dataset_summary.get(
+                "training_records", dataset_summary.get("images")
+            ),
             "warning": "not for production use; tiny dataset",
         },
     )

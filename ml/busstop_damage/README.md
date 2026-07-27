@@ -1,10 +1,10 @@
 # 정류장 파손 RF-DETR 개념검증
 
-사용자가 제공한 파손 사진 17장과 정상 사진 2장을 `bus_stop_damage` 단일 클래스로 학습하는 최소 파이프라인이다.
+사용자가 제공한 파손 사진 19장과 정상 사진 2장을 `bus_stop_damage` 단일 클래스로 학습하는 최소 파이프라인이다.
 
 ## 판정
 
-- 19장은 제품용 모델 학습량이 아니다.
+- 21장은 제품용 모델 학습량이 아니다.
 - 기둥형·의자 파손은 각 1장뿐이므로 세부 클래스로 나누지 않는다.
 - 정상 정류장 사진이 2장뿐이라 오탐률을 평가할 수 없다.
 - 뉴스 자막·워터마크가 있는 사진은 모델이 잘못 학습할 수 있다.
@@ -15,14 +15,14 @@
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\prepare_dataset.py `
   --source C:\Users\user\Downloads\busstop_coco `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v2
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v4
 ```
 
 생성 구조:
 
 ```text
-dataset_v2/
-  train/   # 파손 13장 + 정상 음성 2장 + _annotations.coco.json
+dataset_v4/
+  train/   # 파손 15장 + 정상 음성 2장 + _annotations.coco.json
   valid/   # 2장 + _annotations.coco.json
   test/    # 2장 + _annotations.coco.json
   review/annotations_contact_sheet.jpg
@@ -55,8 +55,8 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\train_rfdetr.py `
-  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v2 `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v2 `
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v4 `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v4 `
   --epochs 40 `
   --early-stopping-patience 12 `
   --device cuda
@@ -75,9 +75,9 @@ GTX 1650 Ti 4GB 기준:
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\predict_rfdetr.py `
-  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v2\checkpoint_best_total.pth `
-  --images C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v2\test `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v2
+  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v4\checkpoint_best_total.pth `
+  --images C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v4\test `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v4
 ```
 
 ## 앱에서 maeng_coco 사용
@@ -98,7 +98,7 @@ npm run dev
 3. `검사 시작`
 4. 파손 의심 박스와 신뢰도 확인
 
-API는 `POST /api/maeng-coco?threshold=0.25`에 JPG/PNG/WEBP 원본 바이트를 받고 JSON과 주석 이미지를 반환한다. 판정은 후보 없음=`미검출`, 신뢰도 0.25~0.49=`확인 필요`, 0.5 이상=`파손 의심`의 3단계다.
+API는 `POST /api/maeng-coco?threshold=0.15`에 JPG/PNG/WEBP 원본 바이트를 받고 JSON과 주석 이미지를 반환한다. 판정은 후보 없음=`미검출`, 신뢰도 0.15~0.219=`확인 필요`, 0.22 이상=`파손 의심`의 3단계다. 이 임계값은 파손 회귀 사진 4장과 정상 사진 2장으로 정한 PoC 값이며 운영 기준이 아니다.
 
 모델 위치가 다르면 실행 시 지정한다.
 

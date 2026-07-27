@@ -4,7 +4,7 @@ The source images stay outside the repository. This script converts them to
 RGB JPEG, assigns deterministic train/valid/test splits, writes COCO bounding
 boxes, a provenance manifest, and an annotation contact sheet.
 
-The 16 supplied images are intentionally treated as one class:
+The supplied images are intentionally treated as one class:
 ``bus_stop_damage``. There are too few examples per subtype for a defensible
 multi-class model. Images with ``bbox=None`` are explicit normal negatives.
 """
@@ -124,6 +124,20 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         (24, 90, 420, 295),
     ),
     Sample(
+        "images.jpg",
+        "hard_broken_glass_01.jpg",
+        "train",
+        "side_glass",
+        (184, 124, 218, 222),
+    ),
+    Sample(
+        "파손/images (1).jpg",
+        "hard_broken_glass_02.jpg",
+        "train",
+        "side_glass",
+        (126, 89, 238, 244),
+    ),
+    Sample(
         "정류장_정상.jpg",
         "normal_negative_00.jpg",
         "train",
@@ -211,7 +225,7 @@ def prepare_split(
                     "iscrowd": 0,
                     "attributes": {
                         "damage_subtype": sample.subtype,
-                        "annotation_status": "reviewed_manual_v2",
+                        "annotation_status": "reviewed_manual_v4",
                     },
                 }
             )
@@ -236,7 +250,7 @@ def prepare_split(
     coco = {
         "info": {
             "description": "Bus-stop damage proof-of-concept dataset",
-            "version": "1.0",
+            "version": "4.0",
             "annotation_scope": "visibly damaged component or area",
         },
         "licenses": [],
@@ -320,9 +334,11 @@ def main() -> None:
         writer.writerows(all_rows)
 
     contact_sheet = create_contact_sheet(output_dir, SAMPLES)
+    unique_source_images = len({sample.source_name for sample in SAMPLES})
     summary = {
         "class": CATEGORY["name"],
-        "images": len(SAMPLES),
+        "source_images": unique_source_images,
+        "training_records": len(SAMPLES),
         "annotations": sum(sample.bbox is not None for sample in SAMPLES),
         "splits": {
             split: sum(sample.split == split for sample in SAMPLES)
@@ -330,7 +346,7 @@ def main() -> None:
         },
         "limitations": [
             "only 2 normal negative images",
-            "19 images",
+            f"{unique_source_images} unique source images",
             "one bounding box per positive image",
             "news captions and watermarks in several images",
             "not suitable for production evaluation",

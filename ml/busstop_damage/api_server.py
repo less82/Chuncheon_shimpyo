@@ -32,14 +32,14 @@ from rfdetr import RFDETRNano
 
 MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 MAX_RENDER_SIDE = 1600
-CANDIDATE_THRESHOLD = 0.25
-DAMAGE_THRESHOLD = 0.5
+CANDIDATE_THRESHOLD = 0.15
+DAMAGE_THRESHOLD = 0.22
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v2"
+    / "output_v4"
     / "checkpoint_best_total.pth"
 )
 
@@ -133,7 +133,7 @@ class DamageDetector:
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "19장으로 학습한 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
+                "21장으로 학습한 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
             ),
         }
 
@@ -176,7 +176,7 @@ def health() -> dict[str, Any]:
 @app.post("/api/maeng-coco")
 async def inspect_bus_stop(
     request: Request,
-    threshold: float = Query(default=CANDIDATE_THRESHOLD, ge=0.25, le=0.9),
+    threshold: float = Query(default=CANDIDATE_THRESHOLD, ge=0.05, le=0.9),
 ) -> dict[str, Any]:
     content_type = request.headers.get("content-type", "").split(";", 1)[0].lower()
     if content_type not in ALLOWED_CONTENT_TYPES:

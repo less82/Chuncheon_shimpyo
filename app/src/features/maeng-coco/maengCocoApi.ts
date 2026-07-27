@@ -21,7 +21,7 @@ const apiBase = (
 
 export async function inspectBusStopImage(
   file: File,
-  threshold = 0.25,
+  threshold = 0.15,
   fetcher: FetchLike = fetch,
 ): Promise<MaengCocoResult> {
   const response = await fetcher(
