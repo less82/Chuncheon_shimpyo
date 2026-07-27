@@ -2,14 +2,17 @@
 
 사용자가 제공한 파손 사진 19장과 정상 사진 2장을
 `side_glass_damage`(버스 정류장 외벽 유리)와
-`other_bus_stop_damage`(버스 정류장 시설)
-2개 클래스로 학습하는 최소 파이프라인이다.
+`other_bus_stop_damage`(버스 정류장 시설),
+`bus_information_system_damage`(버스 정류장 버스정보시스템)
+3개 클래스로 학습하는 최소 파이프라인이다.
 
 ## 판정
 
-- 21장은 제품용 모델 학습량이 아니다.
-- 외벽 유리는 9장이라 별도 클래스로 분리하지만, 기둥형·의자 등은 각
-  1장뿐이므로 `other_bus_stop_damage`로 묶는다.
+- 고유 원본 21장은 제품용 모델 학습량이 아니다.
+- 버스정보시스템 원본 3장은 위치·원근·조명·압축·흐림·부분 가림을 적용해
+  원본당 6장씩 증식한다. 단순 복사는 증식으로 계산하지 않는다.
+- 외벽 유리와 버스정보시스템은 별도 클래스로 분리하고, 기둥형·의자 등은
+  각 1장뿐이므로 `other_bus_stop_damage`로 묶는다.
 - 독립 정상 정류장 사진이 2장뿐이라 실제 오탐률을 평가할 수 없다.
 - 문제 사진의 오른쪽 정상 유리 패널 크롭 4개를 하드 네거티브로 추가했다.
 - 뉴스 자막·워터마크가 있는 사진은 모델이 잘못 학습할 수 있다.
@@ -20,29 +23,35 @@
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\prepare_dataset.py `
   --source C:\Users\user\Downloads\busstop_coco `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v8
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v10_bis `
+  --separate-bus-information `
+  --augment-bus-information 6
 ```
 
 생성 구조:
 
 ```text
-dataset_v8/
-  train/   # 외벽 16레코드 + 기타 7장 + 정상 원본 2장 + 정상 패널 크롭 4장
-  valid/   # 기타 파손 1장
+dataset_v10_bis/
+  train/   # 버스정보시스템 원본 2 + 증식 12 + 외벽/기타/정상
+  valid/   # 독립 버스정보시스템 파손 1장
   test/    # 기타 파손 2장
   review/annotations_contact_sheet.jpg
   manifest.csv
   dataset_summary.json
 ```
 
-참조 모델은 제공된 기타 파손 회귀를 보존하기 위해 검증·테스트 원본의
-반복본을 학습에 추가한 별도 데이터셋을 사용한다. 이 옵션을 사용한 데이터의
-분할 점수는 독립 평가값이 아니다.
+독립 검증 뒤 제공 사진 전체의 앱 회귀를 맞추는 최종 데이터셋은 검증·테스트
+원본의 반복본을 학습에 추가한다. 버스정보시스템 3장 모두 원본당 6장씩
+증식하고, 불균형을 막기 위해 기타 시설도 고유 원본당 2장씩 증식한다.
+이 옵션을 사용한 데이터의 분할 점수는 독립 평가값이 아니다.
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\prepare_dataset.py `
   --source C:\Users\user\Downloads\busstop_coco `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v9_reference `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v12_balanced_app `
+  --separate-bus-information `
+  --augment-bus-information 6 `
+  --augment-other-damage 2 `
   --include-reference-regression
 ```
 
@@ -71,24 +80,35 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\train_rfdetr.py `
-  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v8 `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v8 `
-  --epochs 12 `
-  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v7\checkpoint_selected_app.pth `
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v10_bis `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v10_bis `
+  --epochs 15 `
+  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v8\checkpoint_selected_app.pth `
   --lr 0.00002 `
   --lr-encoder 0.000002 `
-  --early-stopping-patience 12 `
+  --early-stopping-patience 15 `
   --device cuda
 ```
 
-기타 시설 판정용 참조 모델은 두 단계로 추가 학습했다.
+위 명령의 `--dataset`은 `dataset_v10_bis`다. 독립 검증 후 앱용 모델은
+3클래스 체크포인트를 전체 버스정보시스템 증식 데이터로 미세조정한 뒤,
+`dataset_v12_balanced_app`으로 10 epoch 더 학습한다. 마지막 단계의 학습률은
+`1e-5`, encoder 학습률은 `1e-6`이다.
 
-1. v5 선택 모델을 v8 데이터로 12 epoch 학습해
-   `output_v8_reference` 생성
-2. 해당 선택 모델을 `dataset_v9_reference`로 10 epoch 추가 학습해
-   `output_v9_reference` 생성
+```powershell
+.\.venv\Scripts\python.exe ml\busstop_damage\train_rfdetr.py `
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v12_balanced_app `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v12_balanced_app `
+  --epochs 10 `
+  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v11_bis_app_all\candidate_last.pth `
+  --lr 0.00001 `
+  --lr-encoder 0.000001 `
+  --early-stopping-patience 10 `
+  --device cuda
+```
 
-두 단계 모두 학습률 `2e-5`, encoder 학습률 `2e-6`을 사용했다.
+기타 시설 회귀 보전용 `output_v9_reference` 2클래스 모델은 참조 모델로
+유지한다.
 
 GTX 1650 Ti 4GB 기준:
 
@@ -103,18 +123,17 @@ GTX 1650 Ti 4GB 기준:
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\predict_rfdetr.py `
-  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v8\checkpoint_selected_app.pth `
-  --images C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v8\train `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v8 `
-  --num-classes 2 `
-  --class-names side_glass_damage,other_bus_stop_damage
+  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v12_balanced_app\checkpoint_selected_app.pth `
+  --images C:\Users\user\Downloads\busstop_coco `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v12 `
+  --num-classes 3 `
+  --class-names side_glass_damage,other_bus_stop_damage,bus_information_system_damage
 ```
 
-`output_v8/checkpoint_selected_app.pth`는 외벽 위치 검출용 주 모델이고,
+`output_v12_balanced_app/checkpoint_selected_app.pth`는 3클래스 주 모델이고,
 `output_v9_reference/checkpoint_selected_app.pth`는 기타 시설 라벨을 보전하는 참조
-모델이다. API는 두 결과를 결합한다. 검증 mAP 자동 최적 모델보다 외벽 9장,
-정상 2장, 정상 패널 크롭 4장, 안내판·천장 파손 회귀 결과가 나은
-10번째 학습 체크포인트를 앱용으로 선택했다. Lightning 중간 체크포인트는
+모델이다. API는 버스정보시스템 주 모델 결과를 참조 모델이 일반 시설로
+덮어쓰지 않도록 두 결과를 결합한다. Lightning 중간 체크포인트는
 `export_checkpoint.py`로 추론용 `.pth`로 변환한다.
 
 ## 앱에서 maeng_coco 사용
@@ -133,22 +152,35 @@ npm run dev
 1. `maeng_coco` 선택
 2. 정류장 사진 촬영 또는 선택
 3. `검사 시작`
-4. 파손 박스와 `(버스 정류장 외벽 유리)` 또는 `(버스 정류장 시설)` 모델 라벨 확인
+4. 파손 박스와 `(버스 정류장 외벽 유리)`, `(버스 정류장 시설)` 또는
+   `(버스 정류장 버스정보시스템)` 모델 라벨 확인
 5. `다른 사진` 또는 `확인` 선택
 6. `확인`을 누르면 주석 사진·신뢰도·검출 좌표가 어드민 시민 제보 탭에 접수
 
 API는 `POST /api/maeng-coco?threshold=0.15`에 JPG/PNG/WEBP 원본 바이트를
 받고 JSON과 주석 이미지를 반환한다. 판정은 후보 없음=`미검출`, 신뢰도
 0.15~0.219=`확인 필요`, 0.22 이상=`파손 의심`의 3단계다. 이 임계값은
-외벽 회귀 사진 9장, 정상 사진 2장, 기타 파손 2장에 맞춘 PoC 값이며 운영
-기준이 아니다. 외벽 클래스는 최고 신뢰도의 65% 미만인 약한 중복 박스를
-제거하고, 기타 시설은 50% 기준을 사용한다.
+버스정보시스템 3장, 외벽 유리 9장, 기타 시설 7장, 정상 사진 2장에 맞춘
+PoC 값이며 운영 기준이 아니다. 외벽 클래스는 최고 신뢰도의 65% 미만인
+약한 중복 박스를 제거하고, 기타 시설과 버스정보시스템은 50% 기준을
+사용한다.
+
+제공 사진 전체 회귀는 다음 명령으로 확인한다.
+
+```powershell
+.\.venv\Scripts\python.exe ml\busstop_damage\verify_api_regression.py `
+  --source C:\Users\user\Downloads\busstop_coco `
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v12_balanced_app
+```
 
 접수 API는 `POST /api/maeng-coco/reports`, 목록은 `GET /api/maeng-coco/reports`, 처리 상태 변경은 `PATCH /api/maeng-coco/reports/{id}`다. 기본 저장 파일은 `C:\Users\user\Downloads\busstop_coco_rfdetr\maeng_coco_reports.json`이며 `MAENG_COCO_REPORT_STORE_PATH` 환경변수로 바꿀 수 있다. 사진만으로 정류장 위치를 확정하지 않으므로 자동 접수는 `정류장 위치 미확인` 상태로 전달한다.
 
-현재 모델은 외벽 유리 파손만 별도 클래스로 구분한다. 화면의
+현재 모델은 외벽 유리와 버스정보시스템 파손을 별도 클래스로 구분한다.
+화면의
 `(버스 정류장 외벽 유리)`는 `side_glass_damage`,
-`(버스 정류장 시설)`은 `other_bus_stop_damage`의 한글 표시다.
+`(버스 정류장 시설)`은 `other_bus_stop_damage`,
+`(버스 정류장 버스정보시스템)`은
+`bus_information_system_damage`의 한글 표시다.
 안내판·의자·천장 유리 같은 나머지 세부 부위 자동 표기는 유형별 데이터가
 충분히 추가된 뒤에만 분리해야 한다.
 
@@ -165,6 +197,7 @@ powershell -ExecutionPolicy Bypass -File scripts\start-maeng-coco.ps1 `
 ## 실제 서비스 모델로 가기 위한 최소 데이터
 
 - 파손 유형별 학습 이미지 200장 이상
+- 버스정보시스템 파손 독립 원본 학습 200장 이상, 검증·테스트 각 30장 이상
 - 유형별 검증·테스트 이미지 각 30장 이상
 - 정상 정류장과 유사 오염·반사·낙서 음성 이미지 300장 이상
 - 동일 사진의 크롭·재저장을 서로 다른 분할에 넣지 않음

@@ -49,6 +49,11 @@ MODEL_LABELS: dict[int, dict[str, str]] = {
         "label_display": "버스 정류장 시설",
         "annotation_label": "bus stop facility",
     },
+    2: {
+        "label": "bus_information_system_damage",
+        "label_display": "버스 정류장 버스정보시스템",
+        "annotation_label": "bus information system",
+    },
 }
 MODEL_LABELS_BY_NAME = {
     label["label"]: label
@@ -68,7 +73,7 @@ DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v8"
+    / "output_v12_balanced_app"
     / "checkpoint_selected_app.pth"
 )
 DEFAULT_REFERENCE_MODEL_PATH = (
@@ -190,12 +195,12 @@ class DamageDetector:
         return self._model is not None and self._reference_model is not None
 
     @staticmethod
-    def _load_model(checkpoint: Path) -> RFDETRNano:
+    def _load_model(checkpoint: Path, num_classes: int) -> RFDETRNano:
         if not checkpoint.is_file():
             raise FileNotFoundError(checkpoint)
         return RFDETRNano(
             pretrain_weights=str(checkpoint),
-            num_classes=len(MODEL_LABELS),
+            num_classes=num_classes,
         )
 
     def _get_model(self) -> RFDETRNano:
@@ -203,7 +208,10 @@ class DamageDetector:
             return self._model
         with self._load_lock:
             if self._model is None:
-                self._model = self._load_model(self.checkpoint)
+                self._model = self._load_model(
+                    self.checkpoint,
+                    len(MODEL_LABELS),
+                )
         return self._model
 
     def _get_reference_model(self) -> RFDETRNano:
@@ -211,7 +219,10 @@ class DamageDetector:
             return self._reference_model
         with self._load_lock:
             if self._reference_model is None:
-                self._reference_model = self._load_model(self.reference_checkpoint)
+                self._reference_model = self._load_model(
+                    self.reference_checkpoint,
+                    2,
+                )
         return self._reference_model
 
     @staticmethod
@@ -276,7 +287,12 @@ class DamageDetector:
             and (
                 primary_best is None
                 or primary_best["label"] == "other_bus_stop_damage"
-                or reference_best["confidence"] >= primary_best["confidence"] * 0.6
+                or (
+                    primary_best["label"]
+                    != "bus_information_system_damage"
+                    and reference_best["confidence"]
+                    >= primary_best["confidence"] * 0.7
+                )
             )
         )
         if reference_overrides:
@@ -351,7 +367,9 @@ class DamageDetector:
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "고유 원본 21장 기반의 2종 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
+                "고유 원본 21장과 버스정보시스템 18장·기타 시설 14장 "
+                "증식본 기반의 3종 개념검증 모델입니다. "
+                "결과를 사람이 확인해야 합니다."
             ),
         }
 

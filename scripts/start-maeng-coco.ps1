@@ -1,7 +1,7 @@
 param(
   [string]$ModelPath = (
     Join-Path ([Environment]::GetFolderPath("UserProfile")) `
-      "Downloads\busstop_coco_rfdetr\output_v8\checkpoint_selected_app.pth"
+      "Downloads\busstop_coco_rfdetr\output_v12_balanced_app\checkpoint_selected_app.pth"
   ),
   [string]$ReferenceModelPath = (
     Join-Path ([Environment]::GetFolderPath("UserProfile")) `

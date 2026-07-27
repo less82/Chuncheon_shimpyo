@@ -117,24 +117,24 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       stopId: "unidentified:maeng-coco-r1",
       stopNo: "미확인",
       stopName: "정류장 위치 미확인",
-      issue: "(버스 정류장 시설) 파손이 확인되었습니다.",
+      issue: "(버스 정류장 버스정보시스템) 파손이 확인되었습니다.",
       photoDataUrl: "data:image/jpeg;base64,ZmFrZQ==",
       createdAt: "2026-07-27T01:00:00.000Z",
       status: "received",
       source: "maeng_coco",
-      modelLabel: "other_bus_stop_damage",
-      modelLabelDisplay: "버스 정류장 시설",
-      modelConfidence: 0.3573,
-      detectionCount: 2,
+      modelLabel: "bus_information_system_damage",
+      modelLabelDisplay: "버스 정류장 버스정보시스템",
+      modelConfidence: 0.9705,
+      detectionCount: 1,
     }]));
     const utils = render(<Dashboard />);
 
     fireEvent.click(utils.getByRole("row", {
-      name: "정류장 위치 미확인 (버스 정류장 시설) 파손이 확인되었습니다. 상세 보기",
+      name: "정류장 위치 미확인 (버스 정류장 버스정보시스템) 파손이 확인되었습니다. 상세 보기",
     }));
     expect(
       utils.getByText(
-        "라벨 버스 정류장 시설 · 신뢰도 36% · 2개 영역",
+        "라벨 버스 정류장 버스정보시스템 · 신뢰도 97% · 1개 영역",
       ),
     ).toBeInTheDocument();
     expect(utils.getByRole("img", { name: "정류장 위치 미확인 민원 첨부" })).toBeInTheDocument();

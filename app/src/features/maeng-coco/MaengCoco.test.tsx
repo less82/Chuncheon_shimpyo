@@ -40,6 +40,46 @@ afterEach(() => {
 });
 
 describe("<MaengCoco>", () => {
+  it("버스정보시스템 파손 전용 라벨을 표시한다", async () => {
+    const busInformationResult = {
+      ...result,
+      label: "bus_information_system_damage",
+      label_display: "버스 정류장 버스정보시스템",
+      detections: [{
+        ...result.detections[0],
+        label: "bus_information_system_damage",
+        label_display: "버스 정류장 버스정보시스템",
+        confidence: 0.91,
+      }],
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => busInformationResult,
+    }));
+    const screen = render(
+      <MemoryRouter>
+        <MaengCoco />
+      </MemoryRouter>,
+    );
+    const file = new File(["image"], "bus-information-damaged.jpg", {
+      type: "image/jpeg",
+    });
+
+    fireEvent.change(screen.getByLabelText(/정류장 사진 넣기/), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
+
+    expect(
+      await screen.findByText(
+        "(버스 정류장 버스정보시스템) 파손이 확인되었습니다.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("접수하시겠습니까? · 1개 영역 · 신뢰도 91%"),
+    ).toBeInTheDocument();
+  });
+
   it("사진을 선택해 검사 API를 호출하고 파손 의심 결과를 표시한다", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
