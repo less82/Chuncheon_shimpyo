@@ -9,6 +9,7 @@ import StopCard from "./StopCard";
 import ImportOnLoad from "../share/ImportOnLoad";
 import ShareSheet from "../share/ShareSheet";
 import QrScanner from "../share/QrScanner";
+import FacilityAiTest from "./FacilityAiTest";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import type { Stop } from "../../types/stop";
@@ -76,6 +77,8 @@ export default function CitizenHome() {
           </Link>
         </div>
       </header>
+
+      {import.meta.env.DEV && <FacilityAiTest />}
 
       <div className="home__map">
         <MapView onSelect={setSelected} selectedId={selected?.id} />
