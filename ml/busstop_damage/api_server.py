@@ -37,6 +37,7 @@ from rfdetr import RFDETRNano
 MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 MAX_RENDER_SIDE = 1600
 CANDIDATE_THRESHOLD = 0.15
+MIN_REVIEW_CONFIDENCE = 0.18
 DAMAGE_THRESHOLD = 0.22
 MODEL_LABELS: dict[int, dict[str, str]] = {
     0: {
@@ -73,7 +74,7 @@ DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v12_balanced_app"
+    / "output_v13_distant_app"
     / "checkpoint_selected_app.pth"
 )
 DEFAULT_REFERENCE_MODEL_PATH = (
@@ -320,6 +321,7 @@ class DamageDetector:
             )
             relative_threshold = max(
                 threshold,
+                MIN_REVIEW_CONFIDENCE,
                 best_detection["confidence"] * relative_multiplier,
             )
             rows = [
@@ -367,7 +369,7 @@ class DamageDetector:
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "고유 원본 21장과 버스정보시스템 18장·기타 시설 14장 "
+                "고유 원본 22장과 버스정보시스템 18장·기타 시설 26장 "
                 "증식본 기반의 3종 개념검증 모델입니다. "
                 "결과를 사람이 확인해야 합니다."
             ),

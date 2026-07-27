@@ -5,10 +5,10 @@ RGB JPEG, assigns deterministic train/valid/test splits, writes COCO bounding
 boxes, a provenance manifest, and an annotation contact sheet.
 
 By default the supplied images are grouped into two defensible classes:
-``side_glass_damage`` and ``other_bus_stop_damage``. The optional v10 mode
-separates ``bus_information_system_damage`` and creates deterministic
-photometric/geometric training augmentations without modifying the independent
-validation image. Images with ``bbox=None`` are explicit normal negatives.
+``side_glass_damage`` and ``other_bus_stop_damage``. Optional modes separate
+``bus_information_system_damage`` and create deterministic class-balanced or
+distant-structure training augmentations. Images with ``bbox=None`` are
+explicit normal negatives.
 """
 
 from __future__ import annotations
@@ -277,6 +277,13 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         (126, 89, 238, 244),
     ),
     Sample(
+        "파손/4830_5592_3830.jpg",
+        "hard_distant_collision_structure_00.jpg",
+        "train",
+        "collision_structure",
+        (373, 415, 287, 205),
+    ),
+    Sample(
         "정류장_정상.jpg",
         "normal_negative_00.jpg",
         "train",
@@ -406,6 +413,44 @@ def expand_other_damage_augmentations(
                     augmentation_seed=augmentation_seed_for(
                         sample,
                         10_000 + index,
+                    ),
+                )
+            )
+    return tuple(expanded)
+
+
+def expand_distant_structure_augmentations(
+    samples: tuple[Sample, ...],
+    copies_per_training_image: int,
+) -> tuple[Sample, ...]:
+    """Oversample small, distant collision damage without changing its class."""
+    if copies_per_training_image < 0:
+        raise ValueError("--augment-distant-structure must be zero or greater")
+    expanded = list(samples)
+    if copies_per_training_image == 0:
+        return tuple(expanded)
+
+    for sample in samples:
+        if (
+            sample.split != "train"
+            or sample.subtype != "collision_structure"
+            or sample.bbox is None
+            or sample.augmentation_seed is not None
+        ):
+            continue
+        stem = Path(sample.output_name).stem
+        for index in range(1, copies_per_training_image + 1):
+            expanded.append(
+                Sample(
+                    source_name=sample.source_name,
+                    output_name=f"{stem}_distant_aug_{index:02d}.jpg",
+                    split=sample.split,
+                    subtype=sample.subtype,
+                    bbox=sample.bbox,
+                    crop_xyxy=sample.crop_xyxy,
+                    augmentation_seed=augmentation_seed_for(
+                        sample,
+                        20_000 + index,
                     ),
                 )
             )
@@ -741,6 +786,16 @@ def main() -> None:
             "training source in the grouped other-damage class."
         ),
     )
+    parser.add_argument(
+        "--augment-distant-structure",
+        type=int,
+        default=0,
+        metavar="COPIES",
+        help=(
+            "Create this many deterministic copies of distant, partly "
+            "occluded collision-structure damage."
+        ),
+    )
     args = parser.parse_args()
     if args.augment_bus_information and not args.separate_bus_information:
         parser.error(
@@ -766,8 +821,14 @@ def main() -> None:
         selected_samples,
         args.augment_other_damage,
     )
+    selected_samples = expand_distant_structure_augmentations(
+        selected_samples,
+        args.augment_distant_structure,
+    )
     categories = categories_for(args.separate_bus_information)
-    if args.separate_bus_information and args.augment_other_damage:
+    if args.separate_bus_information and args.augment_distant_structure:
+        annotation_version = "13r" if args.include_reference_regression else "13"
+    elif args.separate_bus_information and args.augment_other_damage:
         annotation_version = "12r" if args.include_reference_regression else "12"
     elif args.separate_bus_information:
         annotation_version = "11" if args.include_reference_regression else "10"
@@ -803,6 +864,7 @@ def main() -> None:
         "only 2 independent normal source images plus 4 intact-panel crops",
         f"{unique_source_images} unique source images",
         "one bounding box per positive image",
+        "distant collision-structure subtype has only one independent source image",
         "all supplied side-glass images are training data; no independent side-glass holdout",
         "three difficult side-glass sources are oversampled for app regression",
         "four intact-panel hard-negative crops come from one supplied source image",
@@ -854,6 +916,9 @@ def main() -> None:
             ),
             "other_damage_copies_per_training_image": (
                 args.augment_other_damage
+            ),
+            "distant_structure_copies_per_training_image": (
+                args.augment_distant_structure
             ),
             "validation_or_test_augmented": False,
             "deterministic": True,

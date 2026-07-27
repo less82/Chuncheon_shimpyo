@@ -265,7 +265,7 @@ export default function MaengCoco() {
         </div>
 
         <p className="maengcoco__notice">
-          원본 21장과 버스정보시스템 18장·기타 시설 14장 증식본으로 학습한 시험용 모델입니다.
+          원본 22장과 버스정보시스템 18장·기타 시설 26장 증식본으로 학습한 시험용 모델입니다.
           민원 접수나 보수 판단 전에 반드시 사람이 확인해야 합니다.
         </p>
       </section>

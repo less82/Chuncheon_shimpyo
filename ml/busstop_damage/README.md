@@ -1,6 +1,6 @@
 # 정류장 파손 RF-DETR 개념검증
 
-사용자가 제공한 파손 사진 19장과 정상 사진 2장을
+사용자가 제공한 파손 사진 20장과 정상 사진 2장을
 `side_glass_damage`(버스 정류장 외벽 유리)와
 `other_bus_stop_damage`(버스 정류장 시설),
 `bus_information_system_damage`(버스 정류장 버스정보시스템)
@@ -8,13 +8,15 @@
 
 ## 판정
 
-- 고유 원본 21장은 제품용 모델 학습량이 아니다.
+- 고유 원본 22장은 제품용 모델 학습량이 아니다.
 - 버스정보시스템 원본 3장은 위치·원근·조명·압축·흐림·부분 가림을 적용해
   원본당 6장씩 증식한다. 단순 복사는 증식으로 계산하지 않는다.
 - 외벽 유리와 버스정보시스템은 별도 클래스로 분리하고, 기둥형·의자 등은
   각 1장뿐이므로 `other_bus_stop_damage`로 묶는다.
 - 독립 정상 정류장 사진이 2장뿐이라 실제 오탐률을 평가할 수 없다.
 - 문제 사진의 오른쪽 정상 유리 패널 크롭 4개를 하드 네거티브로 추가했다.
+- 버스 충돌 정류장 원거리 사진 1장은 찌그러진 지붕·프레임만 라벨링하고
+  원거리·가림 변형 10장을 별도로 증식했다.
 - 뉴스 자막·워터마크가 있는 사진은 모델이 잘못 학습할 수 있다.
 - 산출 모델은 UI 연결과 학습 파이프라인 확인용이다.
 
@@ -48,10 +50,11 @@ dataset_v10_bis/
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\prepare_dataset.py `
   --source C:\Users\user\Downloads\busstop_coco `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v12_balanced_app `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v13_distant_app `
   --separate-bus-information `
   --augment-bus-information 6 `
   --augment-other-damage 2 `
+  --augment-distant-structure 10 `
   --include-reference-regression
 ```
 
@@ -92,15 +95,16 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 위 명령의 `--dataset`은 `dataset_v10_bis`다. 독립 검증 후 앱용 모델은
 3클래스 체크포인트를 전체 버스정보시스템 증식 데이터로 미세조정한 뒤,
-`dataset_v12_balanced_app`으로 10 epoch 더 학습한다. 마지막 단계의 학습률은
+`dataset_v12_balanced_app`으로 10 epoch 학습한 뒤, 원거리 충돌 사진을 추가한
+`dataset_v13_distant_app`으로 10 epoch 더 학습한다. 마지막 단계의 학습률은
 `1e-5`, encoder 학습률은 `1e-6`이다.
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\train_rfdetr.py `
-  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v12_balanced_app `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v12_balanced_app `
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v13_distant_app `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v13_distant_app `
   --epochs 10 `
-  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v11_bis_app_all\candidate_last.pth `
+  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v12_balanced_app\checkpoint_selected_app.pth `
   --lr 0.00001 `
   --lr-encoder 0.000001 `
   --early-stopping-patience 10 `
@@ -123,14 +127,14 @@ GTX 1650 Ti 4GB 기준:
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\predict_rfdetr.py `
-  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v12_balanced_app\checkpoint_selected_app.pth `
+  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v13_distant_app\checkpoint_selected_app.pth `
   --images C:\Users\user\Downloads\busstop_coco `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v12 `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v13 `
   --num-classes 3 `
   --class-names side_glass_damage,other_bus_stop_damage,bus_information_system_damage
 ```
 
-`output_v12_balanced_app/checkpoint_selected_app.pth`는 3클래스 주 모델이고,
+`output_v13_distant_app/checkpoint_selected_app.pth`는 3클래스 주 모델이고,
 `output_v9_reference/checkpoint_selected_app.pth`는 기타 시설 라벨을 보전하는 참조
 모델이다. API는 버스정보시스템 주 모델 결과를 참조 모델이 일반 시설로
 덮어쓰지 않도록 두 결과를 결합한다. Lightning 중간 체크포인트는
@@ -159,8 +163,9 @@ npm run dev
 
 API는 `POST /api/maeng-coco?threshold=0.15`에 JPG/PNG/WEBP 원본 바이트를
 받고 JSON과 주석 이미지를 반환한다. 판정은 후보 없음=`미검출`, 신뢰도
-0.15~0.219=`확인 필요`, 0.22 이상=`파손 의심`의 3단계다. 이 임계값은
-버스정보시스템 3장, 외벽 유리 9장, 기타 시설 7장, 정상 사진 2장에 맞춘
+0.18~0.219=`확인 필요`, 0.22 이상=`파손 의심`의 3단계다. 0.18 미만 후보는
+화면에 표시하지 않는다. 이 임계값은 버스정보시스템 3장, 외벽 유리 9장,
+기타 시설 8장, 정상 사진 2장에 맞춘
 PoC 값이며 운영 기준이 아니다. 외벽 클래스는 최고 신뢰도의 65% 미만인
 약한 중복 박스를 제거하고, 기타 시설과 버스정보시스템은 50% 기준을
 사용한다.
@@ -170,7 +175,7 @@ PoC 값이며 운영 기준이 아니다. 외벽 클래스는 최고 신뢰도�
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\verify_api_regression.py `
   --source C:\Users\user\Downloads\busstop_coco `
-  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v12_balanced_app
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v13_distant_app
 ```
 
 접수 API는 `POST /api/maeng-coco/reports`, 목록은 `GET /api/maeng-coco/reports`, 처리 상태 변경은 `PATCH /api/maeng-coco/reports/{id}`다. 기본 저장 파일은 `C:\Users\user\Downloads\busstop_coco_rfdetr\maeng_coco_reports.json`이며 `MAENG_COCO_REPORT_STORE_PATH` 환경변수로 바꿀 수 있다. 사진만으로 정류장 위치를 확정하지 않으므로 자동 접수는 `정류장 위치 미확인` 상태로 전달한다.

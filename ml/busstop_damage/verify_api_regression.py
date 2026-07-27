@@ -53,6 +53,7 @@ def main() -> None:
             source / "정류장_의자파손.jpg",
             source / "정류장_천장유리파손.jpg",
             source / "정류장_천장유리파손01.jpg",
+            source / "파손" / "4830_5592_3830.jpg",
         ],
         "no_damage_detected": [
             source / "정류장_정상.jpg",
