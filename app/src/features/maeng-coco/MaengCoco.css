@@ -138,6 +138,12 @@
   color: #8a5b00;
 }
 
+.maengcoco__result[data-submitted="true"] {
+  border-color: var(--yes);
+  background: var(--yes-bg);
+  color: var(--yes);
+}
+
 .maengcoco__result > svg { width: 29px; height: 29px; }
 .maengcoco__result div { display: flex; min-width: 0; flex-direction: column; }
 .maengcoco__result strong { font-size: 16px; }

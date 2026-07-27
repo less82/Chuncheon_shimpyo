@@ -116,6 +116,9 @@
 .report-case { padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .report-label { color: var(--ink-muted); font-size: 11px; font-weight: 900; letter-spacing: .06em; }
 .report-quote { margin: 8px 0 0; color: var(--ink); font-size: 18px; font-weight: 800; line-height: 1.4; }
+.report-ai-evidence { display: grid; gap: 3px; margin: 12px 0 0; padding: 10px 12px; border-left: 4px solid var(--brand); background: var(--brand-soft); }
+.report-ai-evidence b { color: var(--brand); font-size: 11px; }
+.report-ai-evidence span { color: var(--ink); font-size: 12px; font-weight: 800; }
 .report-facts { padding: 14px 20px; background: var(--surface-2); }
 .report-facts dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; margin: 0; }
 .report-facts dl > div { display: grid; gap: 4px; }

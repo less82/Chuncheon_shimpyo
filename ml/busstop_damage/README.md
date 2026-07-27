@@ -96,9 +96,15 @@ npm run dev
 1. `maeng_coco` 선택
 2. 정류장 사진 촬영 또는 선택
 3. `검사 시작`
-4. 파손 의심 박스와 신뢰도 확인
+4. 파손 박스와 `(정류장 시설)` 모델 라벨 확인
+5. `다른 사진` 또는 `확인` 선택
+6. `확인`을 누르면 주석 사진·신뢰도·검출 좌표가 어드민 시민 제보 탭에 접수
 
-API는 `POST /api/maeng-coco?threshold=0.15`에 JPG/PNG/WEBP 원본 바이트를 받고 JSON과 주석 이미지를 반환한다. 판정은 후보 없음=`미검출`, 신뢰도 0.15~0.219=`확인 필요`, 0.22 이상=`파손 의심`의 3단계다. 이 임계값은 파손 회귀 사진 4장과 정상 사진 2장으로 정한 PoC 값이며 운영 기준이 아니다.
+API는 `POST /api/maeng-coco?threshold=0.15`에 JPG/PNG/WEBP 원본 바이트를 받고 JSON과 주석 이미지를 반환한다. 판정은 후보 없음=`미검출`, 신뢰도 0.15~0.219=`확인 필요`, 0.22 이상=`파손 의심`의 3단계다. 이 임계값은 파손 회귀 사진 5장과 정상 사진 2장으로 정한 PoC 값이며 운영 기준이 아니다.
+
+접수 API는 `POST /api/maeng-coco/reports`, 목록은 `GET /api/maeng-coco/reports`, 처리 상태 변경은 `PATCH /api/maeng-coco/reports/{id}`다. 기본 저장 파일은 `C:\Users\user\Downloads\busstop_coco_rfdetr\maeng_coco_reports.json`이며 `MAENG_COCO_REPORT_STORE_PATH` 환경변수로 바꿀 수 있다. 사진만으로 정류장 위치를 확정하지 않으므로 자동 접수는 `정류장 위치 미확인` 상태로 전달한다.
+
+현재 모델은 `bus_stop_damage` 단일 클래스라 외벽 유리·안내판·의자 같은 세부 유형을 구분하지 못한다. 화면의 `(정류장 시설)`은 이 단일 모델 라벨의 한글 표시이며, 세부 부위 자동 표기는 다중 클래스 데이터가 추가된 뒤 적용해야 한다.
 
 모델 위치가 다르면 실행 시 지정한다.
 

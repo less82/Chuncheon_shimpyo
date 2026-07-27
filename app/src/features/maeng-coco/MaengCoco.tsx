@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   Camera,
+  Check,
   CheckCircle2,
   ChevronLeft,
   ImagePlus,
@@ -12,8 +13,10 @@ import {
 import { Link } from "react-router-dom";
 import {
   inspectBusStopImage,
+  submitMaengCocoReport,
   type MaengCocoResult,
 } from "./maengCocoApi";
+import { upsertReport } from "../report/reportStore";
 import "./MaengCoco.css";
 
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
@@ -26,6 +29,8 @@ export default function MaengCoco() {
   const [result, setResult] = useState<MaengCocoResult | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     if (!file) {
@@ -40,6 +45,7 @@ export default function MaengCoco() {
   const chooseFile = (selected: File | undefined) => {
     setError("");
     setResult(null);
+    setSubmitted(false);
     if (!selected) {
       setFile(null);
       return;
@@ -62,6 +68,7 @@ export default function MaengCoco() {
     setLoading(true);
     setError("");
     setResult(null);
+    setSubmitted(false);
     try {
       setResult(await inspectBusStopImage(file, 0.15));
     } catch (requestError) {
@@ -81,6 +88,8 @@ export default function MaengCoco() {
     setFile(null);
     setResult(null);
     setError("");
+    setSubmitting(false);
+    setSubmitted(false);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -90,6 +99,29 @@ export default function MaengCoco() {
     (best, detection) => Math.max(best, detection.confidence),
     0,
   );
+
+  const submitReport = async () => {
+    if (!file || !result || !suspected || submitting || submitted) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const report = await submitMaengCocoReport(file, result);
+      try {
+        upsertReport(report);
+      } catch {
+        // 공용 API 접수는 완료됐으므로 브라우저 저장공간 부족은 무시한다.
+      }
+      setSubmitted(true);
+    } catch (reportError) {
+      setError(
+        reportError instanceof Error
+          ? reportError.message
+          : "파손 접수를 어드민으로 보내지 못했습니다.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <main className="maengcoco">
@@ -143,6 +175,7 @@ export default function MaengCoco() {
           <section
             className="maengcoco__result"
             data-verdict={result.verdict}
+            data-submitted={submitted || undefined}
             aria-live="polite"
           >
             {suspected || reviewRequired ? (
@@ -152,15 +185,19 @@ export default function MaengCoco() {
             )}
             <div>
               <strong>
-                {suspected
-                  ? "파손 의심 영역이 있습니다"
+                {submitted
+                  ? "어드민으로 접수되었습니다"
+                  : suspected
+                  ? `(${result.label_display}) 파손이 확인되었습니다.`
                   : reviewRequired
                     ? "파손 가능성을 확인해주세요"
                   : "파손 의심 영역을 찾지 못했습니다"}
               </strong>
               <p>
-                {suspected
-                  ? `${result.detections.length}개 영역 · 최고 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}%`
+                {submitted
+                  ? `(${result.label_display}) 파손 제보를 접수 상태로 보냈습니다.`
+                  : suspected
+                  ? `접수하시겠습니까? · ${result.detections.length}개 영역 · 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}%`
                   : reviewRequired
                     ? `${result.detections.length}개 영역 · 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}% · 사람이 확인해야 합니다.`
                   : "정상 확정이 아니므로 사진을 사람이 다시 확인해주세요."}
@@ -196,7 +233,26 @@ export default function MaengCoco() {
               </button>
             </>
           )}
-          {result && (
+          {result && suspected && !submitted && (
+            <>
+              <button type="button" className="maengcoco__secondary" onClick={reset}>
+                <RotateCcw aria-hidden="true" />다른 사진
+              </button>
+              <button
+                type="button"
+                className="maengcoco__primary"
+                disabled={submitting}
+                onClick={() => void submitReport()}
+              >
+                {submitting ? (
+                  <><LoaderCircle className="maengcoco__spinner" aria-hidden="true" />접수 중</>
+                ) : (
+                  <><Check aria-hidden="true" />확인</>
+                )}
+              </button>
+            </>
+          )}
+          {result && (!suspected || submitted) && (
             <button type="button" className="maengcoco__primary maengcoco__primary--wide" onClick={reset}>
               <RotateCcw aria-hidden="true" />다른 사진 검사
             </button>

@@ -14,6 +14,16 @@ export interface CitizenReport {
   updatedAt?: string;
   resolvedAt?: string;
   status: "received" | "reviewing" | "task_created" | "resolved";
+  source?: "citizen" | "maeng_coco";
+  modelLabel?: string;
+  modelLabelDisplay?: string;
+  modelConfidence?: number;
+  detectionCount?: number;
+  detections?: Array<{
+    confidence: number;
+    xyxy: [number, number, number, number];
+  }>;
+  sourceFileName?: string;
 }
 
 export function loadReports(): CitizenReport[] {
@@ -41,6 +51,13 @@ export function saveReport(stop: Stop, issue: string, photoDataUrl?: string): Ci
   localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify([...loadReports(), report]));
   window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
   return report;
+}
+
+export function upsertReport(report: CitizenReport): void {
+  const reports = loadReports();
+  const next = [...reports.filter((item) => item.id !== report.id), report];
+  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(next));
+  window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
 }
 
 export function updateReportStatus(id: string, status: CitizenReport["status"]): void {

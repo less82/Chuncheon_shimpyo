@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { REPORT_STORAGE_KEY } from "../report/reportStore";
 import MaengCoco from "./MaengCoco";
 
 const result = {
   verdict: "damage_suspected",
+  label: "bus_stop_damage",
+  label_display: "정류장 시설",
   threshold: 0.15,
   damage_threshold: 0.22,
   detections: [
@@ -15,6 +18,7 @@ const result = {
 };
 
 beforeEach(() => {
+  localStorage.clear();
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
     value: vi.fn(() => "blob:preview"),
@@ -50,8 +54,10 @@ describe("<MaengCoco>", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
 
-    expect(await screen.findByText("파손 의심 영역이 있습니다")).toBeInTheDocument();
-    expect(screen.getByText("1개 영역 · 최고 신뢰도 64%")).toBeInTheDocument();
+    expect(await screen.findByText("(정류장 시설) 파손이 확인되었습니다.")).toBeInTheDocument();
+    expect(screen.getByText("접수하시겠습니까? · 1개 영역 · 신뢰도 64%")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다른 사진" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "확인" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:8000/api/maeng-coco?threshold=0.15",
       expect.objectContaining({
@@ -60,6 +66,58 @@ describe("<MaengCoco>", () => {
         body: file,
       }),
     );
+  });
+
+  it("확인하면 사진과 AI 라벨을 어드민 접수로 전송한다", async () => {
+    const report = {
+      id: "maeng-coco-r1",
+      stopId: "unidentified:maeng-coco-r1",
+      stopNo: "미확인",
+      stopName: "정류장 위치 미확인",
+      issue: "(정류장 시설) 파손이 확인되었습니다.",
+      createdAt: "2026-07-27T01:00:00.000Z",
+      status: "received",
+      source: "maeng_coco",
+      modelLabel: "bus_stop_damage",
+      modelLabelDisplay: "정류장 시설",
+      modelConfidence: 0.6408,
+      detectionCount: 1,
+      photoDataUrl: result.annotated_image,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => result })
+      .mockResolvedValueOnce({ ok: true, json: async () => report });
+    vi.stubGlobal("fetch", fetchMock);
+    const screen = render(
+      <MemoryRouter>
+        <MaengCoco />
+      </MemoryRouter>,
+    );
+    const file = new File(["image"], "damaged.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(screen.getByLabelText(/정류장 사진 넣기/), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
+    fireEvent.click(await screen.findByRole("button", { name: "확인" }));
+
+    expect(await screen.findByText("어드민으로 접수되었습니다")).toBeInTheDocument();
+    expect(localStorage.getItem(REPORT_STORAGE_KEY)).toContain("maeng-coco-r1");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/maeng-coco/reports",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const request = fetchMock.mock.calls[1][1] as RequestInit;
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      label: "bus_stop_damage",
+      label_display: "정류장 시설",
+      source_file_name: "damaged.jpg",
+      confidence: 0.6408,
+    });
   });
 
   it("낮은 신뢰도 후보를 정상으로 표시하지 않고 확인 필요로 분류한다", async () => {

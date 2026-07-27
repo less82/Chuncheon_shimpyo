@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { REPORT_STORAGE_KEY, updateReportStatus } from "./reportStore";
+import {
+  REPORT_STORAGE_KEY,
+  updateReportStatus,
+  upsertReport,
+} from "./reportStore";
 
 describe("reportStore 처리 시각", () => {
   beforeEach(() => {
@@ -20,5 +24,24 @@ describe("reportStore 처리 시각", () => {
     const [saved] = JSON.parse(localStorage.getItem(REPORT_STORAGE_KEY) ?? "[]");
     expect(saved.updatedAt).toBe("2026-07-22T03:00:00.000Z");
     expect(saved.resolvedAt).toBe("2026-07-22T03:00:00.000Z");
+  });
+
+  it("API에서 받은 AI 파손 접수를 같은 ID로 추가·갱신한다", () => {
+    const report = {
+      id: "maeng-coco-r1",
+      stopId: "unidentified:maeng-coco-r1",
+      stopNo: "미확인",
+      stopName: "정류장 위치 미확인",
+      issue: "(정류장 시설) 파손이 확인되었습니다.",
+      createdAt: "2026-07-27T01:00:00.000Z",
+      status: "received" as const,
+      source: "maeng_coco" as const,
+    };
+    upsertReport(report);
+    upsertReport({ ...report, status: "reviewing" });
+
+    const saved = JSON.parse(localStorage.getItem(REPORT_STORAGE_KEY) ?? "[]");
+    expect(saved).toHaveLength(1);
+    expect(saved[0].status).toBe("reviewing");
   });
 });
