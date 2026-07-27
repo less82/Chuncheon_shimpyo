@@ -95,13 +95,18 @@ export default function MaengCoco() {
 
   const suspected = result?.verdict === "damage_suspected";
   const reviewRequired = result?.verdict === "review_required";
+  const reportable = Boolean(
+    result &&
+    result.detections.length > 0 &&
+    (suspected || reviewRequired),
+  );
   const bestConfidence = result?.detections.reduce(
     (best, detection) => Math.max(best, detection.confidence),
     0,
   );
 
   const submitReport = async () => {
-    if (!file || !result || !suspected || submitting || submitted) return;
+    if (!file || !result || !reportable || submitting || submitted) return;
     setSubmitting(true);
     setError("");
     try {
@@ -190,7 +195,7 @@ export default function MaengCoco() {
                   : suspected
                   ? `(${result.label_display}) 파손이 확인되었습니다.`
                   : reviewRequired
-                    ? "파손 가능성을 확인해주세요"
+                    ? `(${result.label_display}) 파손 가능성을 확인해주세요`
                   : "파손 의심 영역을 찾지 못했습니다"}
               </strong>
               <p>
@@ -199,7 +204,7 @@ export default function MaengCoco() {
                   : suspected
                   ? `접수하시겠습니까? · ${result.detections.length}개 영역 · 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}%`
                   : reviewRequired
-                    ? `${result.detections.length}개 영역 · 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}% · 사람이 확인해야 합니다.`
+                    ? `사람이 파손으로 확인하면 접수할 수 있습니다. · ${result.detections.length}개 영역 · 신뢰도 ${Math.round((bestConfidence ?? 0) * 100)}%`
                   : "정상 확정이 아니므로 사진을 사람이 다시 확인해주세요."}
               </p>
             </div>
@@ -233,7 +238,7 @@ export default function MaengCoco() {
               </button>
             </>
           )}
-          {result && suspected && !submitted && (
+          {result && reportable && !submitted && (
             <>
               <button type="button" className="maengcoco__secondary" onClick={reset}>
                 <RotateCcw aria-hidden="true" />다른 사진
@@ -252,7 +257,7 @@ export default function MaengCoco() {
               </button>
             </>
           )}
-          {result && (!suspected || submitted) && (
+          {result && (!reportable || submitted) && (
             <button type="button" className="maengcoco__primary maengcoco__primary--wide" onClick={reset}>
               <RotateCcw aria-hidden="true" />다른 사진 검사
             </button>

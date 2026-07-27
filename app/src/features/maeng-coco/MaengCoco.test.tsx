@@ -129,20 +129,49 @@ describe("<MaengCoco>", () => {
     });
   });
 
-  it("낮은 신뢰도 후보를 정상으로 표시하지 않고 확인 필요로 분류한다", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        ...result,
-        verdict: "review_required",
-        detections: [{
-          confidence: 0.18,
-          xyxy: [5, 10, 200, 220],
+  it("낮은 신뢰도 후보도 사람이 확인해 어드민으로 접수할 수 있다", async () => {
+    const reviewResult = {
+      ...result,
+      verdict: "review_required",
+      detections: [
+        {
+          confidence: 0.2,
+          xyxy: [5, 10, 120, 220],
           label: "side_glass_damage",
           label_display: "외벽 유리",
-        }],
-      }),
-    }));
+        },
+        {
+          confidence: 0.18,
+          xyxy: [130, 15, 300, 230],
+          label: "side_glass_damage",
+          label_display: "외벽 유리",
+        },
+      ],
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => reviewResult,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "maeng-coco-review",
+          stopId: "unidentified:maeng-coco-review",
+          stopNo: "미확인",
+          stopName: "정류장 위치 미확인",
+          issue: "(외벽 유리) 파손이 확인되었습니다.",
+          createdAt: "2026-07-27T02:00:00.000Z",
+          status: "received",
+          source: "maeng_coco",
+          modelLabel: "side_glass_damage",
+          modelLabelDisplay: "외벽 유리",
+          modelConfidence: 0.2,
+          detectionCount: 2,
+          photoDataUrl: reviewResult.annotated_image,
+        }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
     const screen = render(
       <MemoryRouter>
         <MaengCoco />
@@ -155,8 +184,21 @@ describe("<MaengCoco>", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
 
-    expect(await screen.findByText("파손 가능성을 확인해주세요")).toBeInTheDocument();
-    expect(screen.getByText(/신뢰도 18%/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("(외벽 유리) 파손 가능성을 확인해주세요"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/2개 영역 · 신뢰도 20%/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다른 사진" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(await screen.findByText("어드민으로 접수되었습니다")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/maeng-coco/reports",
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 
   it("지원하지 않는 파일 형식을 검사 전에 거절한다", () => {
