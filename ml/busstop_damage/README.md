@@ -9,7 +9,8 @@
 - 21장은 제품용 모델 학습량이 아니다.
 - 외벽 유리는 9장이라 별도 클래스로 분리하지만, 기둥형·의자 등은 각
   1장뿐이므로 `other_bus_stop_damage`로 묶는다.
-- 정상 정류장 사진이 2장뿐이라 오탐률을 평가할 수 없다.
+- 독립 정상 정류장 사진이 2장뿐이라 실제 오탐률을 평가할 수 없다.
+- 문제 사진의 오른쪽 정상 유리 패널 크롭 4개를 하드 네거티브로 추가했다.
 - 뉴스 자막·워터마크가 있는 사진은 모델이 잘못 학습할 수 있다.
 - 산출 모델은 UI 연결과 학습 파이프라인 확인용이다.
 
@@ -18,19 +19,30 @@
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\prepare_dataset.py `
   --source C:\Users\user\Downloads\busstop_coco `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v7
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v8
 ```
 
 생성 구조:
 
 ```text
-dataset_v7/
-  train/   # 외벽 14레코드 + 기타 7장 + 정상 음성 2장
+dataset_v8/
+  train/   # 외벽 16레코드 + 기타 7장 + 정상 원본 2장 + 정상 패널 크롭 4장
   valid/   # 기타 파손 1장
   test/    # 기타 파손 2장
   review/annotations_contact_sheet.jpg
   manifest.csv
   dataset_summary.json
+```
+
+참조 모델은 제공된 기타 파손 회귀를 보존하기 위해 검증·테스트 원본의
+반복본을 학습에 추가한 별도 데이터셋을 사용한다. 이 옵션을 사용한 데이터의
+분할 점수는 독립 평가값이 아니다.
+
+```powershell
+.\.venv\Scripts\python.exe ml\busstop_damage\prepare_dataset.py `
+  --source C:\Users\user\Downloads\busstop_coco `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v9_reference `
+  --include-reference-regression
 ```
 
 ## Windows GPU 환경
@@ -58,15 +70,24 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\train_rfdetr.py `
-  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v7 `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v7 `
-  --epochs 15 `
-  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v5\checkpoint_selected_app.pth `
-  --lr 0.00005 `
-  --lr-encoder 0.000005 `
-  --early-stopping-patience 15 `
+  --dataset C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v8 `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\output_v8 `
+  --epochs 12 `
+  --initial-checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v7\checkpoint_selected_app.pth `
+  --lr 0.00002 `
+  --lr-encoder 0.000002 `
+  --early-stopping-patience 12 `
   --device cuda
 ```
+
+기타 시설 판정용 참조 모델은 두 단계로 추가 학습했다.
+
+1. v5 선택 모델을 v8 데이터로 12 epoch 학습해
+   `output_v8_reference` 생성
+2. 해당 선택 모델을 `dataset_v9_reference`로 10 epoch 추가 학습해
+   `output_v9_reference` 생성
+
+두 단계 모두 학습률 `2e-5`, encoder 학습률 `2e-6`을 사용했다.
 
 GTX 1650 Ti 4GB 기준:
 
@@ -81,17 +102,19 @@ GTX 1650 Ti 4GB 기준:
 
 ```powershell
 .\.venv\Scripts\python.exe ml\busstop_damage\predict_rfdetr.py `
-  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v7\checkpoint_selected_app.pth `
-  --images C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v7\train `
-  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v7 `
+  --checkpoint C:\Users\user\Downloads\busstop_coco_rfdetr\output_v8\checkpoint_selected_app.pth `
+  --images C:\Users\user\Downloads\busstop_coco_rfdetr\dataset_v8\train `
+  --output C:\Users\user\Downloads\busstop_coco_rfdetr\predictions_v8 `
   --num-classes 2 `
   --class-names side_glass_damage,other_bus_stop_damage
 ```
 
-`output_v7/checkpoint_selected_app.pth`는 외벽 위치 검출용 주 모델이고,
-`output_v5/checkpoint_selected_app.pth`는 기타 시설 라벨을 보전하는 참조
+`output_v8/checkpoint_selected_app.pth`는 외벽 위치 검출용 주 모델이고,
+`output_v9_reference/checkpoint_selected_app.pth`는 기타 시설 라벨을 보전하는 참조
 모델이다. API는 두 결과를 결합한다. 검증 mAP 자동 최적 모델보다 외벽 9장,
-정상 2장, 안내판·천장 파손 회귀 결과가 나은 체크포인트를 앱용으로 선택했다.
+정상 2장, 정상 패널 크롭 4장, 안내판·천장 파손 회귀 결과가 나은
+10번째 학습 체크포인트를 앱용으로 선택했다. Lightning 중간 체크포인트는
+`export_checkpoint.py`로 추론용 `.pth`로 변환한다.
 
 ## 앱에서 maeng_coco 사용
 

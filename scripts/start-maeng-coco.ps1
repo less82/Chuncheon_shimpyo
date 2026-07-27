@@ -1,11 +1,11 @@
 param(
   [string]$ModelPath = (
     Join-Path ([Environment]::GetFolderPath("UserProfile")) `
-      "Downloads\busstop_coco_rfdetr\output_v7\checkpoint_selected_app.pth"
+      "Downloads\busstop_coco_rfdetr\output_v8\checkpoint_selected_app.pth"
   ),
   [string]$ReferenceModelPath = (
     Join-Path ([Environment]::GetFolderPath("UserProfile")) `
-      "Downloads\busstop_coco_rfdetr\output_v5\checkpoint_selected_app.pth"
+      "Downloads\busstop_coco_rfdetr\output_v9_reference\checkpoint_selected_app.pth"
   ),
   [int]$ApiPort = 8000
 )

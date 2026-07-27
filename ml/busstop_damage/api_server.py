@@ -64,14 +64,14 @@ DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v7"
+    / "output_v8"
     / "checkpoint_selected_app.pth"
 )
 DEFAULT_REFERENCE_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v5"
+    / "output_v9_reference"
     / "checkpoint_selected_app.pth"
 )
 
@@ -243,31 +243,36 @@ class DamageDetector:
 
         primary_rows = self._mapped_rows(primary_detections)
         reference_rows = self._mapped_rows(reference_detections)
+        reference_other_rows = [
+            row
+            for row in reference_rows
+            if row["label"] == "other_bus_stop_damage"
+        ]
         primary_best = max(
             primary_rows,
             key=lambda row: row["confidence"],
             default=None,
         )
         reference_best = max(
-            reference_rows,
+            reference_other_rows,
             key=lambda row: row["confidence"],
             default=None,
         )
         reference_overrides = (
             reference_best is not None
-            and reference_best["label"] == "other_bus_stop_damage"
             and reference_best["confidence"] >= DAMAGE_THRESHOLD
             and (
                 primary_best is None
                 or primary_best["label"] == "other_bus_stop_damage"
-                or reference_best["confidence"] >= primary_best["confidence"] * 0.8
+                or reference_best["confidence"] >= primary_best["confidence"] * 0.6
             )
         )
-        candidate_rows = (
-            reference_rows
-            if reference_overrides or not primary_rows
-            else primary_rows
-        )
+        if reference_overrides:
+            candidate_rows = reference_other_rows
+        elif primary_rows:
+            candidate_rows = primary_rows
+        else:
+            candidate_rows = []
 
         rendered = image.copy()
         draw = ImageDraw.Draw(rendered)
@@ -334,7 +339,7 @@ class DamageDetector:
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "21장으로 학습한 2종 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
+                "고유 원본 21장 기반의 2종 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
             ),
         }
 

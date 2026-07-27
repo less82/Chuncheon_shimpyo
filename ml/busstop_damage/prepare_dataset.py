@@ -31,6 +31,8 @@ class Sample:
     split: str
     subtype: str
     bbox: tuple[int, int, int, int] | None
+    crop_xyxy: tuple[int, int, int, int] | None = None
+    reference_only: bool = False
 
 
 # Bounding boxes enclose the visibly damaged component/area, not the whole image.
@@ -58,9 +60,41 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         "bus_information_system",
         (249, 74, 310, 359),
     ),
+    Sample(
+        "정류장_버스정보시스템파손02.jpg",
+        "bus_information_damage_02_repeat_1.jpg",
+        "train",
+        "bus_information_system",
+        (249, 74, 310, 359),
+        reference_only=True,
+    ),
+    Sample(
+        "정류장_버스정보시스템파손02.jpg",
+        "bus_information_damage_02_repeat_2.jpg",
+        "train",
+        "bus_information_system",
+        (249, 74, 310, 359),
+        reference_only=True,
+    ),
     Sample("정류장_안내판파손.jpg", "sign_damage_00.jpg", "train", "sign", (98, 19, 198, 352)),
     Sample("정류장_안내판파손01.jpg", "sign_damage_01.jpg", "train", "sign", (82, 24, 349, 757)),
     Sample("정류장_안내판파손02.jpg", "sign_damage_02.jpg", "test", "sign", (23, 3, 351, 310)),
+    Sample(
+        "정류장_안내판파손02.jpg",
+        "sign_damage_02_repeat_1.jpg",
+        "train",
+        "sign",
+        (23, 3, 351, 310),
+        reference_only=True,
+    ),
+    Sample(
+        "정류장_안내판파손02.jpg",
+        "sign_damage_02_repeat_2.jpg",
+        "train",
+        "sign",
+        (23, 3, 351, 310),
+        reference_only=True,
+    ),
     Sample(
         "정류장_외벽유리파손.jpg",
         "side_glass_damage_00.jpg",
@@ -90,6 +124,55 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         (160, 43, 139, 309),
     ),
     Sample(
+        "정류장_외벽유리파손03.jpg",
+        "side_glass_damage_03_repeat_1.jpg",
+        "train",
+        "side_glass",
+        (160, 43, 139, 309),
+    ),
+    Sample(
+        "정류장_외벽유리파손03.jpg",
+        "side_glass_damage_03_repeat_2.jpg",
+        "train",
+        "side_glass",
+        (160, 43, 139, 309),
+    ),
+    # Hard-negative crops from the intact right-hand glass panel in the same
+    # scene. They teach the detector that a framed glass panel is not damage
+    # by itself and suppress the false positive reported in the app.
+    Sample(
+        "정류장_외벽유리파손03.jpg",
+        "normal_intact_side_glass_00.jpg",
+        "train",
+        "normal_negative",
+        None,
+        (330, 35, 515, 365),
+    ),
+    Sample(
+        "정류장_외벽유리파손03.jpg",
+        "normal_intact_side_glass_01.jpg",
+        "train",
+        "normal_negative",
+        None,
+        (345, 75, 515, 360),
+    ),
+    Sample(
+        "정류장_외벽유리파손03.jpg",
+        "normal_intact_side_glass_02.jpg",
+        "train",
+        "normal_negative",
+        None,
+        (335, 125, 515, 355),
+    ),
+    Sample(
+        "정류장_외벽유리파손03.jpg",
+        "normal_intact_side_glass_03.jpg",
+        "train",
+        "normal_negative",
+        None,
+        (355, 40, 515, 245),
+    ),
+    Sample(
         "정류장_외벽유리파손04.jpg",
         "side_glass_damage_04.jpg",
         "train",
@@ -117,6 +200,22 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         "test",
         "roof_glass",
         (37, 0, 582, 207),
+    ),
+    Sample(
+        "정류장_천장유리파손01.jpg",
+        "roof_glass_damage_01_repeat_1.jpg",
+        "train",
+        "roof_glass",
+        (37, 0, 582, 207),
+        reference_only=True,
+    ),
+    Sample(
+        "정류장_천장유리파손01.jpg",
+        "roof_glass_damage_01_repeat_2.jpg",
+        "train",
+        "roof_glass",
+        (37, 0, 582, 207),
+        reference_only=True,
     ),
     Sample(
         "151893_17318_1425.jpg",
@@ -229,7 +328,10 @@ def validate_bbox(
 
 
 def prepare_split(
-    samples: list[Sample], source_dir: Path, output_dir: Path
+    samples: list[Sample],
+    source_dir: Path,
+    output_dir: Path,
+    annotation_version: str,
 ) -> list[dict[str, object]]:
     split = samples[0].split
     split_dir = output_dir / split
@@ -247,6 +349,22 @@ def prepare_split(
 
         with Image.open(source_path) as opened:
             image = ImageOps.exif_transpose(opened).convert("RGB")
+            if sample.crop_xyxy is not None:
+                source_width, source_height = image.size
+                crop_x1, crop_y1, crop_x2, crop_y2 = sample.crop_xyxy
+                if (
+                    crop_x1 < 0
+                    or crop_y1 < 0
+                    or crop_x2 <= crop_x1
+                    or crop_y2 <= crop_y1
+                    or crop_x2 > source_width
+                    or crop_y2 > source_height
+                ):
+                    raise ValueError(
+                        f"{sample.source_name}: crop {sample.crop_xyxy} exceeds "
+                        f"image dimensions {source_width}x{source_height}"
+                    )
+                image = image.crop(sample.crop_xyxy)
             width, height = image.size
             if sample.bbox is not None:
                 validate_bbox(sample.bbox, width, height, sample.source_name)
@@ -273,7 +391,9 @@ def prepare_split(
                     "iscrowd": 0,
                     "attributes": {
                         "damage_subtype": sample.subtype,
-                        "annotation_status": "reviewed_manual_v7",
+                        "annotation_status": (
+                            f"reviewed_manual_v{annotation_version}"
+                        ),
                     },
                 }
             )
@@ -290,6 +410,18 @@ def prepare_split(
                 "bbox_y": sample.bbox[1] if sample.bbox is not None else "",
                 "bbox_width": sample.bbox[2] if sample.bbox is not None else "",
                 "bbox_height": sample.bbox[3] if sample.bbox is not None else "",
+                "crop_x1": (
+                    sample.crop_xyxy[0] if sample.crop_xyxy is not None else ""
+                ),
+                "crop_y1": (
+                    sample.crop_xyxy[1] if sample.crop_xyxy is not None else ""
+                ),
+                "crop_x2": (
+                    sample.crop_xyxy[2] if sample.crop_xyxy is not None else ""
+                ),
+                "crop_y2": (
+                    sample.crop_xyxy[3] if sample.crop_xyxy is not None else ""
+                ),
                 "source_sha256": sha256(source_path),
                 "output_sha256": sha256(destination),
             }
@@ -298,7 +430,7 @@ def prepare_split(
     coco = {
         "info": {
             "description": "Bus-stop damage proof-of-concept dataset",
-            "version": "7.0",
+            "version": f"{annotation_version}.0",
             "annotation_scope": "visibly damaged component or area",
         },
         "licenses": [],
@@ -362,6 +494,14 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--include-reference-regression",
+        action="store_true",
+        help=(
+            "Duplicate valid/test other-damage sources into train for the "
+            "app reference model. This invalidates independent split metrics."
+        ),
+    )
     args = parser.parse_args()
 
     source_dir = args.source.resolve()
@@ -370,10 +510,25 @@ def main() -> None:
         raise NotADirectoryError(source_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    selected_samples = tuple(
+        sample
+        for sample in SAMPLES
+        if args.include_reference_regression or not sample.reference_only
+    )
+    annotation_version = "9" if args.include_reference_regression else "8"
     all_rows: list[dict[str, object]] = []
     for split in ("train", "valid", "test"):
-        split_samples = [sample for sample in SAMPLES if sample.split == split]
-        all_rows.extend(prepare_split(split_samples, source_dir, output_dir))
+        split_samples = [
+            sample for sample in selected_samples if sample.split == split
+        ]
+        all_rows.extend(
+            prepare_split(
+                split_samples,
+                source_dir,
+                output_dir,
+                annotation_version,
+            )
+        )
 
     manifest_path = output_dir / "manifest.csv"
     with manifest_path.open("w", encoding="utf-8-sig", newline="") as file_handle:
@@ -381,27 +536,39 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(all_rows)
 
-    contact_sheet = create_contact_sheet(output_dir, SAMPLES)
-    unique_source_images = len({sample.source_name for sample in SAMPLES})
+    contact_sheet = create_contact_sheet(output_dir, selected_samples)
+    unique_source_images = len(
+        {sample.source_name for sample in selected_samples}
+    )
+    limitations = [
+        "only 2 independent normal source images plus 4 intact-panel crops",
+        f"{unique_source_images} unique source images",
+        "one bounding box per positive image",
+        "non-side-glass subtypes remain grouped into one class",
+        "all supplied side-glass images are training data; no independent side-glass holdout",
+        "three difficult side-glass sources are oversampled for app regression",
+        "four intact-panel hard-negative crops come from one supplied source image",
+        "news captions and watermarks in several images",
+        "not suitable for production evaluation",
+    ]
+    if args.include_reference_regression:
+        limitations.insert(
+            -2,
+            "valid/test other-damage sources are duplicated into train for app regression",
+        )
     summary = {
+        "version": annotation_version,
         "classes": [category["name"] for category in CATEGORIES],
         "source_images": unique_source_images,
-        "training_records": len(SAMPLES),
-        "annotations": sum(sample.bbox is not None for sample in SAMPLES),
+        "training_records": len(selected_samples),
+        "annotations": sum(
+            sample.bbox is not None for sample in selected_samples
+        ),
         "splits": {
-            split: sum(sample.split == split for sample in SAMPLES)
+            split: sum(sample.split == split for sample in selected_samples)
             for split in ("train", "valid", "test")
         },
-        "limitations": [
-            "only 2 normal negative images",
-            f"{unique_source_images} unique source images",
-            "one bounding box per positive image",
-            "non-side-glass subtypes remain grouped into one class",
-            "all supplied side-glass images are training data; no independent side-glass holdout",
-            "two difficult side-glass sources are oversampled for app regression",
-            "news captions and watermarks in several images",
-            "not suitable for production evaluation",
-        ],
+        "limitations": limitations,
     }
     (output_dir / "dataset_summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
