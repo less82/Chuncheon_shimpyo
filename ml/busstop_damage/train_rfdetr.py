@@ -34,7 +34,7 @@ def main() -> None:
     parser.add_argument(
         "--initial-checkpoint",
         type=Path,
-        help="Optionally continue fine-tuning from a one-class RF-DETR checkpoint.",
+        help="Optionally continue fine-tuning from a class-compatible RF-DETR checkpoint.",
     )
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--lr-encoder", type=float, default=1e-5)
@@ -74,6 +74,19 @@ def main() -> None:
         if dataset_summary_path.is_file()
         else {}
     )
+    train_annotations = json.loads(
+        (dataset_dir / "train" / "_annotations.coco.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    class_names = [
+        category["name"]
+        for category in sorted(
+            train_annotations["categories"],
+            key=lambda category: category["id"],
+        )
+    ]
+    num_classes = len(class_names)
     environment = {
         "python": platform.python_version(),
         "torch": torch.__version__,
@@ -105,7 +118,7 @@ def main() -> None:
     if initial_checkpoint is not None:
         model_kwargs.update(
             pretrain_weights=str(initial_checkpoint),
-            num_classes=1,
+            num_classes=num_classes,
         )
     model = RFDETRNano(**model_kwargs)
     model.train(
@@ -138,7 +151,7 @@ def main() -> None:
         seed=20260725,
         notes={
             "purpose": "bus-stop damage proof of concept",
-            "class": "bus_stop_damage",
+            "classes": class_names,
             "source_images": dataset_summary.get(
                 "source_images", dataset_summary.get("images")
             ),

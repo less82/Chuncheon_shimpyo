@@ -38,22 +38,54 @@ MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 MAX_RENDER_SIDE = 1600
 CANDIDATE_THRESHOLD = 0.15
 DAMAGE_THRESHOLD = 0.22
-MODEL_LABEL = "bus_stop_damage"
-MODEL_LABEL_DISPLAY = "정류장 시설"
+MODEL_LABELS: dict[int, dict[str, str]] = {
+    0: {
+        "label": "side_glass_damage",
+        "label_display": "외벽 유리",
+        "annotation_label": "side glass",
+    },
+    1: {
+        "label": "other_bus_stop_damage",
+        "label_display": "정류장 시설",
+        "annotation_label": "other damage",
+    },
+}
+MODEL_LABELS_BY_NAME = {
+    label["label"]: label
+    for label in MODEL_LABELS.values()
+}
+NO_DETECTION_LABEL = {
+    "label": "unclassified_damage",
+    "label_display": "파손 유형 미분류",
+}
 MAX_REPORT_IMAGE_CHARS = 16 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 DEFAULT_MODEL_PATH = (
     Path.home()
     / "Downloads"
     / "busstop_coco_rfdetr"
-    / "output_v4"
-    / "checkpoint_best_total.pth"
+    / "output_v7"
+    / "checkpoint_selected_app.pth"
+)
+DEFAULT_REFERENCE_MODEL_PATH = (
+    Path.home()
+    / "Downloads"
+    / "busstop_coco_rfdetr"
+    / "output_v5"
+    / "checkpoint_selected_app.pth"
 )
 
 
 def configured_model_path() -> Path:
     raw = os.environ.get("MAENG_COCO_MODEL_PATH", "").strip()
     return Path(raw).expanduser().resolve() if raw else DEFAULT_MODEL_PATH.resolve()
+
+
+def configured_reference_model_path() -> Path:
+    raw = os.environ.get("MAENG_COCO_REFERENCE_MODEL_PATH", "").strip()
+    if raw:
+        return Path(raw).expanduser().resolve()
+    return DEFAULT_REFERENCE_MODEL_PATH.resolve()
 
 
 def configured_report_store_path() -> Path:
@@ -82,6 +114,8 @@ def configured_origins() -> list[str]:
 class DamageDetectionPayload(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     xyxy: tuple[float, float, float, float]
+    label: str = Field(min_length=1, max_length=80)
+    label_display: str = Field(min_length=1, max_length=80)
 
 
 class DamageReportPayload(BaseModel):
@@ -131,58 +165,150 @@ def _write_damage_reports_unlocked(reports: list[dict[str, Any]]) -> None:
 
 
 class DamageDetector:
-    def __init__(self, checkpoint: Path) -> None:
+    def __init__(self, checkpoint: Path, reference_checkpoint: Path) -> None:
         self.checkpoint = checkpoint
+        self.reference_checkpoint = reference_checkpoint
         self._model: RFDETRNano | None = None
+        self._reference_model: RFDETRNano | None = None
         self._load_lock = threading.Lock()
         self._predict_lock = threading.Lock()
 
     @property
     def loaded(self) -> bool:
-        return self._model is not None
+        return self._model is not None and self._reference_model is not None
+
+    @staticmethod
+    def _load_model(checkpoint: Path) -> RFDETRNano:
+        if not checkpoint.is_file():
+            raise FileNotFoundError(checkpoint)
+        return RFDETRNano(
+            pretrain_weights=str(checkpoint),
+            num_classes=len(MODEL_LABELS),
+        )
 
     def _get_model(self) -> RFDETRNano:
         if self._model is not None:
             return self._model
         with self._load_lock:
             if self._model is None:
-                if not self.checkpoint.is_file():
-                    raise FileNotFoundError(self.checkpoint)
-                self._model = RFDETRNano(
-                    pretrain_weights=str(self.checkpoint),
-                    num_classes=1,
-                )
+                self._model = self._load_model(self.checkpoint)
         return self._model
+
+    def _get_reference_model(self) -> RFDETRNano:
+        if self._reference_model is not None:
+            return self._reference_model
+        with self._load_lock:
+            if self._reference_model is None:
+                self._reference_model = self._load_model(self.reference_checkpoint)
+        return self._reference_model
+
+    @staticmethod
+    def _mapped_rows(detections: Any) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for xyxy, confidence, class_id in zip(
+            detections.xyxy,
+            detections.confidence,
+            detections.class_id,
+            strict=True,
+        ):
+            class_index = int(class_id)
+            model_label = MODEL_LABELS.get(class_index)
+            if model_label is None:
+                continue
+            x1, y1, x2, y2 = [float(value) for value in xyxy]
+            rows.append(
+                {
+                    "confidence": float(confidence),
+                    "xyxy": [x1, y1, x2, y2],
+                    "label": model_label["label"],
+                    "label_display": model_label["label_display"],
+                    "annotation_label": model_label["annotation_label"],
+                }
+            )
+        return rows
 
     def inspect(self, image: Image.Image, threshold: float) -> dict[str, Any]:
         model = self._get_model()
+        reference_model = self._get_reference_model()
         with self._predict_lock:
-            detections = model.predict(image, threshold=threshold).with_nms(
+            primary_detections = model.predict(image, threshold=threshold).with_nms(
                 threshold=0.5
             )
+            reference_detections = reference_model.predict(
+                image,
+                threshold=threshold,
+            ).with_nms(
+                threshold=0.5
+            )
+
+        primary_rows = self._mapped_rows(primary_detections)
+        reference_rows = self._mapped_rows(reference_detections)
+        primary_best = max(
+            primary_rows,
+            key=lambda row: row["confidence"],
+            default=None,
+        )
+        reference_best = max(
+            reference_rows,
+            key=lambda row: row["confidence"],
+            default=None,
+        )
+        reference_overrides = (
+            reference_best is not None
+            and reference_best["label"] == "other_bus_stop_damage"
+            and reference_best["confidence"] >= DAMAGE_THRESHOLD
+            and (
+                primary_best is None
+                or primary_best["label"] == "other_bus_stop_damage"
+                or reference_best["confidence"] >= primary_best["confidence"] * 0.8
+            )
+        )
+        candidate_rows = (
+            reference_rows
+            if reference_overrides or not primary_rows
+            else primary_rows
+        )
 
         rendered = image.copy()
         draw = ImageDraw.Draw(rendered)
         font = ImageFont.load_default()
-        rows: list[dict[str, Any]] = []
-        for xyxy, confidence in zip(
-            detections.xyxy, detections.confidence, strict=True
-        ):
-            x1, y1, x2, y2 = [float(value) for value in xyxy]
-            score = float(confidence)
+        best_detection = max(
+            candidate_rows,
+            key=lambda row: row["confidence"],
+            default=None,
+        )
+        if best_detection is None:
+            rows: list[dict[str, Any]] = []
+        else:
+            relative_multiplier = (
+                0.65
+                if best_detection["label"] == "side_glass_damage"
+                else 0.5
+            )
+            relative_threshold = max(
+                threshold,
+                best_detection["confidence"] * relative_multiplier,
+            )
+            rows = [
+                row
+                for row in sorted(
+                    candidate_rows,
+                    key=lambda row: row["confidence"],
+                    reverse=True,
+                )
+                if row["label"] == best_detection["label"]
+                and row["confidence"] >= relative_threshold
+            ][:5]
+        for row in rows:
+            x1, y1, x2, y2 = row["xyxy"]
             draw.rectangle((x1, y1, x2, y2), outline=(239, 45, 45), width=5)
             draw.text(
                 (x1 + 5, max(0, y1 - 18)),
-                f"damage {score:.2f}",
+                f"{row['annotation_label']} {row['confidence']:.2f}",
                 fill=(239, 45, 45),
                 font=font,
             )
-            rows.append(
-                {
-                    "confidence": score,
-                    "xyxy": [x1, y1, x2, y2],
-                }
-            )
+            del row["annotation_label"]
 
         rendered.thumbnail((MAX_RENDER_SIDE, MAX_RENDER_SIDE))
         output = io.BytesIO()
@@ -192,6 +318,7 @@ class DamageDetector:
             (row["confidence"] for row in rows),
             default=0.0,
         )
+        result_label = (rows[0] if rows else None) or NO_DETECTION_LABEL
         if best_confidence >= DAMAGE_THRESHOLD:
             verdict = "damage_suspected"
         elif rows:
@@ -200,14 +327,14 @@ class DamageDetector:
             verdict = "no_damage_detected"
         return {
             "verdict": verdict,
-            "label": MODEL_LABEL,
-            "label_display": MODEL_LABEL_DISPLAY,
+            "label": result_label["label"],
+            "label_display": result_label["label_display"],
             "threshold": threshold,
             "damage_threshold": DAMAGE_THRESHOLD,
             "detections": rows,
             "annotated_image": f"data:image/jpeg;base64,{encoded}",
             "notice": (
-                "21장으로 학습한 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
+                "21장으로 학습한 2종 개념검증 모델입니다. 결과를 사람이 확인해야 합니다."
             ),
         }
 
@@ -219,11 +346,20 @@ _detector_lock = threading.Lock()
 def get_detector() -> DamageDetector:
     global _detector
     checkpoint = configured_model_path()
-    if _detector is not None and _detector.checkpoint == checkpoint:
+    reference_checkpoint = configured_reference_model_path()
+    if (
+        _detector is not None
+        and _detector.checkpoint == checkpoint
+        and _detector.reference_checkpoint == reference_checkpoint
+    ):
         return _detector
     with _detector_lock:
-        if _detector is None or _detector.checkpoint != checkpoint:
-            _detector = DamageDetector(checkpoint)
+        if (
+            _detector is None
+            or _detector.checkpoint != checkpoint
+            or _detector.reference_checkpoint != reference_checkpoint
+        ):
+            _detector = DamageDetector(checkpoint, reference_checkpoint)
     return _detector
 
 
@@ -241,8 +377,14 @@ app.add_middleware(
 def health() -> dict[str, Any]:
     detector = get_detector()
     return {
-        "status": "ready" if detector.checkpoint.is_file() else "model_missing",
+        "status": (
+            "ready"
+            if detector.checkpoint.is_file()
+            and detector.reference_checkpoint.is_file()
+            else "model_missing"
+        ),
         "model_path": str(detector.checkpoint),
+        "reference_model_path": str(detector.reference_checkpoint),
         "model_loaded": detector.loaded,
     }
 
@@ -292,7 +434,8 @@ def list_damage_reports() -> list[dict[str, Any]]:
 
 @app.post("/api/maeng-coco/reports", status_code=201)
 def create_damage_report(payload: DamageReportPayload) -> dict[str, Any]:
-    if payload.label != MODEL_LABEL or payload.label_display != MODEL_LABEL_DISPLAY:
+    model_label = MODEL_LABELS_BY_NAME.get(payload.label)
+    if model_label is None or payload.label_display != model_label["label_display"]:
         raise HTTPException(status_code=422, detail="현재 모델 라벨과 일치하지 않습니다.")
     if not payload.detections:
         raise HTTPException(status_code=422, detail="검출된 파손 영역이 없습니다.")
@@ -301,28 +444,50 @@ def create_damage_report(payload: DamageReportPayload) -> dict[str, Any]:
     if not payload.photo_data_url.startswith("data:image/"):
         raise HTTPException(status_code=422, detail="접수 사진 형식이 올바르지 않습니다.")
 
+    for detection in payload.detections:
+        detection_label = MODEL_LABELS_BY_NAME.get(detection.label)
+        if (
+            detection_label is None
+            or detection.label_display != detection_label["label_display"]
+        ):
+            raise HTTPException(
+                status_code=422,
+                detail="검출 영역의 모델 라벨이 올바르지 않습니다.",
+            )
+    best_detection = max(
+        payload.detections,
+        key=lambda detection: detection.confidence,
+    )
+    if best_detection.label != payload.label:
+        raise HTTPException(
+            status_code=422,
+            detail="최고 신뢰도 영역과 대표 모델 라벨이 일치하지 않습니다.",
+        )
+
     now = datetime.now(timezone.utc).isoformat()
     report_id = f"maeng-coco-{uuid.uuid4()}"
-    confidence = max(detection.confidence for detection in payload.detections)
+    confidence = best_detection.confidence
     report = {
         "id": report_id,
         "stopId": f"unidentified:{report_id}",
         "stopNo": "미확인",
         "stopName": "정류장 위치 미확인",
-        "issue": f"({MODEL_LABEL_DISPLAY}) 파손이 확인되었습니다.",
+        "issue": f"({model_label['label_display']}) 파손이 확인되었습니다.",
         "photoDataUrl": payload.photo_data_url,
         "createdAt": now,
         "updatedAt": now,
         "status": "received",
         "source": "maeng_coco",
-        "modelLabel": MODEL_LABEL,
-        "modelLabelDisplay": MODEL_LABEL_DISPLAY,
+        "modelLabel": model_label["label"],
+        "modelLabelDisplay": model_label["label_display"],
         "modelConfidence": confidence,
         "detectionCount": len(payload.detections),
         "detections": [
             {
                 "confidence": detection.confidence,
                 "xyxy": list(detection.xyxy),
+                "label": detection.label,
+                "label_display": detection.label_display,
             }
             for detection in payload.detections
         ],
@@ -359,11 +524,19 @@ def update_damage_report(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=Path, default=configured_model_path())
+    parser.add_argument(
+        "--reference-model",
+        type=Path,
+        default=configured_reference_model_path(),
+    )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
 
     os.environ["MAENG_COCO_MODEL_PATH"] = str(args.model.resolve())
+    os.environ["MAENG_COCO_REFERENCE_MODEL_PATH"] = str(
+        args.reference_model.resolve()
+    )
     import uvicorn
 
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")

@@ -122,7 +122,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       createdAt: "2026-07-27T01:00:00.000Z",
       status: "received",
       source: "maeng_coco",
-      modelLabel: "bus_stop_damage",
+      modelLabel: "other_bus_stop_damage",
       modelLabelDisplay: "정류장 시설",
       modelConfidence: 0.3573,
       detectionCount: 2,

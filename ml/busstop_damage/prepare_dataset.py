@@ -4,9 +4,11 @@ The source images stay outside the repository. This script converts them to
 RGB JPEG, assigns deterministic train/valid/test splits, writes COCO bounding
 boxes, a provenance manifest, and an annotation contact sheet.
 
-The supplied images are intentionally treated as one class:
-``bus_stop_damage``. There are too few examples per subtype for a defensible
-multi-class model. Images with ``bbox=None`` are explicit normal negatives.
+The supplied images are grouped into two defensible classes:
+``side_glass_damage`` and ``other_bus_stop_damage``. There are enough side-glass
+examples to separate the user-facing exterior-glass label, while the remaining
+subtypes are still too sparse for individual classes. Images with ``bbox=None``
+are explicit normal negatives.
 """
 
 from __future__ import annotations
@@ -64,42 +66,42 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         "side_glass_damage_00.jpg",
         "train",
         "side_glass",
-        (153, 54, 285, 334),
+        (236, 64, 209, 355),
     ),
     Sample(
         "정류장_외벽유리파손01.jpg",
         "side_glass_damage_01.jpg",
         "train",
         "side_glass",
-        (119, 113, 462, 328),
+        (158, 190, 126, 166),
     ),
     Sample(
         "정류장_외벽유리파손02.jpg",
         "side_glass_damage_02.jpg",
         "train",
         "side_glass",
-        (8, 51, 172, 279),
+        (0, 78, 82, 164),
     ),
     Sample(
         "정류장_외벽유리파손03.jpg",
         "side_glass_damage_03.jpg",
         "train",
         "side_glass",
-        (44, 40, 267, 306),
+        (160, 43, 139, 309),
     ),
     Sample(
         "정류장_외벽유리파손04.jpg",
         "side_glass_damage_04.jpg",
-        "valid",
+        "train",
         "side_glass",
-        (86, 147, 625, 363),
+        (4, 188, 400, 326),
     ),
     Sample(
         "정류장_외벽유리파손05.jpg",
         "side_glass_damage_05.jpg",
         "train",
         "side_glass",
-        (192, 118, 555, 559),
+        (286, 142, 337, 441),
     ),
     Sample("정류장_의자파손.jpg", "seat_damage_00.jpg", "train", "seat", (137, 231, 407, 244)),
     Sample(
@@ -121,7 +123,7 @@ SAMPLES: Final[tuple[Sample, ...]] = (
         "hard_cracked_glass_00.jpg",
         "train",
         "side_glass",
-        (24, 90, 420, 295),
+        (146, 63, 267, 316),
     ),
     Sample(
         "images.jpg",
@@ -133,6 +135,41 @@ SAMPLES: Final[tuple[Sample, ...]] = (
     Sample(
         "파손/images (1).jpg",
         "hard_broken_glass_02.jpg",
+        "train",
+        "side_glass",
+        (126, 89, 238, 244),
+    ),
+    Sample(
+        "정류장_외벽유리파손04.jpg",
+        "side_glass_damage_04_repeat_1.jpg",
+        "train",
+        "side_glass",
+        (4, 188, 400, 326),
+    ),
+    Sample(
+        "정류장_외벽유리파손04.jpg",
+        "side_glass_damage_04_repeat_2.jpg",
+        "train",
+        "side_glass",
+        (4, 188, 400, 326),
+    ),
+    Sample(
+        "파손/images (1).jpg",
+        "hard_broken_glass_02_repeat_1.jpg",
+        "train",
+        "side_glass",
+        (126, 89, 238, 244),
+    ),
+    Sample(
+        "파손/images (1).jpg",
+        "hard_broken_glass_02_repeat_2.jpg",
+        "train",
+        "side_glass",
+        (126, 89, 238, 244),
+    ),
+    Sample(
+        "파손/images (1).jpg",
+        "hard_broken_glass_02_repeat_3.jpg",
         "train",
         "side_glass",
         (126, 89, 238, 244),
@@ -153,11 +190,22 @@ SAMPLES: Final[tuple[Sample, ...]] = (
     ),
 )
 
-CATEGORY: Final[dict[str, object]] = {
-    "id": 1,
-    "name": "bus_stop_damage",
-    "supercategory": "damage",
-}
+CATEGORIES: Final[tuple[dict[str, object], ...]] = (
+    {
+        "id": 1,
+        "name": "side_glass_damage",
+        "supercategory": "damage",
+    },
+    {
+        "id": 2,
+        "name": "other_bus_stop_damage",
+        "supercategory": "damage",
+    },
+)
+
+
+def category_id_for(sample: Sample) -> int:
+    return 1 if sample.subtype == "side_glass" else 2
 
 
 def sha256(path: Path) -> str:
@@ -219,13 +267,13 @@ def prepare_split(
                 {
                     "id": annotation_id,
                     "image_id": image_id,
-                    "category_id": 1,
+                    "category_id": category_id_for(sample),
                     "bbox": list(sample.bbox),
                     "area": sample.bbox[2] * sample.bbox[3],
                     "iscrowd": 0,
                     "attributes": {
                         "damage_subtype": sample.subtype,
-                        "annotation_status": "reviewed_manual_v4",
+                        "annotation_status": "reviewed_manual_v7",
                     },
                 }
             )
@@ -250,13 +298,13 @@ def prepare_split(
     coco = {
         "info": {
             "description": "Bus-stop damage proof-of-concept dataset",
-            "version": "4.0",
+            "version": "7.0",
             "annotation_scope": "visibly damaged component or area",
         },
         "licenses": [],
         "images": images,
         "annotations": annotations,
-        "categories": [CATEGORY],
+        "categories": list(CATEGORIES),
     }
     annotation_path = split_dir / "_annotations.coco.json"
     annotation_path.write_text(
@@ -336,7 +384,7 @@ def main() -> None:
     contact_sheet = create_contact_sheet(output_dir, SAMPLES)
     unique_source_images = len({sample.source_name for sample in SAMPLES})
     summary = {
-        "class": CATEGORY["name"],
+        "classes": [category["name"] for category in CATEGORIES],
         "source_images": unique_source_images,
         "training_records": len(SAMPLES),
         "annotations": sum(sample.bbox is not None for sample in SAMPLES),
@@ -348,6 +396,9 @@ def main() -> None:
             "only 2 normal negative images",
             f"{unique_source_images} unique source images",
             "one bounding box per positive image",
+            "non-side-glass subtypes remain grouped into one class",
+            "all supplied side-glass images are training data; no independent side-glass holdout",
+            "two difficult side-glass sources are oversampled for app regression",
             "news captions and watermarks in several images",
             "not suitable for production evaluation",
         ],

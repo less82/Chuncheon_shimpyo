@@ -25,6 +25,12 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--threshold", type=float, default=0.15)
     parser.add_argument("--nms-threshold", type=float, default=0.5)
+    parser.add_argument("--num-classes", type=int, default=1)
+    parser.add_argument(
+        "--class-names",
+        default="bus_stop_damage",
+        help="Comma-separated class names in checkpoint order.",
+    )
     args = parser.parse_args()
 
     checkpoint = args.checkpoint.resolve()
@@ -36,7 +42,13 @@ def main() -> None:
         raise NotADirectoryError(image_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    model = RFDETRNano(pretrain_weights=str(checkpoint), num_classes=1)
+    class_names = [name.strip() for name in args.class_names.split(",") if name.strip()]
+    if len(class_names) != args.num_classes:
+        raise ValueError("--class-names count must match --num-classes")
+    model = RFDETRNano(
+        pretrain_weights=str(checkpoint),
+        num_classes=args.num_classes,
+    )
     font = ImageFont.load_default()
     prediction_rows: list[dict[str, object]] = []
     rendered_paths: list[Path] = []
@@ -55,10 +67,13 @@ def main() -> None:
             x1, y1, x2, y2 = [float(value) for value in xyxy]
             score = float(confidence)
             class_index = int(class_id)
+            if not 0 <= class_index < len(class_names):
+                continue
+            class_name = class_names[class_index]
             draw.rectangle((x1, y1, x2, y2), outline=(255, 40, 40), width=4)
             draw.text(
                 (x1 + 4, max(0, y1 - 16)),
-                f"damage {score:.2f}",
+                f"{class_name} {score:.2f}",
                 fill=(255, 40, 40),
                 font=font,
             )
@@ -66,6 +81,7 @@ def main() -> None:
                 {
                     "image": image_path.name,
                     "class_id": class_index,
+                    "class_name": class_name,
                     "confidence": score,
                     "xyxy": [x1, y1, x2, y2],
                 }

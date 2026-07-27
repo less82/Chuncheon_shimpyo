@@ -6,12 +6,17 @@ import MaengCoco from "./MaengCoco";
 
 const result = {
   verdict: "damage_suspected",
-  label: "bus_stop_damage",
-  label_display: "정류장 시설",
+  label: "side_glass_damage",
+  label_display: "외벽 유리",
   threshold: 0.15,
   damage_threshold: 0.22,
   detections: [
-    { confidence: 0.6408, xyxy: [10, 20, 300, 240] },
+    {
+      confidence: 0.6408,
+      xyxy: [10, 20, 300, 240],
+      label: "side_glass_damage",
+      label_display: "외벽 유리",
+    },
   ],
   annotated_image: "data:image/jpeg;base64,ZmFrZQ==",
   notice: "시험용 모델",
@@ -54,7 +59,7 @@ describe("<MaengCoco>", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "검사 시작" }));
 
-    expect(await screen.findByText("(정류장 시설) 파손이 확인되었습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("(외벽 유리) 파손이 확인되었습니다.")).toBeInTheDocument();
     expect(screen.getByText("접수하시겠습니까? · 1개 영역 · 신뢰도 64%")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다른 사진" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "확인" })).toBeInTheDocument();
@@ -74,12 +79,12 @@ describe("<MaengCoco>", () => {
       stopId: "unidentified:maeng-coco-r1",
       stopNo: "미확인",
       stopName: "정류장 위치 미확인",
-      issue: "(정류장 시설) 파손이 확인되었습니다.",
+      issue: "(외벽 유리) 파손이 확인되었습니다.",
       createdAt: "2026-07-27T01:00:00.000Z",
       status: "received",
       source: "maeng_coco",
-      modelLabel: "bus_stop_damage",
-      modelLabelDisplay: "정류장 시설",
+      modelLabel: "side_glass_damage",
+      modelLabelDisplay: "외벽 유리",
       modelConfidence: 0.6408,
       detectionCount: 1,
       photoDataUrl: result.annotated_image,
@@ -113,10 +118,14 @@ describe("<MaengCoco>", () => {
     );
     const request = fetchMock.mock.calls[1][1] as RequestInit;
     expect(JSON.parse(String(request.body))).toMatchObject({
-      label: "bus_stop_damage",
-      label_display: "정류장 시설",
+      label: "side_glass_damage",
+      label_display: "외벽 유리",
       source_file_name: "damaged.jpg",
       confidence: 0.6408,
+      detections: [{
+        label: "side_glass_damage",
+        label_display: "외벽 유리",
+      }],
     });
   });
 
@@ -126,7 +135,12 @@ describe("<MaengCoco>", () => {
       json: async () => ({
         ...result,
         verdict: "review_required",
-        detections: [{ confidence: 0.18, xyxy: [5, 10, 200, 220] }],
+        detections: [{
+          confidence: 0.18,
+          xyxy: [5, 10, 200, 220],
+          label: "side_glass_damage",
+          label_display: "외벽 유리",
+        }],
       }),
     }));
     const screen = render(

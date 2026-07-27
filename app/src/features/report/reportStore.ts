@@ -22,6 +22,8 @@ export interface CitizenReport {
   detections?: Array<{
     confidence: number;
     xyxy: [number, number, number, number];
+    label?: string;
+    label_display?: string;
   }>;
   sourceFileName?: string;
 }

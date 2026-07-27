@@ -3,6 +3,8 @@ import type { CitizenReport } from "../report/reportStore";
 export type MaengCocoDetection = {
   confidence: number;
   xyxy: [number, number, number, number];
+  label: string;
+  label_display: string;
 };
 
 export type MaengCocoResult = {
