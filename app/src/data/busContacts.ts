@@ -72,6 +72,56 @@ export const ROUTE_INFO_LINKS = [
   { label: "춘천 라이브 버스", url: "https://ccbus.chuncheon.go.kr" },
 ];
 
+/**
+ * 마을버스 노선명 접두 → 운수회사 전화번호.
+ *
+ * 춘천 마을버스 노선명은 `남산3(남산304)`처럼 권역명으로 시작한다.
+ * 안내문의 10개 권역과 실제 노선명 접두 10종이 정확히 일치한다.
+ * 정류장이 어느 법정동에 있느냐가 아니라 **어느 회사 버스가 그 정류장에 오느냐**가
+ * 이용 불편 민원의 접수처다. 그래서 위치가 아니라 노선으로 판별한다.
+ */
+const VILLAGE_ZONE_PHONE: Record<string, string> = {
+  신북: "033-255-2431",
+  사북: "033-255-2431",
+  북산: "033-255-2431",
+  서면: "033-255-2431",
+  신동: "033-249-8000",
+  남면: "033-249-8000",
+  남산: "033-249-8000",
+  동면: "033-256-1212",
+  동산: "033-256-1212",
+  동내: "033-256-1212",
+};
+
+/** 노선명 접두에서 마을버스 권역을 읽는다. 시내버스(숫자 시작)는 null. */
+export function villageZoneOf(routeName: string): string | null {
+  // `신동`이 `동면`을 부분 문자열로 포함하는 함정이 있어 반드시 접두로만 맞춘다.
+  for (const zone of Object.keys(VILLAGE_ZONE_PHONE)) {
+    if (routeName.startsWith(zone)) return zone;
+  }
+  return null;
+}
+
+/**
+ * 이 정류장에 실제로 오는 버스의 접수처만 추린다.
+ * 근거가 전혀 없으면 안내문 전체(4곳)를 그대로 돌려준다 — 임의로 좁히지 않는다.
+ */
+export function rideContactsForRoutes(routes: string[]): BusContact[] {
+  const all = categoryInfo("ride").contacts;
+  if (!routes.length) return all;
+
+  const phones = new Set<string>();
+  let hasCityBus = false;
+  for (const route of routes) {
+    const zone = villageZoneOf(route);
+    if (zone) phones.add(VILLAGE_ZONE_PHONE[zone]);
+    else hasCityBus = true;
+  }
+  if (hasCityBus) phones.add(all[0].phone); // 춘천시민버스(시내버스)
+  if (!phones.size) return all;
+  return all.filter((contact) => phones.has(contact.phone));
+}
+
 export function categoryInfo(key: ContactCategory): ContactCategoryInfo {
   const found = CONTACT_CATEGORIES.find((item) => item.key === key);
   if (!found) throw new Error(`알 수 없는 접수 분류: ${key}`);

@@ -11,7 +11,9 @@ import {
   ROUTE_INFO_LINKS,
   categoryForIssue,
   categoryInfo,
+  rideContactsForRoutes,
 } from "../../data/busContacts";
+import type { BusContact, ContactCategoryInfo } from "../../data/busContacts";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import "./AppReport.css";
@@ -114,6 +116,13 @@ export default function AppReport() {
   };
 
   // 접수처는 안내문(춘천시 「시내(마을)버스 문의사항이 생기셨나요?」) 기준으로 고른다.
+  // 이용 불편 민원은 그 정류장에 실제로 오는 버스의 운수회사만 남긴다.
+  const contactsOf = useMemo(() => {
+    const routes = selected?.routes ?? [];
+    return (category: ContactCategoryInfo): BusContact[] =>
+      category.key === "ride" ? rideContactsForRoutes(routes) : category.contacts;
+  }, [selected]);
+
   const contact = useMemo(() => {
     const key = categoryForIssue(issue);
     return key ? categoryInfo(key) : null;
@@ -187,7 +196,10 @@ export default function AppReport() {
             <article className="appreport__contact" key={category.key}>
               <h2>{category.title}</h2>
               <p className="appreport__contact-ex">{category.examples}</p>
-              {category.contacts.map((item) => (
+              {category.key === "ride" && selected && (
+                <p className="appreport__contact-ex"><b>{selected.name}</b>에 오는 버스 기준입니다.</p>
+              )}
+              {contactsOf(category).map((item) => (
                 <a className="appreport__tel" href={telHref(item.phone)} key={item.phone}>
                   <Phone aria-hidden="true" />
                   <span>
@@ -224,7 +236,7 @@ export default function AppReport() {
             <article className="appreport__contact appreport__contact--done">
               <h2>춘천시에 바로 알리시려면</h2>
               <p className="appreport__contact-ex">{contact.title}</p>
-              {contact.contacts.map((item) => (
+              {contactsOf(contact).map((item) => (
                 <a className="appreport__tel" href={telHref(item.phone)} key={item.phone}>
                   <Phone aria-hidden="true" />
                   <span>

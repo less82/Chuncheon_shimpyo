@@ -5,6 +5,8 @@ import {
   ROUTE_INFO_LINKS,
   categoryForIssue,
   categoryInfo,
+  rideContactsForRoutes,
+  villageZoneOf,
 } from "./busContacts";
 
 describe("춘천시 버스 문의 안내문 데이터", () => {
@@ -88,5 +90,62 @@ describe("categoryForIssue", () => {
   it("판단이 서지 않으면 임의로 분류하지 않는다", () => {
     expect(categoryForIssue("그냥 좀 그래요")).toBeNull();
     expect(categoryForIssue("")).toBeNull();
+  });
+});
+
+describe("villageZoneOf", () => {
+  it("마을버스 노선명 접두에서 권역을 읽는다", () => {
+    expect(villageZoneOf("남산3(남산304)")).toBe("남산");
+    expect(villageZoneOf("사북3-1(사북302)")).toBe("사북");
+    expect(villageZoneOf("동내2-1(동내203)")).toBe("동내");
+  });
+
+  it("시내버스 노선은 권역이 없다", () => {
+    expect(villageZoneOf("10-S")).toBeNull();
+    expect(villageZoneOf("7-2(칠전동경유)")).toBeNull();
+    expect(villageZoneOf("100-1")).toBeNull();
+  });
+
+  it("신동이 동면으로 잘못 읽히지 않는다 (부분 문자열 함정)", () => {
+    // '신동1-2(신동107)' 안에는 '동'이 있지만 접두는 신동이다.
+    expect(villageZoneOf("신동1-2(신동107)")).toBe("신동");
+    expect(villageZoneOf("동면1(동면106)")).toBe("동면");
+  });
+});
+
+describe("rideContactsForRoutes", () => {
+  const phones = (routes: string[]) => rideContactsForRoutes(routes).map((c) => c.phone);
+
+  it("마을버스 권역에 맞는 회사만 남긴다", () => {
+    // 남산 = 한일여행사
+    expect(phones(["남산3(남산304)"])).toEqual(["033-249-8000"]);
+    // 사북 = 매일관광
+    expect(phones(["사북3-1(사북302)"])).toEqual(["033-255-2431"]);
+    // 동내 = 뉴코리아고속관광
+    expect(phones(["동내1(동내101)"])).toEqual(["033-256-1212"]);
+  });
+
+  it("시내버스만 오면 춘천시민버스만 남긴다", () => {
+    expect(phones(["10-S", "12-1", "3"])).toEqual(["033-254-6925"]);
+  });
+
+  it("여러 권역이 겹치면 해당 회사를 모두 남긴다", () => {
+    // 남춘천역처럼 여러 권역 마을버스가 함께 오는 환승 거점
+    const result = phones(["100", "동내2(동내201)", "남면1(남면101)"]);
+    expect(result).toContain("033-254-6925"); // 시내버스
+    expect(result).toContain("033-256-1212"); // 뉴코리아(동내)
+    expect(result).toContain("033-249-8000"); // 한일(남면)
+    expect(result).not.toContain("033-255-2431"); // 매일관광은 오지 않는다
+  });
+
+  it("노선 근거가 없으면 안내문 전체를 그대로 보여준다", () => {
+    expect(rideContactsForRoutes([])).toHaveLength(4);
+  });
+
+  it("돌려주는 값은 언제나 안내문에 실린 접수처다", () => {
+    const known = new Set(categoryInfo("ride").contacts.map((c) => c.phone));
+    for (const contact of rideContactsForRoutes(["남산1(남산101)", "9"])) {
+      expect(known.has(contact.phone)).toBe(true);
+    }
   });
 });
