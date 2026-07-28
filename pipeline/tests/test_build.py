@@ -120,11 +120,13 @@ def test_stops_json_built_and_valid_schema():
     assert data["cityCenter"] == {"lat": 37.8813, "lng": 127.73}
     assert len(data["stops"]) == 1890
     valid_status = {"yes", "no", "unknown"}
+    # app/src/types/stop.ts 의 Source 와 일치해야 한다
     valid_source = {
         "roadview",
         "bench_registry",
         "shade_registry",
         "light_registry",
+        "sign_registry",
         "none",
     }
     for s in data["stops"]:

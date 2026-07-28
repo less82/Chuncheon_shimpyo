@@ -125,6 +125,26 @@ def build() -> dict:
     }
 
 
+def _carry_over_tago(stops) -> int:
+    """이전 stops.json의 tagoNodeId를 관리번호 기준으로 승계한다. 반환: 승계 건수."""
+    if not os.path.exists(_STOPS_JSON):
+        return 0
+    try:
+        with open(_STOPS_JSON, encoding="utf-8") as f:
+            previous = json.load(f).get("stops", [])
+    except Exception as e:
+        print(f"이전 stops.json 읽기 실패 → nodeid 승계 생략({e})")
+        return 0
+    known = {str(s["id"]): s["tagoNodeId"] for s in previous if s.get("tagoNodeId")}
+    carried = 0
+    for s in stops:
+        nid = known.get(str(s["id"]))
+        if nid:
+            s["tagoNodeId"] = nid
+            carried += 1
+    return carried
+
+
 def _facility_distribution(stops):
     dist = {}
     for kind in ("shade", "seat", "light", "sign"):
@@ -147,16 +167,25 @@ def main():
     _avg = sum(len(r["stops"]) for r in routes["routes"]) / _n if _n else 0
     print(f"생성: {_ROUTES_JSON} (노선 {_n}개, 평균 정류장수 {_avg:.1f})")
 
-    # --- TAGO nodeid 병합(키 없으면 skip → stop에 tagoNodeId 미부여) ---
+    # --- TAGO nodeid 병합 ---
+    # 키가 없거나 수집이 실패하면 이전 stops.json의 매핑을 그대로 물려받는다.
+    # 관리번호↔nodeid는 안정적인 대응이고, 여기서 비우면 재실행만으로
+    # 실시간 도착정보가 전 정류장에서 끊긴다(앞 단계 결과 보존 원칙).
     from tago_map import build_tago_mapping
 
     mapping = build_tago_mapping(data["stops"])
-    for s in data["stops"]:
-        nid = mapping.get(s["id"])
-        if nid:
-            s["tagoNodeId"] = nid
     if mapping:
+        for s in data["stops"]:
+            nid = mapping.get(s["id"])
+            if nid:
+                s["tagoNodeId"] = nid
         print(f"TAGO nodeid 매핑: {len(mapping)}/{len(data['stops'])}")
+    else:
+        carried = _carry_over_tago(data["stops"])
+        if carried:
+            print(f"TAGO 매핑 없음 → 이전 stops.json에서 nodeid {carried}건 승계")
+        else:
+            print("TAGO 매핑 없음, 승계할 이전 산출물도 없음 → tagoNodeId 미부여")
 
     with open(_STOPS_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
