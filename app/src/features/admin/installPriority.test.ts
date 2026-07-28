@@ -92,21 +92,31 @@ describe("buildInstallPriority", () => {
     expect(shadeRows.map((r) => r.stop.id)).toEqual(["2"]);
   });
 
-  it("(e) 현재 실데이터를 로드해 buildInstallPriority(stops,\"seat\")가 빈 배열(no=0)", () => {
+  it("(e) 실데이터 후보는 로드뷰로 '없음'이 확인된 정류장과 정확히 일치한다", () => {
+    // 후보 개수를 숫자로 굳히지 않는다. 조사가 진행되면 늘어나는 게 정상이다.
+    // 지켜야 할 불변조건은 "로드뷰 근거가 있는 '없음'만 후보가 된다"이다.
     let stops: Stop[] = [];
     try {
       const dataPath = join(__dirname, "..", "..", "..", "public", "data", "stops.json");
       const raw = JSON.parse(readFileSync(dataPath, "utf-8"));
       stops = raw.stops ?? raw;
     } catch {
-      // 실데이터 로드가 어려우면 모든 시설 unknown/yes인 픽스처로 대체
+      // 실데이터 로드가 어려우면 픽스처로 대체
       stops = [
         stop("1", { seat: { status: "unknown", source: "none" } }),
         stop("2", { seat: { status: "yes", source: "roadview", capturedAt: "2026.01" } }),
+        stop("3", { seat: { status: "no", source: "roadview", capturedAt: "2026.01" } }),
       ];
     }
+    const expected = stops.filter(
+      (s) => s.facilities.seat.status === "no" && s.facilities.seat.source === "roadview",
+    ).length;
     const rows = buildInstallPriority(stops, "seat");
-    expect(rows).toEqual([]);
+    expect(rows).toHaveLength(expected);
+    for (const row of rows) {
+      expect(row.stop.facilities.seat.status).toBe("no");
+      expect(row.stop.facilities.seat.source).toBe("roadview");
+    }
   });
 
   it("(f) source가 \"roadview\"가 아닌 no는 제외된다(방어적)", () => {

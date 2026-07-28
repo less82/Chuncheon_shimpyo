@@ -1,17 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Search } from "lucide-react";
+import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Phone, Search } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { haversine } from "../../lib/geo";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { saveReport } from "../report/reportStore";
 import { useStops } from "../../store/useStops";
+import {
+  CONTACT_CATEGORIES,
+  ISSUE_OPTIONS,
+  ROUTE_INFO_LINKS,
+  categoryForIssue,
+  categoryInfo,
+} from "../../data/busContacts";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import "./AppReport.css";
 
-type Step = "locating" | "find" | "confirm" | "issue" | "done";
+type Step = "locating" | "find" | "confirm" | "issue" | "guide" | "done";
 const MAX_DISTANCE_M = 1500;
-const ISSUES = ["의자가 파손됐어요", "안내 화면이 꺼졌어요", "조명이 꺼졌어요", "승강장 시설물이 파손됐어요"];
+
+/** 전화 앱으로 넘길 때 쓰는 형식(하이픈 제거). */
+export function telHref(phone: string): string {
+  return `tel:${phone.replace(/-/g, "")}`;
+}
 
 export function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop[]): string {
   if (!routes) return "방면 확인 중";
@@ -102,6 +113,12 @@ export default function AppReport() {
     setStep("done");
   };
 
+  // 접수처는 안내문(춘천시 「시내(마을)버스 문의사항이 생기셨나요?」) 기준으로 고른다.
+  const contact = useMemo(() => {
+    const key = categoryForIssue(issue);
+    return key ? categoryInfo(key) : null;
+  }, [issue]);
+
   return (
     <main className="appreport">
       <header className="appreport__bar">
@@ -155,17 +172,77 @@ export default function AppReport() {
           <span className="appreport__stop-chip"><MapPin aria-hidden="true" />{selected.name}</span>
           <h1>어떤 상태인가요?</h1>
           <p>해당하는 항목을 하나 눌러주세요.</p>
-          <div className="appreport__issues">{ISSUES.map((item) => <button type="button" key={item} aria-pressed={issue === item} onClick={() => setIssue(item)}>{item}</button>)}</div>
+          <div className="appreport__issues">{ISSUE_OPTIONS.map((item) => <button type="button" key={item.label} aria-pressed={issue === item.label} onClick={() => setIssue(item.label)}>{item.label}</button>)}</div>
+          <button type="button" className="appreport__more" onClick={() => setStep("guide")}>그 밖의 버스 문의는 어디로?</button>
           <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("confirm")}>이전</button><button type="button" className="appreport__primary" disabled={!issue} onClick={submit}>내용 보내기</button></div>
         </section>
       )}
 
+      {step === "guide" && (
+        <section className="appreport__panel appreport__panel--scroll">
+          <p className="appreport__step">버스 문의 안내</p>
+          <h1>어디로 문의할까요?</h1>
+          <p>춘천시 안내에 따른 접수처입니다. 눌러서 바로 전화할 수 있어요.</p>
+          {CONTACT_CATEGORIES.map((category) => (
+            <article className="appreport__contact" key={category.key}>
+              <h2>{category.title}</h2>
+              <p className="appreport__contact-ex">{category.examples}</p>
+              {category.contacts.map((item) => (
+                <a className="appreport__tel" href={telHref(item.phone)} key={item.phone}>
+                  <Phone aria-hidden="true" />
+                  <span>
+                    <strong>{item.org}</strong>
+                    {item.scope && <small>{item.scope}</small>}
+                  </span>
+                  <em>{item.phone}</em>
+                </a>
+              ))}
+              {category.required.length > 0 && (
+                <p className="appreport__contact-need">함께 알려주세요 · {category.required.join(", ")}</p>
+              )}
+            </article>
+          ))}
+          <article className="appreport__contact">
+            <h2>버스 노선정보</h2>
+            <div className="appreport__links">
+              {ROUTE_INFO_LINKS.map((link) => (
+                <a href={link.url} key={link.url} target="_blank" rel="noreferrer noopener">{link.label}</a>
+              ))}
+            </div>
+          </article>
+          <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("issue")}>이전</button></div>
+        </section>
+      )}
+
       {step === "done" && selected && (
-        <section className="appreport__center">
+        <section className="appreport__panel appreport__panel--scroll appreport__panel--done">
           <span className="appreport__hero-icon appreport__hero-icon--done"><Check aria-hidden="true" /></span>
-          <p className="appreport__step">3 / 3 · 접수 완료</p>
+          <p className="appreport__step">3 / 3 · 보내기 완료</p>
           <h1>알려주셔서<br />고맙습니다</h1>
           <p><strong>{selected.name}</strong>의 “{issue}” 의견을 현장 확인 자료로 전달합니다.</p>
+          {contact && (
+            <article className="appreport__contact appreport__contact--done">
+              <h2>춘천시에 바로 알리시려면</h2>
+              <p className="appreport__contact-ex">{contact.title}</p>
+              {contact.contacts.map((item) => (
+                <a className="appreport__tel" href={telHref(item.phone)} key={item.phone}>
+                  <Phone aria-hidden="true" />
+                  <span>
+                    <strong>{item.org}</strong>
+                    {item.scope && <small>{item.scope}</small>}
+                  </span>
+                  <em>{item.phone}</em>
+                </a>
+              ))}
+              {contact.required.length > 0 && (
+                <p className="appreport__contact-need">
+                  함께 알려주세요 · {contact.required.join(", ")}
+                  <br />
+                  <b>{selected.name}{selected.stopNo ? ` · 정류소 번호 ${selected.stopNo}` : ""}</b>
+                </p>
+              )}
+            </article>
+          )}
           <Link className="appreport__home" to="/app"><MessageCircle aria-hidden="true" />메인으로 돌아가기</Link>
         </section>
       )}

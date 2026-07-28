@@ -1,3 +1,5 @@
+import { categoryForIssue } from "../../data/busContacts";
+import type { ContactCategory } from "../../data/busContacts";
 import type { Stop } from "../../types/stop";
 
 export const REPORT_STORAGE_KEY = "shimpyo:reports";
@@ -14,6 +16,8 @@ export interface CitizenReport {
   updatedAt?: string;
   resolvedAt?: string;
   status: "received" | "reviewing" | "task_created" | "resolved";
+  /** 춘천시 안내문 기준 접수처 분류. 판단이 서지 않으면 두지 않는다(사람이 확정). */
+  contactCategory?: ContactCategory;
   source?: "citizen" | "maeng_coco";
   modelLabel?: string;
   modelLabelDisplay?: string;
@@ -39,6 +43,7 @@ export function loadReports(): CitizenReport[] {
 
 export function saveReport(stop: Stop, issue: string, photoDataUrl?: string): CitizenReport {
   const now = new Date().toISOString();
+  const category = categoryForIssue(issue);
   const report: CitizenReport = {
     id: crypto.randomUUID(),
     stopId: stop.id,
@@ -49,6 +54,7 @@ export function saveReport(stop: Stop, issue: string, photoDataUrl?: string): Ci
     createdAt: now,
     updatedAt: now,
     status: "received",
+    ...(category ? { contactCategory: category } : {}),
   };
   localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify([...loadReports(), report]));
   window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
