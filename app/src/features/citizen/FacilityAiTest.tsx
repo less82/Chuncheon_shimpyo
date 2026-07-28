@@ -1,4 +1,4 @@
-// 임시 개발용 테스트 컴포넌트 — OpenRouter Qwen3 VL 32B Instruct 연동 확인용.
+// 임시 개발용 테스트 컴포넌트 — OpenRouter Qwen3.7 Plus 연동 확인용.
 // CitizenHome에서 import.meta.env.DEV 일 때만 렌더링한다. 배포 전 제거 전제.
 
 import { useState } from "react";
