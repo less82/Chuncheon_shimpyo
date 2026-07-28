@@ -54,6 +54,15 @@ describe("<TripView>", () => {
     expect(screen.queryByRole("button", { name: "출발지 말하기" })).not.toBeInTheDocument();
   });
 
+  it("board 만 들고 들어오면 그 정류장을 출발 위치로 채워 목적지만 고르게 한다", () => {
+    const screen = render(<MemoryRouter initialEntries={["/go?board=A"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
+
+    // 파라미터를 버리고 빈 입력 화면으로 되돌리지 않는다.
+    expect(screen.getByText("출발 위치")).toBeInTheDocument();
+    expect(screen.getByText("강원대후문")).toBeInTheDocument();
+    expect(screen.getByText("어디로 가세요?")).toBeInTheDocument();
+  });
+
   it("전체 발화 대신 정류장을 특정하는 이름이나 번호만 추출한다", () => {
     expect(extractStopKeyword("출발지는 강원대학교 후문 정류장에서 탈게요", ["강원대후문", "춘천역"])).toBe("강원대후문");
     expect(extractStopKeyword("안녕하세요 반갑습니다 강원대학교", ["강원대후문", "강원대병원"])).toBe("강원대");

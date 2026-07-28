@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Phone, Search } from "lucide-react";
+import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Search } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { haversine } from "../../lib/geo";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { saveReport } from "../report/reportStore";
 import { useStops } from "../../store/useStops";
 import {
-  CONTACT_CATEGORIES,
   ISSUE_OPTIONS,
-  ROUTE_INFO_LINKS,
   categoryForIssue,
   categoryInfo,
   rideContactsForRoutes,
 } from "../../data/busContacts";
 import type { BusContact, ContactCategoryInfo } from "../../data/busContacts";
+import ContactGuide, { ContactTel, telHref } from "../contacts/ContactGuide";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import "./AppReport.css";
@@ -21,10 +20,8 @@ import "./AppReport.css";
 type Step = "locating" | "find" | "confirm" | "issue" | "guide" | "done";
 const MAX_DISTANCE_M = 1500;
 
-/** 전화 앱으로 넘길 때 쓰는 형식(하이픈 제거). */
-export function telHref(phone: string): string {
-  return `tel:${phone.replace(/-/g, "")}`;
-}
+// 전화 링크 형식은 ContactGuide 로 옮겼다. 기존 import 를 깨지 않도록 여기서 다시 내보낸다.
+export { telHref };
 
 export function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop[]): string {
   if (!routes) return "방면 확인 중";
@@ -192,36 +189,7 @@ export default function AppReport() {
           <p className="appreport__step">버스 문의 안내</p>
           <h1>어디로 문의할까요?</h1>
           <p>춘천시 안내에 따른 접수처입니다. 눌러서 바로 전화할 수 있어요.</p>
-          {CONTACT_CATEGORIES.map((category) => (
-            <article className="appreport__contact" key={category.key}>
-              <h2>{category.title}</h2>
-              <p className="appreport__contact-ex">{category.examples}</p>
-              {category.key === "ride" && selected && (
-                <p className="appreport__contact-ex"><b>{selected.name}</b>에 오는 버스 기준입니다.</p>
-              )}
-              {contactsOf(category).map((item) => (
-                <a className="appreport__tel" href={telHref(item.phone)} key={item.phone}>
-                  <Phone aria-hidden="true" />
-                  <span>
-                    <strong>{item.org}</strong>
-                    {item.scope && <small>{item.scope}</small>}
-                  </span>
-                  <em>{item.phone}</em>
-                </a>
-              ))}
-              {category.required.length > 0 && (
-                <p className="appreport__contact-need">함께 알려주세요 · {category.required.join(", ")}</p>
-              )}
-            </article>
-          ))}
-          <article className="appreport__contact">
-            <h2>버스 노선정보</h2>
-            <div className="appreport__links">
-              {ROUTE_INFO_LINKS.map((link) => (
-                <a href={link.url} key={link.url} target="_blank" rel="noreferrer noopener">{link.label}</a>
-              ))}
-            </div>
-          </article>
+          <ContactGuide routes={selected?.routes} stopName={selected?.name} />
           <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("issue")}>이전</button></div>
         </section>
       )}
@@ -233,21 +201,12 @@ export default function AppReport() {
           <h1>알려주셔서<br />고맙습니다</h1>
           <p><strong>{selected.name}</strong>의 “{issue}” 의견을 현장 확인 자료로 전달합니다.</p>
           {contact && (
-            <article className="appreport__contact appreport__contact--done">
+            <article className="contactguide__contact appreport__contact--done">
               <h2>춘천시에 바로 알리시려면</h2>
-              <p className="appreport__contact-ex">{contact.title}</p>
-              {contactsOf(contact).map((item) => (
-                <a className="appreport__tel" href={telHref(item.phone)} key={item.phone}>
-                  <Phone aria-hidden="true" />
-                  <span>
-                    <strong>{item.org}</strong>
-                    {item.scope && <small>{item.scope}</small>}
-                  </span>
-                  <em>{item.phone}</em>
-                </a>
-              ))}
+              <p className="contactguide__contact-ex">{contact.title}</p>
+              {contactsOf(contact).map((item) => <ContactTel contact={item} key={item.phone} />)}
               {contact.required.length > 0 && (
-                <p className="appreport__contact-need">
+                <p className="contactguide__contact-need">
                   함께 알려주세요 · {contact.required.join(", ")}
                   <br />
                   <b>{selected.name}{selected.stopNo ? ` · 정류소 번호 ${selected.stopNo}` : ""}</b>

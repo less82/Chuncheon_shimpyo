@@ -8,6 +8,9 @@ import type { Stop } from "../../types/stop";
 import type { FavoriteJourney } from "../../store/useFavorites";
 import "./CitizenHome.css";
 
+/** 실시간 조회가 실패했을 때 쓰는 고정 문구(docs/현재/01_제품_화면.md). */
+export const ARRIVAL_UNAVAILABLE = "실시간 도착정보를 불러오지 못했어요";
+
 export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney; stops: Stop[] }) {
   const board = stops.find((stop) => stop.id === journey.boardStopId) ?? null;
   const destination = stops.find((stop) => stop.id === journey.destinationStopId) ?? null;
@@ -22,7 +25,9 @@ export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney;
     }
     let alive = true;
     setArrival({ text: "도착정보 확인 중", live: false });
-    getArrival(board, routeNo).then((value) => alive && setArrival(value.live ? value : { text: "실시간 도착정보 없음", live: false }));
+    // 실시간(live)이 아니면 조회 실패·키 미설정이라 배차간격 폴백이 돌아온다.
+    // 배차간격을 도착예정처럼 쓰지 않고, "버스가 없다"고 단정하지도 않는다.
+    getArrival(board, routeNo).then((value) => alive && setArrival(value.live ? value : { text: ARRIVAL_UNAVAILABLE, live: false }));
     return () => { alive = false; };
   }, [board, routeNo]);
 
@@ -53,6 +58,10 @@ export default function CitizenHome() {
         </Link>
         <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">
           <strong>정류장</strong>
+        </Link>
+        <Link className="apphome-task apphome-task--find" to="/find" aria-label="정류장·노선 찾기">
+          <strong>정류장·노선 찾기</strong>
+          <small>이름·번호로 찾고 문의처까지</small>
         </Link>
         <Link className="apphome-task apphome-task--coco" to="/maeng-coco" aria-label="maeng_coco 정류장 파손 검사">
           <strong>maeng_coco</strong>

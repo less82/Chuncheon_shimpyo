@@ -51,7 +51,7 @@ describe("<Favorites>", () => {
     const links = getAllByRole("link", { name: /즐겨찾기 버스 정보/ });
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute("href", "/go?dest=B&board=A&to=%EC%83%81%EA%B3%B5%ED%9A%8C%EC%9D%98%EC%86%8C");
-    expect(await findAllByText(/실시간 도착정보 없음/)).toHaveLength(2);
+    expect(await findAllByText(/실시간 도착정보를 불러오지 못했어요/)).toHaveLength(2);
   });
 
   it("즐겨찾기가 없으면 안내 문구를 보여준다", () => {

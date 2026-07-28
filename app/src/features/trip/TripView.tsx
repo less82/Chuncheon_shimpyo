@@ -191,6 +191,19 @@ export default function TripView() {
   }, [cityCenter]);
 
   const destStop = stops.find((s) => s.id === requestedDestId) ?? null;
+  // 정류장·노선 찾기에서 `board`만 들고 들어오는 경로. 목적지가 아직 없으므로
+  // 도착정보를 보여줄 수 없다. 대신 그 정류장을 출발 위치로 채워 목적지만 고르게 한다.
+  const boardStop = useMemo(
+    () => (requestedBoardId ? stops.find((s) => s.id === requestedBoardId) ?? null : null),
+    [requestedBoardId, stops],
+  );
+  useEffect(() => {
+    if (requestedDestId || !boardStop) return;
+    setPicked((value) => (value.board ? value : { ...value, board: { lat: boardStop.lat, lng: boardStop.lng, name: boardStop.name } }));
+    setQueries((value) => (value.board ? value : { ...value, board: boardStop.name }));
+    setFromPos({ lat: boardStop.lat, lng: boardStop.lng });
+    setActiveField("dest");
+  }, [boardStop, requestedDestId]);
   const routeFromPos = useMemo<LatLng>(() => {
     if (hasRequestedOrigin) return { lat: requestedFromLat, lng: requestedFromLng };
     if (requestedBoardId) {
@@ -329,7 +342,9 @@ export default function TripView() {
     setSearchConfirmed((value) => ({ ...value, dest: true }));
   };
 
-  if (!hasRequestedOrigin && !requestedBoardId) return (
+  // 목적지가 없으면 도착정보를 만들 수 없다. 파라미터를 버리고 되돌리지 말고
+  // 출발지·목적지 고르기 화면을 그대로 보여준다(정류장 맥락 유지).
+  if ((!hasRequestedOrigin && !requestedBoardId) || !requestedDestId) return (
     <main className="tripview tripview--find" data-safe-preview={safePreview || undefined}>
       <header className="tripview__bar">
         <Link className="tripview__back" to="/app" aria-label="앱 메인으로 돌아가기"><ChevronLeft aria-hidden="true" /><span className="sr-only">메인</span></Link>
@@ -396,7 +411,7 @@ export default function TripView() {
     </main>
   );
 
-  if (!requestedDestId || !destStop) return <Navigate to={safePreview ? "/go?safePreview=1" : "/go"} replace />;
+  if (!destStop) return <Navigate to={safePreview ? "/go?safePreview=1" : "/go"} replace />;
 
   return (
     <main className="tripview" data-safe-preview={safePreview || undefined}>

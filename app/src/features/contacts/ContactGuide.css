@@ -1,0 +1,15 @@
+/* 접수처 안내 — 춘천시 「시내(마을)버스 문의사항」 안내문.
+   접수처 카드 스타일은 이 파일 한 벌뿐이다. AppReport 완료 화면도 이 클래스를 쓴다. */
+.contactguide__contact { margin-top: 16px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: white; text-align: left; }
+.contactguide__contact h2 { font-size: 16px; line-height: 1.3; word-break: keep-all; }
+.contactguide__contact-ex { margin-top: 4px; color: var(--ink-muted); font-size: 13px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
+.contactguide__tel { display: grid; grid-template-columns: 26px 1fr auto; min-height: 56px; margin-top: 9px; padding: 8px 11px; align-items: center; gap: 9px; border: 1px solid var(--border); border-radius: 13px; background: var(--brand-soft); color: var(--ink); text-decoration: none; }
+.contactguide__tel svg { width: 19px; color: var(--brand); }
+.contactguide__tel span { display: flex; min-width: 0; flex-direction: column; }
+.contactguide__tel strong { font-size: 15px; }
+.contactguide__tel small { margin-top: 2px; color: var(--ink-muted); font-size: 12px; font-weight: 700; word-break: keep-all; }
+.contactguide__tel em { color: var(--brand); font-size: 15px; font-style: normal; font-weight: 900; white-space: nowrap; }
+.contactguide__contact-need { margin-top: 9px; padding: 8px 10px; border-radius: 10px; background: var(--brand-soft); color: var(--ink); font-size: 13px; font-weight: 700; line-height: 1.5; word-break: keep-all; }
+.contactguide__contact-need b { font-weight: 900; }
+.contactguide__links { display: grid; gap: 7px; margin-top: 9px; }
+.contactguide__links a { display: inline-flex; min-height: 48px; padding: 0 12px; align-items: center; border: 1px solid var(--border); border-radius: 12px; color: var(--ink); font-size: 14px; font-weight: 800; text-decoration: none; word-break: keep-all; }

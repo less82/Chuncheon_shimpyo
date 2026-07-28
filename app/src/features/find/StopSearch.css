@@ -1,0 +1,32 @@
+/* 정류장 검색 탭 — 목록 영역만 세로로 스크롤하고, 가로로는 넘치지 않는다. */
+
+.stopsearch { display: flex; min-width: 0; min-height: 0; height: 100%; flex-direction: column; }
+.stopsearch__search { display: grid; grid-template-columns: 28px 1fr; min-height: 58px; padding: 0 14px; align-items: center; border: 2px solid var(--border-strong); border-radius: 15px; background: white; }
+.stopsearch__search svg { width: 21px; color: var(--ink-muted); }
+.stopsearch__search input { min-width: 0; height: 54px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 17px; font-weight: 700; }
+/* grid-auto-rows: min-content 가 없으면 높이가 정해진 스크롤 컨테이너 안에서
+   암시적 행들이 눌려 항목이 서로 겹친다(항목에 overflow:hidden 이 있어 최소 크기가 0이 된다). */
+.stopsearch__list { display: grid; align-content: start; grid-auto-rows: min-content; gap: 7px; min-width: 0; min-height: 0; flex: 1 1 auto; margin-top: 10px; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.stopsearch__hint { display: flex; align-items: center; gap: 6px; padding: 12px 2px; color: var(--ink-muted); font-size: 14px; font-weight: 700; line-height: 1.5; word-break: keep-all; }
+.stopsearch__hint svg { width: 16px; flex: 0 0 auto; }
+.stopsearch__item { min-width: 0; border: 1px solid var(--border); border-radius: 13px; background: white; overflow: hidden; }
+.stopsearch__row { display: grid; grid-template-columns: 32px 1fr; width: 100%; min-height: 58px; padding: 8px 12px; align-items: center; gap: 8px; border: 0; background: white; color: var(--ink); text-align: left; }
+.stopsearch__row svg { width: 20px; color: var(--brand); }
+.stopsearch__row[aria-expanded="true"] { border-bottom: 1px solid var(--border); background: var(--brand-soft); }
+.stopsearch__row-copy { display: flex; min-width: 0; flex-direction: column; }
+.stopsearch__row-copy strong { overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.stopsearch__row-copy small { margin-top: 3px; color: var(--ink-muted); font-size: 12px; font-weight: 700; }
+.stopsearch__detail { padding: 12px; }
+.stopsearch__facts { display: grid; gap: 5px; }
+.stopsearch__facts > div { display: grid; grid-template-columns: 76px 1fr; min-width: 0; align-items: baseline; gap: 8px; }
+.stopsearch__facts dt { color: var(--ink-muted); font-size: 12px; font-weight: 800; }
+.stopsearch__facts dd { min-width: 0; overflow-wrap: anywhere; font-size: 14px; font-weight: 800; word-break: keep-all; }
+.stopsearch__subtitle { margin-top: 14px; margin-bottom: 7px; font-size: 14px; }
+.stopsearch__facilities { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.stopsearch__routes { display: flex; flex-wrap: wrap; gap: 5px; list-style: none; margin: 0; padding: 0; }
+.stopsearch__routes li { padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 900; }
+.stopsearch__actions { display: grid; gap: 7px; margin-top: 14px; }
+.stopsearch__action { display: inline-flex; min-height: 48px; padding: 0 12px; align-items: center; justify-content: center; gap: 7px; border: 2px solid var(--border-strong); border-radius: 13px; background: white; color: var(--ink); font-size: 14px; font-weight: 900; text-decoration: none; word-break: keep-all; }
+.stopsearch__action svg { width: 18px; flex: 0 0 auto; }
+.stopsearch__action--primary { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
+@media (max-height: 600px) { .stopsearch__search { min-height: 50px; padding-inline: 11px; } .stopsearch__search input { height: 46px; font-size: 16px; } .stopsearch__row { min-height: 48px; } }

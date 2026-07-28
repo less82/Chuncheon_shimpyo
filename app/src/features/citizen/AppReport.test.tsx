@@ -47,5 +47,9 @@ describe("<AppReport>", () => {
 
     expect(screen.getByText(/알려주셔서/)).toBeInTheDocument();
     expect(localStorage.getItem(REPORT_STORAGE_KEY)).toContain("의자가 파손됐어요");
+    // 접수처 카드는 ContactGuide 와 같은 조각·같은 클래스를 쓴다(디자인 두 벌 금지).
+    const tel = screen.getByRole("link", { name: "춘천시 교통과 교통시설팀 033-250-3316 전화 걸기" });
+    expect(tel).toHaveClass("contactguide__tel");
+    expect(screen.queryByText("민원 접수")).not.toBeInTheDocument();
   });
 });
