@@ -4,13 +4,13 @@ export interface FacilityCheckResult {
 }
 
 const TIMEOUT_MS = 20000;
-const MODEL = "qwen/qwen3-vl-8b-instruct";
+const MODEL = "qwen/qwen3-vl-32b-instruct";
 const PROMPT =
   "이 버스정류장 시설(의자/그늘막/조명 등) 사진을 보고 파손 여부를 한국어로 간단히 판단해줘. " +
   "파손이 보이면 어느 부분이 어떻게 파손됐는지, 파손이 없으면 '파손 없음'이라고 답해줘.";
 
 /**
- * OpenRouter의 Qwen3 VL 8B Instruct에 시설 사진을 보내 파손 여부를 물어본다.
+ * OpenRouter의 Qwen3 VL 32B Instruct에 시설 사진을 보내 파손 여부를 물어본다.
  * 개발용 테스트 전용 — 키가 없으면(공개 배포 빌드 포함) 즉시 안내 문구만 반환한다.
  */
 export async function checkFacilityDamage(
