@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronRight, Search } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
@@ -59,13 +60,16 @@ export default function CitizenHome() {
         <Link className="apphome-task apphome-task--report" to="/app/report" aria-label="정류장 상태 알리기">
           <strong>정류장</strong>
         </Link>
-        <Link className="apphome-task apphome-task--find" to="/find" aria-label="정류장·노선 찾기">
-          <strong>정류장·노선 찾기</strong>
-          <small>이름·번호로 찾고 문의처까지</small>
-        </Link>
         <Link className="apphome-task apphome-task--coco" to="/maeng-coco" aria-label="maeng_coco 정류장 파손 검사">
           <strong>maeng_coco</strong>
           <small>사진으로 파손 검사</small>
+        </Link>
+        {/* 주요 과업 셋(버스·정류장·maeng_coco) 아래 붙는 보조 이동 줄.
+            기존 타일과 경쟁하지 않도록 색을 쓰지 않는다. */}
+        <Link className="apphome-find" to="/find" aria-label="정류장·노선 찾기">
+          <Search aria-hidden="true" />
+          <strong>정류장·노선 찾기</strong>
+          <ChevronRight aria-hidden="true" />
         </Link>
       </nav>
 
