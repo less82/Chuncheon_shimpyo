@@ -2,7 +2,7 @@
 // [1단계 조사 검토 순서] / [2단계 설치 검토 우선순위] / [조건 필터(기존 v1 보존)]
 // 규칙: B2G는 순위·실측이 주인공, 합성 지수는 보조 셀에만. 승차량엔 항상 "양방향 합산 기준".
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStops } from "../../store/useStops";
 import FilterTab from "./FilterTab";
 import SurveyTab from "./SurveyTab";
@@ -20,6 +20,8 @@ import {
   updateMaengCocoReportStatus,
 } from "../maeng-coco/maengCocoApi";
 import { buildReportInsights } from "./reportInsights";
+// VLM 사진 설명은 관리자(B2G) 전용이다. 시민 화면에서는 이 모듈을 import 하지 않는다.
+import { explainReportPhoto, type VlmExplanation } from "./facilityVlm";
 import "./Dashboard.css";
 
 type TabKey = "reports" | "survey" | "install" | "filter";
@@ -38,6 +40,14 @@ const REPORT_STATUS = {
   resolved: { label: "처리 완료", next: null, action: "완료" },
 };
 
+/** VLM 설명 실패는 담당자가 할 수 있는 일이 다르므로 이유별로 다르게 안내한다. */
+function vlmFailText(reason: VlmExplanation["reason"]): string {
+  if (reason === "no_key") return "AI 설명 기능이 설정되지 않았습니다";
+  if (reason === "no_image") return "사진 형식을 확인할 수 없습니다";
+  if (reason === "timeout") return "시간이 초과됐습니다. 다시 시도해 주세요";
+  return "설명을 만들지 못했습니다";
+}
+
 function ReportsTab({
   reports,
   onAdvance,
@@ -54,6 +64,10 @@ function ReportsTab({
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checks, setChecks] = useState<[boolean, boolean]>([false, false]);
+  // 제보 id 별 사진 설명. 담당자가 버튼을 눌렀을 때만 채워지고, 다시 열어도 남는다.
+  const [explanations, setExplanations] = useState<Record<string, VlmExplanation>>({});
+  const [explainingId, setExplainingId] = useState<string | null>(null);
+  const modalRef = useRef<HTMLElement>(null);
   const statuses = Object.keys(REPORT_STATUS) as CitizenReport["status"][];
   const counts = (Object.keys(REPORT_STATUS) as CitizenReport["status"][]).map((status) => reports.filter((report) => report.status === status).length);
   const insights = useMemo(() => buildReportInsights(reports), [reports]);
@@ -82,19 +96,66 @@ function ReportsTab({
   };
   const selectedState = selected ? REPORT_STATUS[selected.status] : null;
   const requiredChecks = selected ? reviewItems[selected.status] : null;
+  const selectedExplanation = selected ? explanations[selected.id] ?? null : null;
+  const explaining = Boolean(selected && explainingId === selected.id);
 
+  // 모달 기본기(포커스 이동·순환·복원·배경 스크롤 잠금)는 components/ConfirmModal 과 같은 방식으로 맞춘다.
   useEffect(() => {
     if (!selectedId) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelectedId(null);
+    const modal = modalRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      [...(modal?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') ?? [])]
+        .filter((element) => !element.hasAttribute("disabled"));
+    focusables()[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedId(null);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      const inside = Boolean(active && modal?.contains(active));
+      if (event.shiftKey && (!inside || active === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (!inside || active === last)) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
   }, [selectedId]);
 
   function openReview(id: string) {
     setSelectedId(id);
     setChecks([false, false]);
+  }
+
+  // 비용이 드는 호출이라 모달을 열 때가 아니라 담당자가 눌렀을 때만 부른다.
+  async function requestExplanation(report: CitizenReport) {
+    if (!report.photoDataUrl || explainingId) return;
+    setExplainingId(report.id);
+    try {
+      const result = await explainReportPhoto(report.photoDataUrl, {
+        stopName: report.stopName,
+        issue: report.issue,
+      });
+      setExplanations((current) => ({ ...current, [report.id]: result }));
+    } finally {
+      setExplainingId(null);
+    }
   }
 
   function advanceSelected() {
@@ -116,9 +177,9 @@ function ReportsTab({
           <><div className="dash-tablewrap report-tablewrap"><table className="dash-table report-table"><thead><tr><th>신고 성격</th><th>정류장</th><th>유형·제보</th><th>유사 제보</th><th>접수 경과</th><th>처리 상태</th></tr></thead><tbody>{pageReports.map((item) => { const report = item.report; const state = REPORT_STATUS[report.status] ?? REPORT_STATUS.received; return <tr className="dash-row report-row" key={report.id} tabIndex={0} aria-label={`${report.stopName} ${report.issue} 상세 보기`} aria-selected={selectedId === report.id} onClick={() => openReview(report.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openReview(report.id); } }}><td data-label="신고 성격"><span className="report-risk" data-risk={item.safety}>{item.safety}</span></td><td data-label="정류장"><b className="dash-stopname">{report.stopName}</b><span className="dash-stopid">#{report.stopNo} · {report.stopId}</span></td><td data-label="유형·제보"><span className="report-category">{item.category}</span><strong className="report-issue">{report.issue}</strong></td><td data-label="유사 제보"><strong className="report-overlap" data-repeat={item.overlap >= 2}>{item.overlap}건</strong><span className="dash-stopid">동일 정류장·유형</span></td><td data-label="접수 경과"><strong>{item.elapsedLabel}</strong>{report.status === "resolved" && <span className="report-speed" data-speed={item.speed}>{item.speed}</span>}</td><td data-label="처리 상태"><span className="report-status" data-status={report.status}>{state.label}</span></td></tr>; })}</tbody></table></div>
           <nav className="report-pagination" aria-label="제보 목록 페이지"><button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>이전</button>{pageNumbers.map((pageNumber) => <button type="button" key={pageNumber} aria-current={pageNumber === currentPage ? "page" : undefined} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}<button type="button" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>다음</button></nav></>}
       </div></div>
-      {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" role="dialog" aria-modal="true" aria-label="제보 검토">
+      {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" ref={modalRef} role="dialog" aria-modal="true" aria-label="제보 검토">
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div></header>
-          <div className="report-review-body"><section className="report-case"><span className="report-label">제보 내용</span><p className="report-quote">“{selected.issue}”</p>{selected.source === "maeng_coco" && <p className="report-ai-evidence"><b>AI 검사 자료</b><span>라벨 {selected.modelLabelDisplay ?? selected.modelLabel ?? "미확인"} · 신뢰도 {Math.round((selected.modelConfidence ?? 0) * 100)}% · {selected.detectionCount ?? 0}개 영역</span></p>}{selected.photoDataUrl && <img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName} 민원 첨부`} />}</section><section className="report-facts"><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형</dt><dd>{selectedInsight?.category ?? "기타"}</dd></div><div><dt>신고 성격</dt><dd><span className="report-risk" data-risk={selectedInsight?.safety}>{selectedInsight?.safety ?? "일반 불편"}</span></dd></div><div><dt>유사 제보</dt><dd>{selectedInsight?.overlap ?? 1}건</dd></div><div><dt>접수 경과</dt><dd>{selectedInsight?.elapsedLabel}</dd></div><div><dt>처리 상태</dt><dd>{selectedState?.label}</dd></div></dl></section></div>
+          <div className="report-review-body"><section className="report-case"><span className="report-label">제보 내용</span><p className="report-quote">“{selected.issue}”</p>{selected.source === "maeng_coco" && <p className="report-ai-evidence"><b>AI 검사 자료</b><span>라벨 {selected.modelLabelDisplay ?? selected.modelLabel ?? "미확인"} · 신뢰도 {Math.round((selected.modelConfidence ?? 0) * 100)}% · {selected.detectionCount ?? 0}개 영역</span></p>}{selected.photoDataUrl && <><img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName}에서 보내온 사진`} /><div className="report-vlm"><div className="report-vlm__head"><span className="report-label">사진 설명(AI 추정)</span><button className="report-vlm__run" type="button" disabled={explaining} aria-busy={explaining} onClick={() => void requestExplanation(selected)}>{explaining ? "설명 만드는 중" : selectedExplanation ? "다시 만들기" : "사진 설명 만들기"}</button></div>{explaining ? <p className="report-vlm__status" role="status">사진 설명을 만들고 있습니다. 잠시 기다려 주세요.</p> : selectedExplanation ? selectedExplanation.ok ? <><p className="report-vlm__text">{selectedExplanation.text}</p><p className="report-vlm__notice">AI 추정입니다. 담당자 확인 결과가 우선합니다.</p></> : <p className="report-vlm__fail" role="status">{vlmFailText(selectedExplanation.reason)}</p> : <p className="report-vlm__hint">누르면 이 사진이 외부 AI 서비스(OpenRouter)로 전송돼 설명을 받습니다. 번호판·얼굴 등 개인정보가 찍혀 있으면 누르지 마세요.</p>}</div></>}</section><section className="report-facts"><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형</dt><dd>{selectedInsight?.category ?? "기타"}</dd></div><div><dt>신고 성격</dt><dd><span className="report-risk" data-risk={selectedInsight?.safety}>{selectedInsight?.safety ?? "일반 불편"}</span></dd></div><div><dt>유사 제보</dt><dd>{selectedInsight?.overlap ?? 1}건</dd></div><div><dt>접수 경과</dt><dd>{selectedInsight?.elapsedLabel}</dd></div><div><dt>처리 상태</dt><dd>{selectedState?.label}</dd></div></dl></section></div>
           <footer className="report-review-footer">{requiredChecks ? <fieldset className="report-checks"><legend>접수 확인 항목</legend>{requiredChecks.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={(event) => setChecks((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value) as [boolean, boolean])}/><span>{label}</span></label>)}</fieldset> : <p className="report-complete">처리가 완료된 제보입니다.</p>}<div className="report-review-actions"><button className="report-cancel" type="button" onClick={() => setSelectedId(null)}>취소</button>{selectedState?.next ? <button className="report-confirm" type="button" disabled={!checks.every(Boolean)} onClick={advanceSelected}>{selectedState.action}</button> : <button className="report-confirm" type="button" onClick={() => setSelectedId(null)}>확인</button>}</div></footer>
       </aside></div>}
   </section>;

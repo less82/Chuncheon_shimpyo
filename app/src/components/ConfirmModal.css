@@ -1,0 +1,17 @@
+/* 시민 앱은 휴대폰 프레임(.appreport) 안이 화면이다. 관리자 모달(.report-modal-backdrop)과 같은 방식으로 프레임 안에 가둔다. */
+.confirmmodal__backdrop { position: absolute; inset: 0; z-index: 40; display: grid; padding: 16px; place-items: center; background: rgba(13, 25, 42, .58); }
+.confirmmodal { display: flex; width: min(342px, calc(100vw - 32px)); max-height: min(430px, calc(100svh - 32px)); padding: 20px 18px 18px; flex-direction: column; border-radius: 20px; background: white; color: var(--ink); box-shadow: var(--shadow-float); }
+.confirmmodal__title { margin: 0; font-size: 22px; line-height: 1.25; letter-spacing: -.6px; word-break: keep-all; }
+.confirmmodal__body { min-height: 0; margin-top: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; color: var(--ink-muted); font-size: 15px; font-weight: 700; line-height: 1.5; word-break: keep-all; }
+.confirmmodal__actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin-top: 18px; }
+.confirmmodal__cancel,
+.confirmmodal__confirm { display: inline-flex; min-height: 52px; padding: 0 12px; align-items: center; justify-content: center; border-radius: 14px; font-size: 16px; font-weight: 900; }
+.confirmmodal__cancel { border: 2px solid var(--border-strong); background: white; color: var(--ink); }
+.confirmmodal__confirm { border: 0; background: var(--brand); color: var(--on-brand); }
+.confirmmodal__stop { display: block; color: var(--ink); font-size: 19px; font-weight: 900; word-break: keep-all; }
+.confirmmodal__summary { display: grid; gap: 8px; }
+.confirmmodal__summary > div { display: grid; grid-template-columns: 74px 1fr; gap: 10px; }
+.confirmmodal__summary dt { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
+.confirmmodal__summary dd { color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.4; word-break: break-word; }
+.confirmmodal__use { display: block; margin-top: 10px; color: var(--ink-muted); font-size: 14px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
+@media (max-height: 600px) { .confirmmodal { padding: 14px 14px 12px; } .confirmmodal__title { font-size: 19px; } .confirmmodal__body { margin-top: 8px; font-size: 14px; } .confirmmodal__actions { margin-top: 12px; } .confirmmodal__cancel, .confirmmodal__confirm { min-height: 48px; font-size: 15px; } }

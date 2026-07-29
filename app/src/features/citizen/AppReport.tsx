@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, MapPin, MessageCircle, Navigation, Search } from "lucide-react";
+import type { ChangeEvent } from "react";
+import { Camera, Check, ChevronLeft, MapPin, MessageCircle, Navigation, Search } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import ConfirmModal from "../../components/ConfirmModal";
 import { haversine } from "../../lib/geo";
 import { subjectParticle } from "../../lib/korean";
 import { loadRoutes } from "../../lib/loadRoutes";
@@ -19,8 +21,16 @@ import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import "./AppReport.css";
 
-type Step = "kind" | "locating" | "find" | "confirm" | "issue" | "bus" | "when" | "review" | "done";
+type Step = "kind" | "locating" | "find" | "confirm" | "photo" | "issue" | "bus" | "when" | "review" | "done";
 const MAX_DISTANCE_M = 1500;
+/** 정류장 시설·안내기 고장은 사진 한 장을 받는다. 브라우저가 주는 MIME 만 믿고 그 밖은 거른다. */
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PHOTO_MAX_BYTES = 12 * 1024 * 1024;
+
+/** 정류장 시설 계열(사진 흐름)인지. 버스 이용 불편·노선 요청은 기존 흐름 그대로다. */
+export function isStopKind(kind: ContactCategory | null): boolean {
+  return kind === "facility" || kind === "bis";
+}
 
 // 전화 링크 형식은 ContactGuide 로 옮겼다. 기존 import 를 깨지 않도록 여기서 다시 내보낸다.
 export { telHref };
@@ -37,12 +47,18 @@ export function stopDirection(stop: Stop, routes: RoutesFile | null, stops: Stop
   return "방면 미확인";
 }
 
-/** 화면 위쪽 "n / m · 이름" 표기. 버스 이용 불편만 두 단계(버스·시각)를 더 거친다. */
+/**
+ * 화면 위쪽 "n / m · 이름" 표기.
+ * 정류장 계열은 확인을 모달로 하므로 화면 단계가 셋뿐이고,
+ * 버스 이용 불편만 두 단계(버스·시각)를 더 거친다.
+ */
 const FLOW_BASE = ["kind", "target", "issue", "review"] as const;
+const FLOW_STOP = ["kind", "target", "photo"] as const;
 const FLOW_RIDE = ["kind", "target", "issue", "bus", "when", "review"] as const;
 const FLOW_NAMES: Record<string, string> = {
   kind: "무엇을 알릴까요",
   target: "대상 확인",
+  photo: "사진과 내용",
   issue: "내용 선택",
   bus: "버스 정보",
   when: "겪은 때",
@@ -50,8 +66,8 @@ const FLOW_NAMES: Record<string, string> = {
 };
 
 export function stepProgress(kind: ContactCategory | null, step: Step): string {
-  // 두 흐름의 튜플 타입이 달라 그대로 합치면 indexOf 인자 타입이 교집합이 된다. 문자열 배열로 좁힌다.
-  const flow: readonly string[] = kind === "ride" ? FLOW_RIDE : FLOW_BASE;
+  // 세 흐름의 튜플 타입이 달라 그대로 합치면 indexOf 인자 타입이 교집합이 된다. 문자열 배열로 좁힌다.
+  const flow: readonly string[] = kind === "ride" ? FLOW_RIDE : isStopKind(kind) ? FLOW_STOP : FLOW_BASE;
   const key: string = step === "locating" || step === "find" || step === "confirm" ? "target" : step;
   const index = flow.indexOf(key);
   if (index < 0) return "";
@@ -74,8 +90,23 @@ export default function AppReport() {
   const [happenedDate, setHappenedDate] = useState("");
   const [happenedTime, setHappenedTime] = useState("");
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState("");
+  const [photoError, setPhotoError] = useState("");
+  const [note, setNote] = useState("");
+  const [askStop, setAskStop] = useState(false);
+  const [askSend, setAskSend] = useState(false);
 
-  const locate = () => {
+  /** 정류장이 정해진 뒤 갈 곳. 정류장 계열은 사진 단계로 가면서 확인 모달을 띄운다. */
+  const openAfterStop = (category: ContactCategory | null) => {
+    if (isStopKind(category)) {
+      setStep("photo");
+      setAskStop(true);
+      return;
+    }
+    setStep("confirm");
+  };
+
+  const locate = (category: ContactCategory | null) => {
     setStep("locating");
     if (!navigator.geolocation) {
       setStep("find");
@@ -94,7 +125,7 @@ export default function AppReport() {
           return;
         }
         setSelected(first.stop);
-        setStep("confirm");
+        openAfterStop(category);
       },
       () => setStep("find"),
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 },
@@ -125,20 +156,42 @@ export default function AppReport() {
   const choose = (stop: Stop) => {
     setSelected(stop);
     setQuery("");
-    setStep("confirm");
+    openAfterStop(kind);
   };
 
   const chooseKind = (category: ContactCategory) => {
     setKind(category);
     setIssue("");
     if (selected) {
-      setStep("confirm");
+      openAfterStop(category);
       return;
     }
-    locate();
+    locate(category);
   };
 
   const afterIssue = () => setStep(kind === "ride" ? "bus" : "review");
+
+  /** 사진은 브라우저가 알려준 형식·크기만 보고 거른다. 통과하면 dataURL 로 바꿔 둔다. */
+  const pickPhoto = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!PHOTO_TYPES.includes(file.type)) {
+      setPhotoError("JPG, PNG, WEBP 사진만 올릴 수 있어요.");
+      return;
+    }
+    if (file.size > PHOTO_MAX_BYTES) {
+      setPhotoError("사진이 너무 큽니다. 12MB 이하로 올려주세요.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotoDataUrl(typeof reader.result === "string" ? reader.result : "");
+      setPhotoError("");
+    };
+    reader.onerror = () => setPhotoError("사진을 읽지 못했어요. 다시 골라주세요.");
+    reader.readAsDataURL(file);
+  };
 
   const submit = () => {
     if (!selected || !issue || !kind) return;
@@ -149,6 +202,20 @@ export default function AppReport() {
       happenedDate,
       happenedTime,
     });
+    setStep("done");
+  };
+
+  /**
+   * 정류장 계열 보내기.
+   * 저장되는 issue 가 비면 안 되므로 시민이 적은 글을 쓰고,
+   * 글이 없으면 시민이 고른 유형 라벨을 그대로 쓴다 — 내용을 지어내지 않는다.
+   */
+  const submitStopReport = () => {
+    if (!selected || !kind || !photoDataUrl) return;
+    const text = note.trim() || reportKind(kind).label;
+    saveReport(selected, text, photoDataUrl, { reportKind: kind });
+    setIssue(text);
+    setAskSend(false);
     setStep("done");
   };
 
@@ -210,7 +277,7 @@ export default function AppReport() {
           <div className="appreport__matches">
             {matches.map((stop) => <button type="button" key={stop.id} onClick={() => choose(stop)}><MapPin aria-hidden="true" /><span><strong>{stop.name}</strong><small>{stopDirection(stop, routes, stops)} · {stop.stopNo ? `정류장 ${stop.stopNo}` : "번호 미확인"}</small></span></button>)}
           </div>
-          <button type="button" className="appreport__secondary" onClick={locate}>현재 위치 다시 확인</button>
+          <button type="button" className="appreport__secondary" onClick={() => locate(kind)}>현재 위치 다시 확인</button>
         </section>
       )}
 
@@ -224,6 +291,34 @@ export default function AppReport() {
           </article>
           {nearby.length > 1 && <div className="appreport__nearby"><span>다른 가까운 정류장</span>{nearby.filter((stop) => stop.id !== selected.id).slice(0, 2).map((stop) => <button type="button" key={stop.id} onClick={() => setSelected(stop)}>{stop.name}</button>)}</div>}
           <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep("find")}>다른 정류장</button><button type="button" className="appreport__primary" onClick={() => setStep("issue")}>네, 맞아요</button></div>
+        </section>
+      )}
+
+      {step === "photo" && selected && kind && (
+        <section className="appreport__panel">
+          <p className="appreport__step">{progress}</p>
+          <span className="appreport__stop-chip"><MapPin aria-hidden="true" />{selected.name}</span>
+          <h1>사진을 올려주세요</h1>
+          <p>지금 보이는 모습을 한 장 올려주세요. 글은 안 적으셔도 보낼 수 있습니다.</p>
+          <div className="appreport__photo">
+            {photoDataUrl
+              ? <img className="appreport__photo-preview" src={photoDataUrl} alt="올리신 사진 미리보기" />
+              : <p className="appreport__photo-empty">JPG · PNG · WEBP, 12MB 이하 사진 한 장</p>}
+            <label className="appreport__photo-pick">
+              <Camera aria-hidden="true" />
+              <span>{photoDataUrl ? "사진 다시 고르기" : "사진 고르기"}</span>
+              <input type="file" accept="image/*" onChange={pickPhoto} />
+            </label>
+          </div>
+          {photoError && <p className="appreport__photo-error" role="alert">{photoError}</p>}
+          <label className="appreport__note">
+            <span>더 알려주실 내용 (선택)</span>
+            <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="예: 의자 한쪽이 부서져 앉을 수 없어요" />
+          </label>
+          <div className="appreport__bottom-actions">
+            <button type="button" className="appreport__secondary" onClick={() => setStep("find")}>다른 정류장</button>
+            <button type="button" className="appreport__primary" disabled={!photoDataUrl} onClick={() => setAskSend(true)}>보내기</button>
+          </div>
         </section>
       )}
 
@@ -303,6 +398,7 @@ export default function AppReport() {
             {doneContacts.length > 1 ? " 등" : ""}
             {subjectParticle(doneContacts.length > 1 ? "등" : doneOrg)} 맡는 내용입니다. 현장 확인 자료로 전달합니다.
           </p>
+          {photoDataUrl && <p>사진을 받았습니다.</p>}
           <p>바로 말씀하시려면 지금 전화하셔도 됩니다.</p>
           <div className="appreport__contact--done">
             <ContactGuide categories={[kind]} routes={selected.routes} stopName={kind === "ride" ? selected.name : undefined} compact />
@@ -323,6 +419,35 @@ export default function AppReport() {
           <Link className="appreport__home" to="/app"><MessageCircle aria-hidden="true" />메인으로 돌아가기</Link>
         </section>
       )}
+
+      <ConfirmModal
+        open={askStop && !!selected}
+        title="이 정류장이 맞나요?"
+        confirmLabel="네, 맞아요"
+        cancelLabel="아니요"
+        onConfirm={() => setAskStop(false)}
+        onCancel={() => { setAskStop(false); setStep("find"); }}
+      >
+        <b className="confirmmodal__stop">{selected?.name}</b>
+        <span>{selected?.stopNo ? `정류장 번호 ${selected.stopNo}` : "정류장 번호 미확인"}</span>
+      </ConfirmModal>
+
+      <ConfirmModal
+        open={askSend && !!selected && !!kind}
+        title="이 내용으로 보낼까요?"
+        confirmLabel="네, 보낼게요"
+        cancelLabel="더 고칠래요"
+        onConfirm={submitStopReport}
+        onCancel={() => setAskSend(false)}
+      >
+        <dl className="confirmmodal__summary">
+          <div><dt>정류장</dt><dd>{selected?.name}{selected?.stopNo ? ` · ${selected.stopNo}` : ""}</dd></div>
+          <div><dt>사진</dt><dd>{photoDataUrl ? "1장 첨부" : "없음"}</dd></div>
+          <div><dt>적으신 글</dt><dd>{note.trim() || "안 적음"}</dd></div>
+        </dl>
+        {/* 사진이 어디에 쓰이는지 보내기 전에 한 줄로 알린다. */}
+        <span className="confirmmodal__use">보내신 사진은 담당 부서가 확인하는 데 쓰입니다.</span>
+      </ConfirmModal>
     </main>
   );
 }

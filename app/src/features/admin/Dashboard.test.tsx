@@ -5,6 +5,11 @@ import Dashboard from "./Dashboard";
 import { useStops } from "../../store/useStops";
 import * as csv from "./exportCsv";
 import { INSTALL_STATUS_LABEL } from "../../types/priority";
+import { explainReportPhoto } from "./facilityVlm";
+
+// VLM 호출은 과금되는 외부 요청이라 테스트에서는 모듈째 대체한다.
+vi.mock("./facilityVlm", () => ({ explainReportPhoto: vi.fn() }));
+const explainMock = vi.mocked(explainReportPhoto);
 
 const F = (s: FacilityInfo["status"] = "unknown"): FacilityInfo => ({
   status: s,
@@ -133,7 +138,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
       name: "정류장 위치 미확인 (정류장 시설) 파손이 확인되었습니다. 상세 보기",
     }));
     expect(utils.getByText("라벨 정류장 시설 · 신뢰도 36% · 2개 영역")).toBeInTheDocument();
-    expect(utils.getByRole("img", { name: "정류장 위치 미확인 민원 첨부" })).toBeInTheDocument();
+    expect(utils.getByRole("img", { name: "정류장 위치 미확인에서 보내온 사진" })).toBeInTheDocument();
   });
 
   it("처리 단계를 누르면 해당 단계의 제보만 목록에 표시한다", () => {
@@ -213,6 +218,47 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     expect(confirm).toBeEnabled();
     fireEvent.click(confirm);
     expect(JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]")[0].status).toBe("reviewing");
+  });
+
+  it("검토 모달을 열면 모달 안으로 포커스가 들어가고 배경 스크롤이 잠긴다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
+    const dialog = utils.getByRole("dialog", { name: "제보 검토" });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("검토 모달을 닫으면 스크롤과 원래 포커스를 되돌린다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    const row = utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" });
+    row.focus();
+    fireEvent.click(row);
+    fireEvent.click(utils.getByRole("button", { name: "취소" }));
+    expect(utils.queryByRole("dialog", { name: "제보 검토" })).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+    expect(document.activeElement).toBe(row);
+  });
+
+  it("검토 모달에서 Tab 포커스가 모달 밖으로 나가지 않는다", () => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify([
+      { id: "r1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 없어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received" },
+    ]));
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 없어요 상세 보기" }));
+    const dialog = utils.getByRole("dialog", { name: "제보 검토" });
+    // 마지막 요소에서 Tab 을 누르면 첫 요소로 돌아온다.
+    const cancel = utils.getByRole("button", { name: "취소" });
+    cancel.focus();
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(dialog.contains(document.activeElement)).toBe(true);
   });
 
   it("1단계/2단계/조건 필터 탭이 모두 존재한다", () => {
@@ -312,6 +358,109 @@ describe("<Dashboard> — (c) 실측값 병기 + 표본 배지", () => {
     const { getByText, getByRole } = render(<Dashboard />);
     fireEvent.click(getByRole("tab", { name: "시설정보 검증 목록" }));
     expect(getByText("2025.6 4일 표본, 양방향 합산")).toBeInTheDocument();
+  });
+});
+
+describe("<Dashboard> — 사진 설명(AI 추정)", () => {
+  const photoReport = {
+    id: "p1",
+    stopId: "250000001",
+    stopNo: "1001",
+    stopName: "춘천역",
+    issue: "의자가 부서졌어요",
+    photoDataUrl: "data:image/jpeg;base64,ZmFrZQ==",
+    createdAt: "2026-07-21T08:00:00.000Z",
+    status: "received",
+  };
+
+  beforeEach(() => {
+    explainMock.mockReset();
+    localStorage.setItem("shimpyo:reports", JSON.stringify([photoReport]));
+  });
+
+  function openReview() {
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 부서졌어요 상세 보기" }));
+    return utils;
+  }
+
+  it("버튼을 누르기 전에 사진이 외부로 전송된다는 사실을 알린다", () => {
+    const utils = openReview();
+    const hint = utils.getByText(/외부 AI 서비스\(OpenRouter\)로 전송/);
+    expect(hint).toBeInTheDocument();
+    expect(hint.textContent).toContain("개인정보가 찍혀 있으면 누르지 마세요");
+  });
+
+  it("모달을 열기만 해서는 설명을 만들지 않는다", () => {
+    const utils = openReview();
+    expect(utils.getByRole("button", { name: "사진 설명 만들기" })).toBeInTheDocument();
+    expect(explainMock).not.toHaveBeenCalled();
+    expect(utils.queryByText(/AI 추정입니다/)).toBeNull();
+  });
+
+  it("버튼을 누르면 사진과 참고 정보를 넘겨 설명을 요청한다", async () => {
+    explainMock.mockResolvedValue({ ok: true, text: "의자 좌판 한쪽이 갈라져 보입니다." });
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    expect(explainMock).toHaveBeenCalledWith(photoReport.photoDataUrl, {
+      stopName: "춘천역",
+      issue: "의자가 부서졌어요",
+    });
+    await utils.findByText("의자 좌판 한쪽이 갈라져 보입니다.");
+  });
+
+  it("성공하면 설명 본문과 사람이 확정한다는 고지를 함께 보여준다", async () => {
+    explainMock.mockResolvedValue({ ok: true, text: "의자 좌판 한쪽이 갈라져 보입니다." });
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    expect(await utils.findByText("의자 좌판 한쪽이 갈라져 보입니다.")).toBeInTheDocument();
+    expect(utils.getByText("AI 추정입니다. 담당자 확인 결과가 우선합니다.")).toBeInTheDocument();
+  });
+
+  it("키가 없으면 설정되지 않았다고만 안내한다", async () => {
+    explainMock.mockResolvedValue({ ok: false, reason: "no_key", text: "꺼짐" });
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    expect(await utils.findByText("AI 설명 기능이 설정되지 않았습니다")).toBeInTheDocument();
+    expect(utils.queryByText(/AI 추정입니다/)).toBeNull();
+  });
+
+  it("시간이 초과되면 다시 시도하라고 안내한다", async () => {
+    explainMock.mockResolvedValue({ ok: false, reason: "timeout", text: "초과" });
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    expect(await utils.findByText("시간이 초과됐습니다. 다시 시도해 주세요")).toBeInTheDocument();
+  });
+
+  it("그 밖의 실패는 설명을 만들지 못했다고 안내한다", async () => {
+    explainMock.mockResolvedValue({ ok: false, reason: "network", text: "실패" });
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    expect(await utils.findByText("설명을 만들지 못했습니다")).toBeInTheDocument();
+  });
+
+  it("만드는 동안에는 버튼을 다시 누를 수 없다", async () => {
+    let release: (value: { ok: boolean; text: string }) => void = () => {};
+    explainMock.mockReturnValue(new Promise((resolve) => { release = resolve; }));
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    const running = utils.getByRole("button", { name: "설명 만드는 중" });
+    expect(running).toBeDisabled();
+    fireEvent.click(running);
+    expect(explainMock).toHaveBeenCalledTimes(1);
+    release({ ok: true, text: "설명 본문" });
+    expect(await utils.findByText("설명 본문")).toBeInTheDocument();
+  });
+
+  it("사진을 다시 열어도 이미 만든 설명이 남아 있다", async () => {
+    explainMock.mockResolvedValue({ ok: true, text: "그늘막 지붕 일부가 떨어져 보입니다." });
+    const utils = openReview();
+    fireEvent.click(utils.getByRole("button", { name: "사진 설명 만들기" }));
+    expect(await utils.findByText("그늘막 지붕 일부가 떨어져 보입니다.")).toBeInTheDocument();
+    fireEvent.click(utils.getByRole("button", { name: "취소" }));
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 부서졌어요 상세 보기" }));
+    expect(utils.getByText("그늘막 지붕 일부가 떨어져 보입니다.")).toBeInTheDocument();
+    expect(explainMock).toHaveBeenCalledTimes(1);
   });
 });
 
