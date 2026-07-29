@@ -13,10 +13,10 @@ export default function AdminApp() {
   }, [load, loaded]);
 
   return (
-    // 관리자는 전용 dev 서버(vite.admin.config.ts, root=app/admin)와 전용 빌드(dist/admin)를
-    // 각각 자기 루트에서 서비스한다. dev 에서만 "/admin" 을 붙이면 vite 가 안내하는 주소가
-    // 빈 화면이 된다(예전 통합 서빙 구성의 잔재).
-    <BrowserRouter>
+    // 시민 앱과 같은 출처의 /admin 에서 서비스한다(vite.admin.config.ts 의 base 와 맞춘다).
+    // 같은 출처여야 localStorage 에 쌓인 시민 제보를 관리자가 읽을 수 있다.
+    // dev 전용 서버로 띄울 때도 base 가 /admin/ 이라 같은 경로를 쓴다.
+    <BrowserRouter basename="/admin">
       <Routes>
         <Route index element={<Dashboard />} />
         <Route path="concepts" element={<AdminConcepts />} />
