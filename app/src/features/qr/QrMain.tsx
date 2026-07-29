@@ -15,6 +15,9 @@ import { loadRoutes } from "../../lib/loadRoutes";
 import { haversine } from "../../lib/geo";
 import { planTrip } from "../trip/planTrip";
 import { saveReport } from "../report/reportStore";
+import { saveFailMessage } from "../citizen/AppReport";
+import { categoryInfo, issueOptionsFor } from "../../data/busContacts";
+import type { ContactCategory } from "../../data/busContacts";
 import QrStopMap from "./QrStopMap";
 import "./QrMain.css";
 
@@ -55,6 +58,11 @@ interface RouteSummary {
 }
 
 type QrMode = "home" | "destination" | "report";
+/**
+ * QR 알리기 선택지 — 라벨은 busContacts 를 단일 출처로 쓴다(문구를 여기서 다시 적지 않는다).
+ * 이 화면은 정류장 자체(시설·안내기)만 받고, 스크롤 없이 담기도록 계열마다 앞의 두 개까지만 쓴다.
+ */
+const QR_ISSUE_OPTIONS = [...issueOptionsFor("facility").slice(0, 2), ...issueOptionsFor("bis").slice(0, 2)];
 type LocationSource = "gps" | "manual" | null;
 type VoiceTarget = "destination";
 const MAX_NEARBY_STOP_DISTANCE_M = 1500;
@@ -127,7 +135,11 @@ export default function QrMain() {
   const [nearbyStops, setNearbyStops] = useState<Stop[]>([]);
   const [reportConfirmed, setReportConfirmed] = useState(false);
   const [reportIssue, setReportIssue] = useState("");
+  /** 고른 선택지가 어느 접수 분류인지. 시민이 고른 값이라 저장할 때 reportKind 로 함께 남긴다. */
+  const [reportIssueKind, setReportIssueKind] = useState<ContactCategory | null>(null);
   const [reportPhoto, setReportPhoto] = useState("");
+  /** 저장에 실패했을 때만 채운다. 채워져 있으면 완료 화면으로 넘어가지 않았다는 뜻이다. */
+  const [reportSaveError, setReportSaveError] = useState("");
   const [reportReview, setReportReview] = useState(false);
   const [reportDone, setReportDone] = useState(false);
   const start = stops.find((stop) => stop.id === startId) ?? null;
@@ -234,8 +246,10 @@ export default function QrMain() {
     setReportConfirmed(false);
     setReportDone(false);
     setReportIssue("");
+    setReportIssueKind(null);
     setReportPhoto("");
     setReportReview(false);
+    setReportSaveError("");
     setOutsideServiceArea(false);
     setStartId(null);
     setStartCandidateIds([]);
@@ -310,8 +324,10 @@ export default function QrMain() {
     setReportConfirmed(true);
     setReportDone(false);
     setReportIssue("");
+    setReportIssueKind(null);
     setReportPhoto("");
     setReportReview(false);
+    setReportSaveError("");
     setLocationError(false);
     setOutsideServiceArea(false);
     setLocating(false);
@@ -481,12 +497,21 @@ export default function QrMain() {
       <div className="qrmain__confirm-actions"><button type="button" onClick={() => setReportConfirmed(true)}>네, 맞아요</button><button type="button" onClick={() => setStartId(nearbyStops.find((stop) => stop.id !== start.id)?.id ?? start.id)}>아니요</button></div>
       <div className="qrmain__nearby"><span>다른 가까운 정류장</span>{nearbyStops.filter((stop) => stop.id !== start.id).map((stop) => <button type="button" key={stop.id} onClick={() => setStartId(stop.id)}>{stop.name} {stop.stopNo && `#${stop.stopNo}`}</button>)}</div>
     </section></main>;
-    if (reportDone) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>알려주셔서 고맙습니다</h1><p><b>{start.name}</b><br />{reportIssue}</p><p>검수 후 담당 부서로 전달됩니다.</p><button type="button" className="qrmain__retry" onClick={() => setMode("home")}>완료</button></section></main>;
-    if (reportReview) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportReview(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>이 내용으로 보낼까요?</h1><p><b>{start.name}</b><br />{reportIssue}</p>{reportPhoto && <img className="qrmain__photo-preview" src={reportPhoto} alt="제보 첨부 사진" />}<button type="button" className="qrmain__report-submit" onClick={() => { saveReport(start, reportIssue, reportPhoto || undefined); setReportDone(true); setReportReview(false); }}>확인</button></section></main>;
+    // 앱에는 아직 공식 접수 연계가 없다. 전달됐다고 말하지 않고, 실제 접수 수단인 전화를 함께 안내한다.
+    const doneContact = reportIssueKind ? categoryInfo(reportIssueKind).contacts[0] : null;
+    if (reportDone) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setMode("home")}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>알려주셔서 고맙습니다</h1><p><b>{start.name}</b><br />{reportIssue}</p><p>담당 부서 확인용 자료로 남았습니다.</p>{doneContact && <p>바로 말씀하시려면 {doneContact.org} {doneContact.phone} 으로 전화하셔도 됩니다.</p>}<button type="button" className="qrmain__retry" onClick={() => setMode("home")}>완료</button></section></main>;
+    if (reportReview) return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportReview(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-complete"><h1>이 내용으로 보낼까요?</h1><p><b>{start.name}</b><br />{reportIssue}</p>{reportPhoto && <img className="qrmain__photo-preview" src={reportPhoto} alt="제보 첨부 사진" />}{reportSaveError && <p className="qrmain__report-error" role="alert">{reportSaveError}</p>}<button type="button" className="qrmain__report-submit" onClick={() => {
+      // 저장이 안 됐으면 보낸 게 아니다. 완료 화면으로 넘기지 않고 다시 보낼 길을 남긴다.
+      try { saveReport(start, reportIssue, reportPhoto || undefined, reportIssueKind ? { reportKind: reportIssueKind } : {}); }
+      catch (err) { setReportSaveError(saveFailMessage(err, Boolean(reportPhoto))); return; }
+      setReportSaveError("");
+      setReportDone(true);
+      setReportReview(false);
+    }}>확인</button></section></main>;
     return <main className="qrmain"><button className="qrmain__back" type="button" aria-label="뒤로 가기" onClick={() => setReportConfirmed(false)}><ChevronLeft aria-hidden="true" /></button><section className="qrmain__ask qrmain__report-start">
       <span className="qrmain__report-stop">{start.name} {start.stopNo && `#${start.stopNo}`}</span>
       <h1>어떤 점이 불편하셨나요?</h1><p>해당하는 항목을 하나 눌러주세요.</p>
-      <div className="qrmain__quick-report">{["의자가 파손됐어요", "안내 화면이 꺼졌어요", "조명이 꺼졌어요", "승강장 시설물이 파손됐어요"].map((issue) => <button type="button" aria-pressed={reportIssue === issue} onClick={() => setReportIssue(issue)} key={issue}>{issue}</button>)}</div>
+      <div className="qrmain__quick-report">{QR_ISSUE_OPTIONS.map((option) => <button type="button" aria-pressed={reportIssue === option.label} onClick={() => { setReportIssue(option.label); setReportIssueKind(option.category); }} key={option.label}>{option.label}</button>)}</div>
       <label className="qrmain__photo-input">
         <span>{reportPhoto ? "사진 다시 찍기" : "사진 찍어 첨부하기"}</span>
         <input type="file" accept="image/*" capture="environment" onChange={async (event) => {

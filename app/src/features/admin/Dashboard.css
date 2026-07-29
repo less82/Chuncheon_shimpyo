@@ -37,6 +37,21 @@
 .dash-head { display: flex; min-height: 42px; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .dash-head h2 { margin: 0; font-size: 19px; line-height: 1.2; }
 .dash-today { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
+.report-kinds { display: flex; min-width: 0; align-items: stretch; overflow-x: auto; border-bottom: 1px solid var(--border-strong); }
+/* 상위 범위(유형)와 하위 필터(처리 상태)를 같은 표시로 그리지 않는다.
+   유형은 사이드바 .dash-tab 처럼 왼쪽 굵은 선으로만 고른 값을 나타낸다. */
+.report-kind { position: relative; display: flex; min-height: 46px; align-items: baseline; gap: 8px; padding: 0 14px; border: 0; border-right: 1px solid var(--border); border-left: 4px solid transparent; background: transparent; color: var(--ink-body); font-family: inherit; white-space: nowrap; cursor: pointer; }
+.report-kind:last-child { border-right: 0; }
+.report-kind b { font-size: 13px; font-weight: 800; }
+.report-kind strong { color: var(--ink-muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.report-kind strong small { margin-left: 2px; font-size: 10px; }
+.report-kind:hover { background: var(--surface-2); }
+.report-kind[aria-selected="true"] { border-left-color: var(--brand); background: var(--surface-2); }
+.report-kind[aria-selected="true"] b { color: var(--brand); font-weight: 900; }
+.report-kind[aria-selected="true"] strong { color: var(--brand); }
+.report-desk { display: flex; align-items: baseline; gap: 8px; margin: 8px 0 12px; padding: 8px 12px; border-left: 4px solid var(--brand); background: var(--surface-2); }
+.report-desk span { color: var(--ink-muted); font-size: 11px; font-weight: 900; white-space: nowrap; }
+.report-desk b { overflow-wrap: anywhere; color: var(--ink); font-size: 12px; font-weight: 800; }
 .report-section-head, .report-list-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
 .report-command { display: flex; min-width: 0; align-items: stretch; justify-content: space-between; gap: 18px; margin-bottom: 8px; padding: 10px 0; border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong); }
 .report-command button { font-family: inherit; cursor: pointer; }
@@ -99,6 +114,7 @@
 .report-risk, .report-category, .report-speed { display: inline-flex; width: fit-content; align-items: center; padding: 4px 7px; background: var(--unknown-bg); color: var(--unknown); font-size: 10px; font-weight: 900; white-space: nowrap; }
 .report-risk[data-risk="안전 관련"] { background: var(--warning-bg); color: var(--warning); }
 .report-category { margin-bottom: 5px; background: var(--brand-soft); color: var(--brand); }
+.report-category[data-kind="unclassified"] { background: var(--unknown-bg); color: var(--unknown); }
 .report-issue { display: block; overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .report-overlap { display: block; color: var(--ink); font-size: 14px; }
 .report-overlap[data-repeat="true"] { color: var(--warning); }
@@ -136,6 +152,7 @@
 .report-confirm { border: 0; background: var(--brand); color: var(--on-brand); }
 .report-confirm:disabled { background: var(--border-strong); cursor: not-allowed; }
 .report-complete { margin: 0; padding: 12px; border-left: 4px solid var(--yes); background: var(--yes-bg); font-size: 12px; }
+.report-save-fail { margin: 0; padding: 12px; border-left: 4px solid var(--warning); background: var(--warning-bg); color: var(--warning); font-size: 12px; font-weight: 800; }
 
 .dash-title {
   font-size: var(--fs-xl);

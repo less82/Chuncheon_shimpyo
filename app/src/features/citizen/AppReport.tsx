@@ -6,7 +6,8 @@ import ConfirmModal from "../../components/ConfirmModal";
 import { haversine } from "../../lib/geo";
 import { subjectParticle } from "../../lib/korean";
 import { loadRoutes } from "../../lib/loadRoutes";
-import { saveReport } from "../report/reportStore";
+import { shrinkPhotoDataUrl } from "../../lib/imageResize";
+import { ReportStorageError, saveReport } from "../report/reportStore";
 import { useStops } from "../../store/useStops";
 import {
   REPORT_KINDS,
@@ -30,6 +31,20 @@ const PHOTO_MAX_BYTES = 12 * 1024 * 1024;
 /** 정류장 시설 계열(사진 흐름)인지. 버스 이용 불편·노선 요청은 기존 흐름 그대로다. */
 export function isStopKind(kind: ContactCategory | null): boolean {
   return kind === "facility" || kind === "bis";
+}
+
+/**
+ * 저장 실패를 시민의 말로 옮긴다.
+ * 사진이 있으면 사진이 원인일 가능성이 크므로 다시 고르는 길을 알려준다.
+ */
+export function saveFailMessage(err: unknown, hasPhoto: boolean): string {
+  if (err instanceof ReportStorageError && err.quotaExceeded) {
+    return hasPhoto
+      // 320×461 기준 사진 단계에 한 줄로 들어가야 한다(두 줄이면 보내기 줄이 잘린다).
+      ? "사진이 너무 커요. 다른 사진으로 보내주세요."
+      : "저장 공간이 가득 차서 보내지 못했어요. 잠시 뒤 다시 눌러주세요.";
+  }
+  return "보내지 못했어요. 잠시 뒤 다시 눌러주세요.";
 }
 
 // 전화 링크 형식은 ContactGuide 로 옮겼다. 기존 import 를 깨지 않도록 여기서 다시 내보낸다.
@@ -92,6 +107,8 @@ export default function AppReport() {
   const [routes, setRoutes] = useState<RoutesFile | null>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [photoError, setPhotoError] = useState("");
+  /** 저장에 실패했을 때만 채운다. 채워져 있으면 완료 화면으로 넘어가지 않았다는 뜻이다. */
+  const [saveError, setSaveError] = useState("");
   const [note, setNote] = useState("");
   const [askStop, setAskStop] = useState(false);
   const [askSend, setAskSend] = useState(false);
@@ -171,7 +188,10 @@ export default function AppReport() {
 
   const afterIssue = () => setStep(kind === "ride" ? "bus" : "review");
 
-  /** 사진은 브라우저가 알려준 형식·크기만 보고 거른다. 통과하면 dataURL 로 바꿔 둔다. */
+  /**
+   * 사진은 브라우저가 알려준 형식·크기만 보고 거른다.
+   * 통과하면 dataURL 로 바꾸고 **저장 전에** 줄인다. 미리보기도 줄인 사진을 쓴다.
+   */
   const pickPhoto = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -186,8 +206,16 @@ export default function AppReport() {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      setPhotoDataUrl(typeof reader.result === "string" ? reader.result : "");
-      setPhotoError("");
+      const raw = typeof reader.result === "string" ? reader.result : "";
+      if (!raw) {
+        setPhotoError("사진을 읽지 못했어요. 다시 골라주세요.");
+        return;
+      }
+      shrinkPhotoDataUrl(raw).then((small) => {
+        setPhotoDataUrl(small);
+        setPhotoError("");
+        setSaveError("");
+      });
     };
     reader.onerror = () => setPhotoError("사진을 읽지 못했어요. 다시 골라주세요.");
     reader.readAsDataURL(file);
@@ -195,13 +223,20 @@ export default function AppReport() {
 
   const submit = () => {
     if (!selected || !issue || !kind) return;
-    saveReport(selected, issue, undefined, {
-      reportKind: kind,
-      busRoute,
-      busVehicleNo,
-      happenedDate,
-      happenedTime,
-    });
+    try {
+      saveReport(selected, issue, undefined, {
+        reportKind: kind,
+        busRoute,
+        busVehicleNo,
+        happenedDate,
+        happenedTime,
+      });
+    } catch (err) {
+      // 저장이 안 됐으면 보낸 게 아니다. 완료 화면으로 넘기지 않는다.
+      setSaveError(saveFailMessage(err, false));
+      return;
+    }
+    setSaveError("");
     setStep("done");
   };
 
@@ -213,18 +248,33 @@ export default function AppReport() {
   const submitStopReport = () => {
     if (!selected || !kind || !photoDataUrl) return;
     const text = note.trim() || reportKind(kind).label;
-    saveReport(selected, text, photoDataUrl, { reportKind: kind });
+    try {
+      saveReport(selected, text, photoDataUrl, { reportKind: kind });
+    } catch (err) {
+      // 사진 흐름은 사진이 커서 막히는 경우가 대부분이다. 사진 단계에 남겨 다시 고르게 한다.
+      setSaveError(saveFailMessage(err, true));
+      setAskSend(false);
+      return;
+    }
     setIssue(text);
+    setSaveError("");
     setAskSend(false);
     setStep("done");
   };
 
   // 접수처는 안내문(춘천시 「시내(마을)버스 문의사항이 생기셨나요?」) 기준으로 고른다.
   // 이용 불편은 그 정류장에 실제로 오는 버스의 운수회사만 남긴다.
+  // 시민이 직접 적은 버스 번호는 정류장 노선 목록보다 직접적인 근거다. 둘을 합쳐 쓰고,
+  // 서로 어긋나면 한쪽으로 좁히지 않는다(rideContactsForRoutes 는 합집합으로 남긴다).
+  const rideRoutes = useMemo(
+    () => [...(selected?.routes ?? []), ...(busRoute.trim() ? [busRoute.trim()] : [])],
+    [selected, busRoute],
+  );
+
   const doneContacts = useMemo((): BusContact[] => {
     if (!kind) return [];
-    return kind === "ride" ? rideContactsForRoutes(selected?.routes ?? []) : categoryInfo(kind).contacts;
-  }, [kind, selected]);
+    return kind === "ride" ? rideContactsForRoutes(rideRoutes) : categoryInfo(kind).contacts;
+  }, [kind, rideRoutes]);
 
   const doneOrg = doneContacts[0]?.org ?? "담당 부서";
   const progress = stepProgress(kind, step);
@@ -243,7 +293,7 @@ export default function AppReport() {
         <section className="appreport__panel">
           <p className="appreport__step">{progress}</p>
           <h1>무엇을<br />알리시나요?</h1>
-          <p>고르시면 담당하는 곳으로 정리해 전달합니다.</p>
+          <p>고르시면 담당하는 곳을 찾아 알려드립니다.</p>
           <div className="appreport__issues">
             {REPORT_KINDS.map((item) => (
               <button type="button" key={item.category} onClick={() => chooseKind(item.category)}>
@@ -310,7 +360,7 @@ export default function AppReport() {
               <input type="file" accept="image/*" onChange={pickPhoto} />
             </label>
           </div>
-          {photoError && <p className="appreport__photo-error" role="alert">{photoError}</p>}
+          {(saveError || photoError) && <p className="appreport__photo-error" role="alert">{saveError || photoError}</p>}
           <label className="appreport__note">
             <span>더 알려주실 내용 (선택)</span>
             <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="예: 의자 한쪽이 부서져 앉을 수 없어요" />
@@ -384,6 +434,7 @@ export default function AppReport() {
             {kind === "ride" && <div><dt>버스</dt><dd>{busRoute || "안 적음"}{busVehicleNo ? ` · ${busVehicleNo}` : ""}</dd></div>}
             {kind === "ride" && <div><dt>겪은 때</dt><dd>{happenedDate || happenedTime ? `${happenedDate} ${happenedTime}`.trim() : "안 적음"}</dd></div>}
           </dl>
+          {saveError && <p className="appreport__photo-error" role="alert">{saveError}</p>}
           <div className="appreport__bottom-actions"><button type="button" className="appreport__secondary" onClick={() => setStep(kind === "ride" ? "when" : "issue")}>이전</button><button type="button" className="appreport__primary" onClick={submit}>보내기</button></div>
         </section>
       )}
@@ -396,12 +447,12 @@ export default function AppReport() {
           <p>
             <strong>{doneOrg}</strong>
             {doneContacts.length > 1 ? " 등" : ""}
-            {subjectParticle(doneContacts.length > 1 ? "등" : doneOrg)} 맡는 내용입니다. 현장 확인 자료로 전달합니다.
+            {subjectParticle(doneContacts.length > 1 ? "등" : doneOrg)} 맡는 내용입니다. 담당 부서 확인용 자료로 남았습니다.
           </p>
           {photoDataUrl && <p>사진을 받았습니다.</p>}
           <p>바로 말씀하시려면 지금 전화하셔도 됩니다.</p>
           <div className="appreport__contact--done">
-            <ContactGuide categories={[kind]} routes={selected.routes} stopName={kind === "ride" ? selected.name : undefined} compact />
+            <ContactGuide categories={[kind]} routes={kind === "ride" ? rideRoutes : selected.routes} stopName={kind === "ride" ? selected.name : undefined} compact />
             <p className="contactguide__contact-need">
               함께 알릴 정보
               <br />

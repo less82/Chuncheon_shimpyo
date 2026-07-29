@@ -111,7 +111,7 @@
   .appreport__photo-empty { min-height: 52px; font-size: 12px; }
   .appreport__photo-preview { max-height: 52px; }
   .appreport__photo-pick { min-height: 48px; font-size: 14px; }
-  .appreport__panel > p.appreport__photo-error { margin-top: 6px; font-size: 13px; }
+  .appreport__panel > p.appreport__photo-error { margin-top: 6px; font-size: 13px; line-height: 1.2; }
   .appreport__note { margin-top: 6px; gap: 3px; }
   .appreport__note > span { font-size: 13px; }
   .appreport__note textarea { min-height: 40px; font-size: 15px; }

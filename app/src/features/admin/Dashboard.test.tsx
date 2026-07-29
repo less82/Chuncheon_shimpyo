@@ -464,6 +464,138 @@ describe("<Dashboard> — 사진 설명(AI 추정)", () => {
   });
 });
 
+describe("<Dashboard> — 알리기 4유형 구분", () => {
+  // reportKind 는 시민이 직접 고른 값, contactCategory 는 저장 시 분류, 둘 다 없으면 미분류다.
+  const kindReports = [
+    { id: "k1", stopId: "250000001", stopNo: "1001", stopName: "춘천역", issue: "의자가 파손됐어요", createdAt: "2026-07-21T08:00:00.000Z", status: "received", reportKind: "facility", contactCategory: "facility" },
+    { id: "k2", stopId: "250000002", stopNo: "1002", stopName: "명동", issue: "안내 화면이 꺼졌어요", createdAt: "2026-07-21T08:10:00.000Z", status: "received", reportKind: "bis", contactCategory: "bis" },
+    { id: "k3", stopId: "250000003", stopNo: "1003", stopName: "후평동", issue: "기사님이 불친절했어요", createdAt: "2026-07-21T08:20:00.000Z", status: "reviewing", reportKind: "ride", contactCategory: "ride" },
+    { id: "k4", stopId: "250000004", stopNo: "1004", stopName: "석사동", issue: "옛 제보입니다", createdAt: "2026-07-21T08:30:00.000Z", status: "received" },
+  ];
+
+  beforeEach(() => {
+    localStorage.setItem("shimpyo:reports", JSON.stringify(kindReports));
+  });
+
+  function kindTabs(utils: ReturnType<typeof render>) {
+    return within(utils.getByRole("tablist", { name: "알리기 유형" }));
+  }
+
+  it("전체와 알리기 4유형을 탭으로 보여준다 — 0건이어도 남긴다", () => {
+    const utils = render(<Dashboard />);
+    const tabs = kindTabs(utils);
+    expect(tabs.getByRole("tab", { name: /전체/ })).toBeInTheDocument();
+    expect(tabs.getByRole("tab", { name: /정류장 시설/ })).toBeInTheDocument();
+    expect(tabs.getByRole("tab", { name: /안내기 고장/ })).toBeInTheDocument();
+    expect(tabs.getByRole("tab", { name: /버스 이용 불편/ })).toBeInTheDocument();
+    // 노선 요청은 0건이지만 무엇을 받을 수 있는지 보여야 하므로 남는다.
+    expect(tabs.getByRole("tab", { name: /노선 요청\s*0건/ })).toBeInTheDocument();
+  });
+
+  it("유형별 건수를 함께 보여준다", () => {
+    const utils = render(<Dashboard />);
+    const tabs = kindTabs(utils);
+    expect(tabs.getByRole("tab", { name: /전체\s*4건/ })).toBeInTheDocument();
+    expect(tabs.getByRole("tab", { name: /정류장 시설\s*1건/ })).toBeInTheDocument();
+    expect(tabs.getByRole("tab", { name: /미분류\s*1건/ })).toBeInTheDocument();
+  });
+
+  it("유형을 고르면 그 유형의 제보만 목록에 남는다", () => {
+    const utils = render(<Dashboard />);
+    fireEvent.click(kindTabs(utils).getByRole("tab", { name: /안내기 고장/ }));
+    expect(utils.getByText("안내 화면이 꺼졌어요")).toBeInTheDocument();
+    expect(utils.queryByText("의자가 파손됐어요")).toBeNull();
+    expect(utils.queryByText("옛 제보입니다")).toBeNull();
+  });
+
+  it("유형이 없는 옛 제보는 4유형 어디에도 섞이지 않고 미분류에만 남는다", () => {
+    const utils = render(<Dashboard />);
+    const tabs = kindTabs(utils);
+    for (const label of ["정류장 시설", "안내기 고장", "버스 이용 불편", "노선 요청"]) {
+      fireEvent.click(tabs.getByRole("tab", { name: new RegExp(label) }));
+      expect(utils.queryByText("옛 제보입니다")).toBeNull();
+    }
+    fireEvent.click(tabs.getByRole("tab", { name: /미분류/ }));
+    expect(utils.getByText("옛 제보입니다")).toBeInTheDocument();
+  });
+
+  it("유형을 고르면 처리 현황도 그 유형 기준으로 센다", () => {
+    const utils = render(<Dashboard />);
+    fireEvent.click(kindTabs(utils).getByRole("tab", { name: /버스 이용 불편/ }));
+    const flow = within(utils.getByRole("group", { name: "처리 상태별 제보 목록" }));
+    expect(flow.getByRole("button", { name: /^접수\s*0건/ })).toBeInTheDocument();
+    expect(flow.getByRole("button", { name: /^담당 배정\s*1건/ })).toBeInTheDocument();
+    // 고른 유형의 건수는 목록 범위 버튼 한 곳에서만 센다(같은 숫자를 여러 번 찍지 않는다).
+    expect(within(utils.getByRole("group", { name: "목록 범위 선택" })).getByRole("button", { name: /^버스 이용 불편\s*1건/ })).toBeInTheDocument();
+  });
+
+  it("유형에 맞는 담당 접수처를 보여준다", () => {
+    const utils = render(<Dashboard />);
+    const tabs = kindTabs(utils);
+    fireEvent.click(tabs.getByRole("tab", { name: /정류장 시설/ }));
+    expect(utils.getByText("춘천시 교통과 교통시설팀 033-250-3316")).toBeInTheDocument();
+    fireEvent.click(tabs.getByRole("tab", { name: /노선 요청/ }));
+    expect(utils.getByText("춘천시 교통과 버스팀 033-250-3938")).toBeInTheDocument();
+  });
+
+  it("버스 이용 불편은 목록 화면에서 운수회사를 단정하지 않는다", () => {
+    const utils = render(<Dashboard />);
+    fireEvent.click(kindTabs(utils).getByRole("tab", { name: /버스 이용 불편/ }));
+    expect(utils.getByText(/정류장에 따라 다름/)).toBeInTheDocument();
+    expect(utils.queryByText(/춘천시민버스/)).toBeNull();
+  });
+
+  it("선택 상태를 색이 아니라 aria-selected 로도 알린다", () => {
+    const utils = render(<Dashboard />);
+    const tabs = kindTabs(utils);
+    expect(tabs.getByRole("tab", { name: /전체/ })).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(tabs.getByRole("tab", { name: /정류장 시설/ }));
+    expect(tabs.getByRole("tab", { name: /정류장 시설/ })).toHaveAttribute("aria-selected", "true");
+    expect(tabs.getByRole("tab", { name: /전체/ })).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("목록 각 행에 시민이 고른 유형을 표시한다", () => {
+    const utils = render(<Dashboard />);
+    const row = utils.getByRole("row", { name: "춘천역 의자가 파손됐어요 상세 보기" });
+    expect(within(row).getByText("정류장 시설")).toBeInTheDocument();
+    const oldRow = utils.getByRole("row", { name: "석사동 옛 제보입니다 상세 보기" });
+    expect(within(oldRow).getByText("미분류")).toBeInTheDocument();
+  });
+
+  it("검토 모달의 '유형'은 목록과 같은 값(시민이 고른 유형)을 쓴다", () => {
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("row", { name: "후평동 기사님이 불친절했어요 상세 보기" }));
+    const modal = within(utils.getByRole("dialog", { name: "제보 검토" }));
+    const kindRow = modal.getByText("유형").parentElement as HTMLElement;
+    expect(within(kindRow).getByText("버스 이용 불편")).toBeInTheDocument();
+    // 문구에서 뽑은 값은 '유형'이 아니라 추정으로만 남긴다.
+    expect(modal.getByText("내용 추정")).toBeInTheDocument();
+  });
+
+  it("건수 0인 유형을 고르면 제보가 없다고 뭉뚱그리지 않는다", () => {
+    const utils = render(<Dashboard />);
+    fireEvent.click(kindTabs(utils).getByRole("tab", { name: /노선 요청/ }));
+    expect(utils.getByText("노선 요청 제보가 없습니다")).toBeInTheDocument();
+    expect(utils.queryByText("아직 접수된 제보가 없습니다")).toBeNull();
+  });
+
+  it("처리 상태 저장이 실패하면 화면을 날리지 않고 실패를 알린다", () => {
+    const utils = render(<Dashboard />);
+    fireEvent.click(utils.getByRole("row", { name: "춘천역 의자가 파손됐어요 상세 보기" }));
+    const modal = within(utils.getByRole("dialog", { name: "제보 검토" }));
+    modal.getAllByRole("checkbox").forEach((box) => fireEvent.click(box));
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("가득 참", "QuotaExceededError");
+    });
+
+    fireEvent.click(modal.getByRole("button", { name: "접수 확인" }));
+
+    expect(modal.getByRole("alert")).toHaveTextContent("처리 상태를 저장하지 못했습니다");
+    expect(utils.getByRole("dialog", { name: "제보 검토" })).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+});
+
 describe("<Dashboard> — '현장 확인' 금지 문구", () => {
   it("어떤 탭에도 '현장 확인' 문자열이 없다", () => {
     const utils = render(<Dashboard />);

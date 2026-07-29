@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { useStops } from "../../store/useStops";
@@ -217,6 +217,23 @@ describe("<AppReport>", () => {
     expect(screen.queryByText("민원 접수")).not.toBeInTheDocument();
   });
 
+  it("시민이 적은 버스 번호로 알 수 있는 운수회사를 빼놓지 않는다", async () => {
+    const screen = renderReport();
+    await pickKindAndStop(screen, "버스 이용 불편");
+
+    fireEvent.click(screen.getByRole("button", { name: "기사님이 불친절했어요" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+    // 정류장 노선 목록에는 없지만 시민이 마을버스를 직접 적었다
+    fireEvent.change(screen.getByLabelText("버스 번호"), { target: { value: "남산3" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+
+    // 직접 근거(적은 노선)와 간접 근거(정류장 노선)를 모두 남기고 한쪽으로 좁히지 않는다
+    expect(screen.getByRole("link", { name: /한일여행사\(자\) 033-249-8000 전화 걸기/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /춘천시민버스 033-254-6925 전화 걸기/ })).toBeInTheDocument();
+  });
+
   it("모르는 버스 정보는 비워도 보낼 수 있고, 지어내지 않는다", async () => {
     const screen = renderReport();
     await pickKindAndStop(screen, "버스 이용 불편");
@@ -244,5 +261,59 @@ describe("<AppReport>", () => {
 
     expect(loadReports()[0].reportKind).toBe("route");
     expect(screen.getByRole("link", { name: "춘천시 교통과 버스팀 033-250-3938 전화 걸기" })).toBeInTheDocument();
+  });
+});
+
+describe("<AppReport> 저장 실패", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  /** 저장 공간이 가득 찬 상황을 흉내낸다. */
+  const failWithQuota = () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("가득 참", "QuotaExceededError");
+    });
+  };
+
+  it("사진 저장이 실패하면 완료 화면으로 가지 않고 안내한다", async () => {
+    const screen = renderReport();
+    await pickKindAndStop(screen, "정류장 시설");
+    await attachPhoto(screen);
+
+    failWithQuota();
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+    fireEvent.click(screen.getByRole("button", { name: "네, 보낼게요" }));
+
+    // 보냈다고 믿게 두지 않는다
+    expect(screen.queryByText(/알려주셔서/)).not.toBeInTheDocument();
+    expect(screen.getByText("사진을 올려주세요")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("사진이 너무 커요.");
+    // 다시 시도할 수 있게 사진 흐름에 그대로 남는다
+    expect(screen.getByRole("button", { name: "보내기" })).toBeEnabled();
+  });
+
+  it("사진 없는 흐름도 저장이 실패하면 완료 화면으로 가지 않는다", async () => {
+    const screen = renderReport();
+    await pickKindAndStop(screen, "노선 요청");
+    fireEvent.click(screen.getByRole("button", { name: "노선 신설을 요청해요" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+
+    failWithQuota();
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+
+    expect(screen.queryByText(/알려주셔서/)).not.toBeInTheDocument();
+    expect(screen.getByText(/보낼까요/)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("잠시 뒤 다시 눌러주세요");
+  });
+
+  it("저장에 성공하면 사진이 그대로 남는다", async () => {
+    const screen = renderReport();
+    await pickKindAndStop(screen, "정류장 시설");
+    await attachPhoto(screen);
+
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+    fireEvent.click(screen.getByRole("button", { name: "네, 보낼게요" }));
+
+    expect(screen.getByText(/알려주셔서/)).toBeInTheDocument();
+    expect(loadReports()[0].photoDataUrl).toMatch(/^data:image\/jpeg/);
   });
 });

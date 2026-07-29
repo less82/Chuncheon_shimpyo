@@ -122,6 +122,46 @@ describe("<QrMain>", () => {
 
     await waitFor(() => expect(screen.getByText("알려주셔서 고맙습니다")).toBeInTheDocument());
     expect(screen.queryByText(/접수됐어요/)).not.toBeInTheDocument();
-    expect(screen.getByText("검수 후 담당 부서로 전달됩니다.")).toBeInTheDocument();
+    expect(screen.getByText("담당 부서 확인용 자료로 남았습니다.")).toBeInTheDocument();
+    // 앱에는 공식 접수 연계가 없다. 지금 실제로 접수되는 길(전화)을 함께 알려야 한다.
+    expect(screen.getByText(/033-250-3316/)).toBeInTheDocument();
+  });
+
+  it("고른 선택지의 유형(reportKind)을 함께 저장한다", async () => {
+    const screen = render(<QrMain />);
+
+    fireEvent.click(screen.getByRole("button", { name: "정류장 상태 알리기" }));
+    fireEvent.change(screen.getByLabelText("출발 정류장을 입력하세요"), { target: { value: "1001" } });
+    fireEvent.click(await screen.findByRole("button", { name: "춘천역" }));
+    fireEvent.click(screen.getByRole("button", { name: "네, 맞아요" }));
+    fireEvent.click(screen.getByRole("button", { name: "안내 화면이 꺼졌어요" }));
+    fireEvent.click(screen.getByRole("button", { name: "내용 보내기" }));
+    fireEvent.click(screen.getByRole("button", { name: "확인" }));
+
+    await waitFor(() => expect(screen.getByText("알려주셔서 고맙습니다")).toBeInTheDocument());
+    const saved = JSON.parse(localStorage.getItem("shimpyo:reports") ?? "[]");
+    expect(saved[0].reportKind).toBe("bis");
+    expect(saved[0].contactCategory).toBe("bis");
+  });
+
+  it("저장에 실패하면 완료 화면으로 넘기지 않고 시민에게 알린다", async () => {
+    const screen = render(<QrMain />);
+
+    fireEvent.click(screen.getByRole("button", { name: "정류장 상태 알리기" }));
+    fireEvent.change(screen.getByLabelText("출발 정류장을 입력하세요"), { target: { value: "1001" } });
+    fireEvent.click(await screen.findByRole("button", { name: "춘천역" }));
+    fireEvent.click(screen.getByRole("button", { name: "네, 맞아요" }));
+    fireEvent.click(screen.getByRole("button", { name: "의자가 파손됐어요" }));
+    fireEvent.click(screen.getByRole("button", { name: "내용 보내기" }));
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("가득 참", "QuotaExceededError");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(screen.queryByText("알려주셔서 고맙습니다")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("저장 공간이 가득 차서");
+    expect(screen.getByRole("button", { name: "확인" })).toBeInTheDocument();
+    setItem.mockRestore();
   });
 });

@@ -40,6 +40,43 @@ export interface CitizenReport {
   sourceFileName?: string;
 }
 
+/**
+ * 저장에 실패했을 때 던지는 오류.
+ * 조용히 성공한 척하지 않는다 — 시민이 보냈다고 믿는데 저장이 안 되는 상황을 막는다.
+ */
+export class ReportStorageError extends Error {
+  /** 저장 공간이 가득 찬 경우. 사진이 커서 나는 실패가 대부분이다. */
+  readonly quotaExceeded: boolean;
+
+  constructor(quotaExceeded: boolean, cause?: unknown) {
+    super(quotaExceeded ? "저장 공간이 가득 찼습니다." : "제보를 저장하지 못했습니다.");
+    this.name = "ReportStorageError";
+    this.quotaExceeded = quotaExceeded;
+    this.cause = cause;
+  }
+}
+
+/** 브라우저마다 이름이 다른 저장 공간 초과 오류를 한 가지로 본다. */
+function isQuotaError(err: unknown): boolean {
+  if (typeof DOMException !== "undefined" && err instanceof DOMException) {
+    return err.name === "QuotaExceededError" || err.name === "NS_ERROR_DOM_QUOTA_REACHED" || err.code === 22;
+  }
+  return err instanceof Error && err.name === "QuotaExceededError";
+}
+
+/**
+ * 목록을 통째로 저장한다.
+ * 공간이 부족해도 오래된 제보를 지우지 않는다(데이터 손실). 대신 실패를 그대로 알린다.
+ */
+function writeReports(reports: CitizenReport[]): void {
+  try {
+    localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(reports));
+  } catch (err) {
+    throw new ReportStorageError(isQuotaError(err), err);
+  }
+  window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
+}
+
 export function loadReports(): CitizenReport[] {
   try {
     const value = JSON.parse(localStorage.getItem(REPORT_STORAGE_KEY) ?? "[]");
@@ -82,25 +119,22 @@ export function saveReport(
     ...(category ? { contactCategory: category } : {}),
     ...keepFilled(details),
   };
-  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify([...loadReports(), report]));
-  window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
+  // 저장에 실패하면 ReportStorageError 가 그대로 올라간다. 호출측이 시민에게 알려야 한다.
+  writeReports([...loadReports(), report]);
   return report;
 }
 
 export function upsertReport(report: CitizenReport): void {
   const reports = loadReports();
-  const next = [...reports.filter((item) => item.id !== report.id), report];
-  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(next));
-  window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
+  writeReports([...reports.filter((item) => item.id !== report.id), report]);
 }
 
 export function updateReportStatus(id: string, status: CitizenReport["status"]): void {
   const now = new Date().toISOString();
-  localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(loadReports().map((report) => report.id === id ? {
+  writeReports(loadReports().map((report) => report.id === id ? {
     ...report,
     status,
     updatedAt: now,
     ...(status === "resolved" ? { resolvedAt: now } : {}),
-  } : report)));
-  window.dispatchEvent(new Event(REPORT_CHANGED_EVENT));
+  } : report));
 }

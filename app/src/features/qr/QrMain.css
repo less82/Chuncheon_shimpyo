@@ -121,6 +121,7 @@
 .qrmain__report-submit:disabled { background: var(--border-strong); cursor: not-allowed; }
 .qrmain__report-complete { margin-top: 0; }
 .qrmain__report-complete p { margin-top: 12px; }
+.qrmain__report-error { color: var(--ink); font-size: 15px; font-weight: 800; word-break: keep-all; }
 
 /* 결과: 버스번호와 대기시간 우선 */
 .qrmain__results { display: grid; gap: 16px; }
