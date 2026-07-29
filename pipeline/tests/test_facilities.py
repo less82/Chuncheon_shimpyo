@@ -1,4 +1,4 @@
-"""Task 1.4 검증: 시설 공간 매칭(의자 30m·조명 50m) + 그늘 지오코딩 30m.
+"""Task 1.4 검증: 시설 공간 매칭(의자 30m) + 그늘 지오코딩 30m.
 
 핵심 규칙: 어떤 경로에서도 status='no'를 만들지 않는다.
 매칭되면 yes, 매칭 안 되면 unknown 그대로.
@@ -7,7 +7,7 @@ import copy
 
 import pandas as pd
 
-from attach_facilities import attach_lights, attach_seats, attach_shade
+from attach_facilities import attach_seats, attach_shade
 from geo import haversine
 
 
@@ -22,8 +22,8 @@ def _stop(sid, lat, lng):
         "facilities": {
             "shade": {"status": "unknown", "source": "none"},
             "seat": {"status": "unknown", "source": "none"},
-            "light": {"status": "unknown", "source": "none"},
             "sign": {"status": "unknown", "source": "none"},
+            "shelter": {"status": "unknown", "source": "none"},
         },
     }
 
@@ -63,24 +63,12 @@ def test_attach_seats_never_produces_no():
     assert out[0]["facilities"]["seat"]["status"] == "unknown"
 
 
-def test_attach_lights_within_50m_yes():
-    s = _stop("A", 37.8800, 127.7300)
-    master = [s]
-    lights = pd.DataFrame({"lat": [37.8800 + 0.0003], "lng": [127.7300]})  # ~33m
-    out = attach_lights(master, lights, radius=50)
-    assert out[0]["facilities"]["light"] == {
-        "status": "yes",
-        "source": "light_registry",
-    }
-
-
-def test_attach_lights_empty_source_all_unknown():
-    # 가로등 원본이 없을 때: 전부 unknown(절대 no 아님)
-    master = [_stop("A", 37.88, 127.73)]
-    lights = pd.DataFrame({"lat": pd.Series(dtype=float), "lng": pd.Series(dtype=float)})
-    out = attach_lights(master, lights, radius=50)
-    assert out[0]["facilities"]["light"]["status"] == "unknown"
-    assert out[0]["facilities"]["light"]["source"] == "none"
+def test_shelter_untouched_by_registry_matching():
+    """쉘터는 대장이 없다. 공간매칭 단계는 절대 쉘터를 건드리지 않는다."""
+    master = [_stop("A", 37.8800, 127.7300)]
+    bench = pd.DataFrame({"명칭": ["b1"], "lat": [37.8800 + 0.0001], "lng": [127.7300]})
+    out = attach_seats(master, bench, radius=30)
+    assert out[0]["facilities"]["shelter"] == {"status": "unknown", "source": "none"}
 
 
 def test_attach_shade_uses_geocode_cache_30m():

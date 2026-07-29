@@ -33,7 +33,7 @@ const stop: Stop = {
   routes: ["12"], headwayMin: 12,
   facilities: {
     shade: { status: "unknown", source: "none" }, seat: { status: "unknown", source: "none" },
-    light: { status: "unknown", source: "none" }, sign: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" }, sign: { status: "unknown", source: "none" },
   },
 };
 const destination: Stop = { ...stop, id: "B", stopNo: "1481", name: "춘천역", lat: 37.89, lng: 127.74 };

@@ -4,7 +4,7 @@ import type { Stop } from "../../types/stop";
 export interface FacilityFilterState {
   shade: boolean;
   seat: boolean;
-  light: boolean;
+  shelter: boolean;
 }
 
 type FilterKey = keyof FacilityFilterState;

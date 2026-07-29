@@ -7,7 +7,7 @@ import type { Stop } from "../../types/stop";
 import type { NoDemandCandidate, PresetKey, SurveyRow, SurveyWeights } from "../../types/priority";
 import { PRESETS } from "../../types/priority";
 
-const FACILITY_KEYS = ["shade", "seat", "light", "sign"] as const;
+const FACILITY_KEYS = ["shade", "seat", "shelter", "sign"] as const;
 
 /** [0,1] 분위수. 극단값에 강건(min-max 아님). 동점은 평균 순위 처리. */
 export function quantileRank(values: number[], v: number): number {

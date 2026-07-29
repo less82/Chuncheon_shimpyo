@@ -3,7 +3,8 @@
 재실행 가능한 단일 스크립트. 6개 원본 CSV를 결합해
 app/public/data/stops.json (StopsFile) 과 로드뷰 조사 양식 CSV를 생성한다.
 
-단계적 결합(중요): master -> demand -> seats -> lights -> shade -> roadview.
+단계적 결합(중요): master -> demand -> seats -> shade -> sign -> roadview.
+쉘터는 대장이 없어 로드뷰 오버레이 단계에서만 채워진다.
 뒤 단계가 실패해도 앞 단계 결과로 유효한 stops.json이 나온다(각 단계 try/except).
 네트워크(지오코딩)는 빌드 시점만, 실패해도 해당 그늘만 unknown으로 남는다.
 """
@@ -12,14 +13,13 @@ import json
 import os
 
 from attach_demand import attach_demand
-from attach_facilities import attach_lights, attach_seats, attach_shade, attach_sign
+from attach_facilities import attach_seats, attach_shade, attach_sign
 from build_master import build_master
 from build_routes import build_routes
 from loaders import (
     load_bench,
     load_bit,
     load_boarding,
-    load_lights,
     load_locations,  # noqa: F401  (마스터 내부에서 사용)
     load_shade,
 )
@@ -70,49 +70,40 @@ def build() -> dict:
     except Exception as e:
         print(f"[3] 의자 단계 건너뜀(비치명적): {e}")
 
-    # --- Stage 4: 조명(가로등 50m) ---
-    try:
-        lights = load_lights()
-        attach_lights(master, lights, radius=50)
-        n = sum(1 for s in master if s["facilities"]["light"]["status"] == "yes")
-        note = "" if len(lights) else " (가로등 원본 부재 → 전부 unknown)"
-        print(f"[4] 조명 yes(가로등 50m): {n}{note}")
-    except Exception as e:
-        print(f"[4] 조명 단계 건너뜀(비치명적): {e}")
-
-    # --- Stage 5: 그늘(그늘막 주소 지오코딩 30m) ---
+    # --- Stage 4: 그늘(그늘막 주소 지오코딩 30m) ---
     try:
         from geocode import load_cache
 
         cache = load_cache()
         attach_shade(master, load_shade(), cache, radius=30)
         n = sum(1 for s in master if s["facilities"]["shade"]["status"] == "yes")
-        print(f"[5] 그늘 yes(지오코딩 30m): {n} (지오코딩 캐시 {len(cache)}건)")
+        print(f"[4] 그늘 yes(지오코딩 30m): {n} (지오코딩 캐시 {len(cache)}건)")
     except Exception as e:
-        print(f"[5] 그늘 단계 건너뜀(비치명적): {e}")
+        print(f"[4] 그늘 단계 건너뜀(비치명적): {e}")
 
-    # --- Stage 6: 도착안내기(BIT 정류장번호 정확매칭) ---
+    # --- Stage 5: 도착안내기(BIT 정류장번호 정확매칭) ---
     try:
         bit = load_bit()
         attach_sign(master, bit)
         n = sum(1 for s in master if s["facilities"]["sign"]["status"] == "yes")
         note = "" if len(bit) else " (BIT 원본 부재 → 전부 unknown)"
-        print(f"[6] 도착안내기 yes(BIT 번호매칭): {n}{note}")
+        print(f"[5] 도착안내기 yes(BIT 번호매칭): {n}{note}")
     except Exception as e:
-        print(f"[6] 도착안내기 단계 건너뜀(비치명적): {e}")
+        print(f"[5] 도착안내기 단계 건너뜀(비치명적): {e}")
 
-    # --- Stage 7: 로드뷰 오버레이(조사 파일 있을 때만, 최우선) ---
+    # --- Stage 6: 로드뷰 오버레이(조사 파일 있을 때만, 최우선) ---
+    #     쉘터는 대장이 없어 오직 이 단계에서만 채워진다.
     if os.path.exists(_ROADVIEW_INPUT):
         try:
             import pandas as pd
 
             survey = pd.read_csv(_ROADVIEW_INPUT, encoding="utf-8-sig", dtype=str)
             apply_roadview(master, survey)
-            print(f"[7] 로드뷰 오버레이 적용: {_ROADVIEW_INPUT}")
+            print(f"[6] 로드뷰 오버레이 적용: {_ROADVIEW_INPUT}")
         except Exception as e:
-            print(f"[7] 로드뷰 단계 건너뜀(비치명적): {e}")
+            print(f"[6] 로드뷰 단계 건너뜀(비치명적): {e}")
     else:
-        print("[7] 로드뷰 조사 파일 없음 → 오버레이 생략(정상)")
+        print("[6] 로드뷰 조사 파일 없음 → 오버레이 생략(정상)")
 
     # --- 배차 캐시 ---
     for s in master:
@@ -147,7 +138,7 @@ def _carry_over_tago(stops) -> int:
 
 def _facility_distribution(stops):
     dist = {}
-    for kind in ("shade", "seat", "light", "sign"):
+    for kind in ("shade", "seat", "sign", "shelter"):
         c = {"yes": 0, "no": 0, "unknown": 0}
         for s in stops:
             c[s["facilities"][kind]["status"]] += 1

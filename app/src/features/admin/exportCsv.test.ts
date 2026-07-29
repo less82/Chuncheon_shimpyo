@@ -21,7 +21,7 @@ const rows: CsvRow[] = [
     totalBoarding: 320,
     shade: "미확인",
     seat: "있음",
-    light: "미확인",
+    shelter: "미확인",
     sign: "미확인",
     evidence: "한낮 승차 상위 25% · 그늘 미확인",
   },
@@ -33,7 +33,7 @@ const rows: CsvRow[] = [
     totalBoarding: 240,
     shade: "미확인",
     seat: "미확인",
-    light: "미확인",
+    shelter: "미확인",
     sign: "미확인",
     evidence: "한낮 승차 상위 25% · 그늘 미확인",
   },
@@ -85,7 +85,7 @@ function makeStop(id: string): Stop {
     facilities: {
       shade: fac("unknown"),
       seat: fac("no"),
-      light: fac("unknown"),
+      shelter: fac("unknown"),
       sign: fac("unknown"),
     },
   };

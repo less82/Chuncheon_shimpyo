@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronRight, Search } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
 import { ARRIVAL_UNAVAILABLE_TEXT, getArrival, type Arrival } from "../../lib/arrivals";
@@ -53,8 +52,6 @@ export default function CitizenHome() {
 
   return (
     <main className="apphome" data-safe-preview={safePreview || undefined}>
-      <ImportOnLoad />
-
       <nav className="apphome__tasks" aria-label="주요 기능">
         <Link className="apphome-task apphome-task--route" to={safePreview ? "/go?safePreview=1" : "/go"} aria-label="버스 도착 예정시간 확인">
           <strong>버스</strong>

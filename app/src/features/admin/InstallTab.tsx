@@ -12,7 +12,7 @@ import { sourceBadge, KIND_LABEL } from "../../lib/facilityText";
 import { INSTALL_STATUS_LABEL, type InstallFacilityKind } from "../../types/priority";
 import type { Stop } from "../../types/stop";
 
-const FACILITY_ORDER: InstallFacilityKind[] = ["seat", "shade", "light"];
+const FACILITY_ORDER: InstallFacilityKind[] = ["seat", "shade", "shelter"];
 
 interface Props {
   stops: Stop[];

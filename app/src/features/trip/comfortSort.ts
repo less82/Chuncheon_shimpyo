@@ -51,11 +51,17 @@ export function sortByComfort(
 
 /**
  * 카드용 이유 문구 — 시설별 4종 중 하나. 점수 숫자 절대 미포함.
- * 우선순위: 의자 yes → 그늘 yes → (야간 && 조명 yes) → 미확인.
+ * 우선순위: 쉘터 yes → 의자 yes → 그늘 yes → 미확인.
  */
-export function comfortSentence(stop: Stop, opts?: { night?: boolean }): string {
-  const night = opts?.night ?? false;
-  const { seat, shade, light } = stop.facilities;
+export function comfortSentence(stop: Stop): string {
+  const { seat, shade, shelter } = stop.facilities;
+
+  if (shelter.status === "yes") {
+    const badge = sourceBadge(shelter);
+    return badge
+      ? `쉘터가 있어 비바람을 피할 수 있어요 (${badge})`
+      : "쉘터가 있어 비바람을 피할 수 있어요";
+  }
 
   if (seat.status === "yes") {
     const badge = sourceBadge(seat);
@@ -66,10 +72,6 @@ export function comfortSentence(stop: Stop, opts?: { night?: boolean }): string 
 
   if (shade.status === "yes") {
     return "그늘이 확인된 정류장이에요";
-  }
-
-  if (night && light.status === "yes") {
-    return "조명이 확인된 정류장이에요";
   }
 
   return "시설 정보가 아직 확인되지 않았어요";

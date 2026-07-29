@@ -31,7 +31,7 @@ function stop(
     lat: 37.88,
     lng: 127.73,
     routes: ["1"],
-    facilities: { shade: F(shade), seat: F(), light: F(), sign: F() },
+    facilities: { shade: F(shade), seat: F(), shelter: F(), sign: F() },
     demand: {
       byHour,
       total: midday * 3,
@@ -114,31 +114,6 @@ describe("<Dashboard> — (a) 탭 구조", () => {
     const { getByText } = render(<Dashboard />);
     expect(getByText("의자가 없어요")).toBeInTheDocument();
     expect(getByText("#1001 · 250000001")).toBeInTheDocument();
-  });
-
-  it("AI 파손 접수의 라벨·신뢰도·주석 사진을 검토 화면에 표시한다", () => {
-    localStorage.setItem("shimpyo:reports", JSON.stringify([{
-      id: "maeng-coco-r1",
-      stopId: "unidentified:maeng-coco-r1",
-      stopNo: "미확인",
-      stopName: "정류장 위치 미확인",
-      issue: "(정류장 시설) 파손이 확인되었습니다.",
-      photoDataUrl: "data:image/jpeg;base64,ZmFrZQ==",
-      createdAt: "2026-07-27T01:00:00.000Z",
-      status: "received",
-      source: "maeng_coco",
-      modelLabel: "other_bus_stop_damage",
-      modelLabelDisplay: "정류장 시설",
-      modelConfidence: 0.3573,
-      detectionCount: 2,
-    }]));
-    const utils = render(<Dashboard />);
-
-    fireEvent.click(utils.getByRole("row", {
-      name: "정류장 위치 미확인 (정류장 시설) 파손이 확인되었습니다. 상세 보기",
-    }));
-    expect(utils.getByText("라벨 정류장 시설 · 신뢰도 36% · 2개 영역")).toBeInTheDocument();
-    expect(utils.getByRole("img", { name: "정류장 위치 미확인에서 보내온 사진" })).toBeInTheDocument();
   });
 
   it("처리 단계를 누르면 해당 단계의 제보만 목록에 표시한다", () => {
@@ -289,7 +264,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
         facilities: {
           shade: F("unknown"),
           seat: { status: "no", source: "roadview", capturedAt: "2026.03" },
-          light: F("unknown"),
+          shelter: F("unknown"),
           sign: F("unknown"),
         },
       },
@@ -307,7 +282,7 @@ describe("<Dashboard> — (a) 탭 구조", () => {
         facilities: {
           shade: F("unknown"),
           seat: F("unknown"),
-          light: F("unknown"),
+          shelter: F("unknown"),
           sign: F("unknown"),
         },
       },

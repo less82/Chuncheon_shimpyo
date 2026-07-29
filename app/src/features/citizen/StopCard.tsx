@@ -1,8 +1,8 @@
 // 하단 정류장 카드 — 첫 화면에서 선택(최근접 자동)된 정류장을 보여준다.
-// 정류장명 + 4시설 3상태 배지 + 도착정보(폴백 즉시) + 즐겨찾기 별 + 안내문 인쇄.
+// 정류장명 + 4시설 3상태 배지 + 도착정보(폴백 즉시) + 즐겨찾기 별.
 
 import { useEffect, useState } from "react";
-import { BusFront, Footprints, Navigation, Printer, Share2 } from "lucide-react";
+import { BusFront, Footprints, Navigation } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import FacilityBadge from "../../components/FacilityBadge";
@@ -10,9 +10,6 @@ import FavoriteStar from "../../components/FavoriteStar";
 import AltStopHint from "./AltStopHint";
 import { ARRIVAL_UNAVAILABLE_TEXT, getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
-import { buildQrEntryUrl, buildShareUrl } from "../share/shareLink";
-import { toQrDataUrl } from "../share/qr";
-import { useFavorites } from "../../store/useFavorites";
 import "./StopCard.css";
 
 interface Props {
@@ -40,9 +37,6 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
     injected ? { min: walkMin!, real: walkReal ?? false } : null,
   );
   const [locationUnavailable, setLocationUnavailable] = useState(false);
-  const favIds = useFavorites((s) => s.ids);
-  const [showStopQr, setShowStopQr] = useState(false);
-  const [stopQr, setStopQr] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -86,32 +80,6 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       alive = false;
     };
   }, [stop, injected, walkMin, walkReal]);
-
-  // 이 정류장 QR: 스캔하면 이 정류장을 출발지로 고정한 qr_main이 열린다.
-  useEffect(() => {
-    if (!showStopQr) return;
-    let alive = true;
-    toQrDataUrl(buildQrEntryUrl(stop.id))
-      .then((d) => alive && setStopQr(d))
-      .catch(() => alive && setStopQr(null));
-    return () => {
-      alive = false;
-    };
-  }, [showStopQr, stop.id]);
-
-  const share = async () => {
-    const url = buildShareUrl(favIds.length ? favIds : [stop.id]);
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "춘천 정류장 정보", url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      alert("공유 링크를 복사했어요. 가족에게 붙여넣어 보내세요.");
-    } catch {
-      /* 사용자가 취소 */
-    }
-  };
 
   return (
     <section className="stopcard" aria-label={`${stop.name} 정류장 정보`}>
@@ -159,7 +127,7 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       <div className="stopcard__facilities">
         <FacilityBadge kind="shade" info={stop.facilities.shade} />
         <FacilityBadge kind="seat" info={stop.facilities.seat} />
-        <FacilityBadge kind="light" info={stop.facilities.light} />
+        <FacilityBadge kind="shelter" info={stop.facilities.shelter} />
         <FacilityBadge kind="sign" info={stop.facilities.sign} />
       </div>
 
@@ -168,50 +136,6 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
       <div className="stopcard__actions">
         <Link className="stopcard__go" to="/go">
           <Navigation aria-hidden="true" /> 버스로 가기
-        </Link>
-        <button
-          type="button"
-          className="stopcard__qrbtn"
-          aria-expanded={showStopQr}
-          onClick={() => setShowStopQr((v) => !v)}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <path d="M14 14h3v3M14 20h7M20 14v3M17 20v-3" />
-          </svg>
-          이 정류장 QR
-        </button>
-      </div>
-
-      {showStopQr && (
-        <div className="stopcard__qr" role="group" aria-label={`${stop.name} 정류장 QR 코드`}>
-          <p className="stopcard__qr-hint">
-            휴대폰 카메라로 찍고 목적지를 말하면 탈 버스를 알려드려요.
-          </p>
-          {stopQr ? (
-            <img
-              className="stopcard__qr-img"
-              src={stopQr}
-              alt={`${stop.name} 정류장 QR 코드`}
-              width={200}
-              height={200}
-            />
-          ) : (
-            <p className="stopcard__qr-hint">QR 을 만드는 중…</p>
-          )}
-        </div>
-      )}
-
-      <div className="stopcard__actions">
-        <button type="button" className="stopcard__share" onClick={share}>
-          <Share2 aria-hidden="true" />
-          가족에게 공유
-        </button>
-        <Link className="stopcard__print" to={`/print/${stop.id}`}>
-          <Printer aria-hidden="true" />
-          안내문 인쇄
         </Link>
       </div>
     </section>

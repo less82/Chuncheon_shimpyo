@@ -13,7 +13,7 @@ const info = (partial: Partial<FacilityInfo>): FacilityInfo => ({
 const stop = (partial?: {
   shade?: Partial<FacilityInfo>;
   seat?: Partial<FacilityInfo>;
-  light?: Partial<FacilityInfo>;
+  shelter?: Partial<FacilityInfo>;
   sign?: Partial<FacilityInfo>;
 }): Stop => ({
   id: "250001",
@@ -25,7 +25,7 @@ const stop = (partial?: {
   facilities: {
     shade: info(partial?.shade ?? {}),
     seat: info(partial?.seat ?? {}),
-    light: info(partial?.light ?? {}),
+    shelter: info(partial?.shelter ?? {}),
     sign: info(partial?.sign ?? {}),
   },
 });
@@ -35,20 +35,19 @@ describe("comfortScore", () => {
     expect(comfortScore(stop())).toBe(0);
   });
 
-  it("(b) seat=yes만, 주간(night 미지정) → 0.5", () => {
+  it("(b) seat=yes만 → 0.5", () => {
     const s = stop({ seat: { status: "yes" } });
     expect(comfortScore(s)).toBe(0.5);
   });
 
-  it("(c) night=true & light=yes 반영, night=false면 light 무시", () => {
-    const s = stop({
-      seat: { status: "yes" },
-      light: { status: "yes" },
-    });
-    // 야간: (1 + 0 + 1) / 3
-    expect(comfortScore(s, { night: true })).toBeCloseTo(2 / 3);
-    // 주간: light 무시, (1 + 0) / 2
-    expect(comfortScore(s, { night: false })).toBe(0.5);
+  it("(c) shelter=yes면 그늘·의자를 모두 갖춘 것으로 보아 만점", () => {
+    const s = stop({ shelter: { status: "yes", source: "roadview" } });
+    expect(comfortScore(s)).toBe(1);
+  });
+
+  it("shelter=unknown은 감점 근거가 아니다(seat=yes면 그대로 0.5)", () => {
+    const s = stop({ seat: { status: "yes" }, shelter: { status: "unknown" } });
+    expect(comfortScore(s)).toBe(0.5);
   });
 
   it("(d) no와 unknown은 같은 0 가점(감점 없음)", () => {
@@ -58,13 +57,12 @@ describe("comfortScore", () => {
     expect(comfortScore(sNo)).toBe(0);
   });
 
-  it("모든 시설 yes, 야간 → 1", () => {
+  it("그늘·의자 모두 yes → 1", () => {
     const s = stop({
       shade: { status: "yes" },
       seat: { status: "yes" },
-      light: { status: "yes" },
     });
-    expect(comfortScore(s, { night: true })).toBe(1);
+    expect(comfortScore(s)).toBe(1);
   });
 });
 
@@ -78,14 +76,12 @@ describe("comfortReasons", () => {
         seat: { status: "yes", source: "roadview", capturedAt: "2026.03" },
       }),
       stop({ shade: { status: "no", source: "shade_registry" } }),
-      stop({ light: { status: "yes", source: "light_registry" } }),
+      stop({ shelter: { status: "yes", source: "roadview", capturedAt: "2026.03" } }),
     ];
     for (const s of combos) {
-      for (const night of [true, false, undefined]) {
-        const reasons = comfortReasons(s, { night });
-        for (const r of reasons) {
-          expect(r).not.toContain(forbidden);
-        }
+      const reasons = comfortReasons(s);
+      for (const r of reasons) {
+        expect(r).not.toContain(forbidden);
       }
     }
   });

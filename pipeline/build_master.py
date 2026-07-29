@@ -39,8 +39,8 @@ def build_master() -> list[dict]:
                 "facilities": {
                     "shade": _unknown(),
                     "seat": _unknown(),
-                    "light": _unknown(),
                     "sign": _unknown(),
+                    "shelter": _unknown(),
                 },
             }
         )

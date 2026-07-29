@@ -8,7 +8,6 @@ export type Source =
   | "roadview" // 로드뷰 수동 조사 (최우선)
   | "bench_registry" // 춘천시 벤치 대장
   | "shade_registry" // 폭염대비 그늘막 대장
-  | "light_registry" // 가로등 대장
   | "sign_registry" // 버스정보안내단말기(BIT) 현황 (도착안내기)
   | "none"; // 근거 없음 (status는 반드시 unknown)
 
@@ -35,8 +34,8 @@ export interface Stop {
   facilities: {
     shade: FacilityInfo; // 그늘
     seat: FacilityInfo; // 의자
-    light: FacilityInfo; // 야간조명
-    sign: FacilityInfo; // 도착안내기
+    sign: FacilityInfo; // 도착안내기(BIT)
+    shelter: FacilityInfo; // 쉘터 — 근거는 로드뷰 조사뿐(대장 없음)
   };
   demand?: Demand; // 없으면 = 수요 미확인
   headwayMin?: number; // 배차간격(분) 캐시 — TAGO 도착정보 폴백용

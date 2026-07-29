@@ -102,7 +102,7 @@ export default function FilterTab({ stops, loaded }: Props) {
         totalBoarding: s.demand?.total ?? 0,
         shade: facilityLabel(s.facilities.shade),
         seat: facilityLabel(s.facilities.seat),
-        light: facilityLabel(s.facilities.light),
+        shelter: facilityLabel(s.facilities.shelter),
         sign: facilityLabel(s.facilities.sign),
         evidence: buildEvidence(s, criteria),
       })),
@@ -274,7 +274,7 @@ export default function FilterTab({ stops, loaded }: Props) {
                       <div className="dash-chips">
                         <FacilityChip kind="shade" status={s.facilities.shade.status} />
                         <FacilityChip kind="seat" status={s.facilities.seat.status} />
-                        <FacilityChip kind="light" status={s.facilities.light.status} />
+                        <FacilityChip kind="shelter" status={s.facilities.shelter.status} />
                         <FacilityChip kind="sign" status={s.facilities.sign.status} />
                       </div>
                     </td>

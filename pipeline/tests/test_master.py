@@ -13,7 +13,7 @@ def test_every_stop_has_required_shape_and_unknown_facilities():
         assert set(["id", "stopNo", "name", "lat", "lng", "routes", "facilities"]).issubset(s)
         assert isinstance(s["lat"], float) and isinstance(s["lng"], float)
         assert isinstance(s["routes"], list)
-        for kind in ("shade", "seat", "light", "sign"):
+        for kind in ("shade", "seat", "sign", "shelter"):
             assert s["facilities"][kind] == {"status": "unknown", "source": "none"}
         # 마스터 단계에서는 수요/시설 근거 없음
         assert "demand" not in s

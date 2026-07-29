@@ -19,7 +19,7 @@ const stop: Stop = {
   facilities: {
     shade: { status: "unknown", source: "none" },
     seat: { status: "unknown", source: "none" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
 };
@@ -45,16 +45,15 @@ describe("reportStore 처리 시각", () => {
     expect(saved.resolvedAt).toBe("2026-07-22T03:00:00.000Z");
   });
 
-  it("API에서 받은 AI 파손 접수를 같은 ID로 추가·갱신한다", () => {
+  it("같은 ID의 제보를 덮어써서 갱신한다", () => {
     const report = {
-      id: "maeng-coco-r1",
-      stopId: "unidentified:maeng-coco-r1",
-      stopNo: "미확인",
-      stopName: "정류장 위치 미확인",
-      issue: "(정류장 시설) 파손이 확인되었습니다.",
+      id: "r9",
+      stopId: "2501",
+      stopNo: "1001",
+      stopName: "춘천역",
+      issue: "의자가 부서졌어요",
       createdAt: "2026-07-27T01:00:00.000Z",
       status: "received" as const,
-      source: "maeng_coco" as const,
     };
     upsertReport(report);
     upsertReport({ ...report, status: "reviewing" });

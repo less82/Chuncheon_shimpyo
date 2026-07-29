@@ -1,11 +1,10 @@
 import type { CitizenReport } from "../report/reportStore";
 
-export type ReportCategory = "안전" | "조명" | "안내정보" | "편의시설" | "기타";
+export type ReportCategory = "안전" | "안내정보" | "편의시설" | "기타";
 export type SafetyFlag = "안전 관련" | "일반 불편";
 
 const CATEGORY_RULES: Array<[ReportCategory, RegExp]> = [
   ["안전", /파손|깨졌|날카|넘어|쓰러|위험|유리|화재|누전|침수/],
-  ["조명", /조명|가로등|어두|불이\s*꺼/],
   ["안내정보", /안내|화면|표지|시간|도착|노선/],
   ["편의시설", /의자|그늘|쉘터|지붕|비|더위|추위/],
 ];
@@ -15,7 +14,7 @@ export function classifyCategory(issue: string): ReportCategory {
 }
 
 export function classifySafety(issue: string): SafetyFlag {
-  return /파손|깨졌|날카|쓰러|위험|유리|화재|누전|침수|조명|어두/.test(issue) ? "안전 관련" : "일반 불편";
+  return /파손|깨졌|날카|쓰러|위험|유리|화재|누전|침수/.test(issue) ? "안전 관련" : "일반 불편";
 }
 
 function elapsedHours(from: string, to: string): number {

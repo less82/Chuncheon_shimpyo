@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ..\\scripts\\start-maeng-coco.ps1",
+    "dev": "npm run dev:citizen",
     "dev:citizen": "vite --config vite.citizen.config.ts --mode citizen",
     "dev:admin": "vite --config vite.admin.config.ts --port 5174 --mode admin",
     "typecheck": "tsc -b",

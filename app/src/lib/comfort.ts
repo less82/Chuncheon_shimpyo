@@ -6,38 +6,34 @@ import { KIND_LABEL, facilityLabel, sourceBadge } from "./facilityText";
 
 /**
  * 확인된 편의시설 존재를 우선하는 정렬 코어. [0,1].
- * 분자 전체를 활성 가중치 합으로 나눈다(괄호 그대로).
- *   comfortScore = (seatYes + shadeYes + (night ? lightYes : 0)) / activeWeightSum
- * - seat·shade는 상시 활성(가중치 각 1). light는 night=true일 때만 활성(가중치 1).
- * - seatYes = seat.status==="yes" ? 1 : 0  (shade·light 동일). yes만 가점 — no·unknown 모두 0(감점 아님).
- * - activeWeightSum = 주간 2(seat+shade), 야간 3(seat+shade+light).
+ *   shelter.status==="yes" → 1 (쉘터가 확인되면 그늘·의자를 모두 갖춘 것으로 본다)
+ *   그 밖에는 comfortScore = (seatYes + shadeYes) / 2
+ * - seatYes = seat.status==="yes" ? 1 : 0 (shade 동일). yes만 가점 — no·unknown 모두 0(감점 아님).
+ * - 쉘터는 미확인이 대다수라 감점 근거로 쓰지 않는다. 확인된 "있음"일 때만 만점으로 올린다.
  */
-export function comfortScore(stop: Stop, opts?: { night?: boolean }): number {
-  const night = opts?.night ?? false;
-  const { seat, shade, light } = stop.facilities;
+export function comfortScore(stop: Stop): number {
+  const { seat, shade, shelter } = stop.facilities;
+  if (shelter.status === "yes") return 1;
+
   const seatYes = seat.status === "yes" ? 1 : 0;
   const shadeYes = shade.status === "yes" ? 1 : 0;
-  const lightYes = light.status === "yes" ? 1 : 0;
 
-  const numerator = seatYes + shadeYes + (night ? lightYes : 0);
-  const activeWeightSum = night ? 3 : 2;
-
-  return numerator / activeWeightSum;
+  return (seatYes + shadeYes) / 2;
 }
 
 /**
  * 이유 문구 "재료"(확인된 시설의 근거 문자열 배열). facilityText 재사용.
- * comfort 대상 시설은 seat·shade·light 3종뿐 — sign(도착안내기)은 comfort와 무관.
- * 미확인 시설은 "○○ 미확인"으로 표기.
+ * comfort 대상 시설은 seat·shade 2종 + 확인된 쉘터 — sign(도착안내기)은 comfort와 무관.
+ * 미확인 시설은 "○○ 미확인"으로 표기하되, 쉘터는 "있음"으로 확인된 경우에만 덧붙인다
+ * (쉘터는 미확인이 대다수라 매번 "미확인"을 늘어놓으면 화면만 어지럽다).
  */
-export function comfortReasons(stop: Stop, opts?: { night?: boolean }): string[] {
-  const night = opts?.night ?? false;
-  const { seat, shade, light } = stop.facilities;
+export function comfortReasons(stop: Stop): string[] {
+  const { seat, shade, shelter } = stop.facilities;
 
-  const kinds: Array<{ key: "seat" | "shade" | "light"; info: (typeof stop.facilities)["seat"] }> = [
+  const kinds: Array<{ key: "seat" | "shade" | "shelter"; info: (typeof stop.facilities)["seat"] }> = [
     { key: "seat", info: seat },
     { key: "shade", info: shade },
-    ...(night ? [{ key: "light" as const, info: light }] : []),
+    ...(shelter.status === "yes" ? [{ key: "shelter" as const, info: shelter }] : []),
   ];
 
   return kinds.map(({ key, info }) => {

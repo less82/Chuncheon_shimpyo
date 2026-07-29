@@ -13,7 +13,7 @@ const stop: Stop = {
   facilities: {
     shade: { status: "unknown", source: "none" },
     seat: { status: "yes", source: "bench_registry" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
   demand: {

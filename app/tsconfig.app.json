@@ -4,7 +4,9 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client"],
+    // 일부 테스트가 node:fs 로 원본 CSV 를 읽는다. 예전에는 @types/qrcode 가 node 타입을
+    // 딸려 들여왔지만 QR 기능을 걷어내면서 사라져, 이제 명시적으로 넣는다.
+    "types": ["vite/client", "node"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 

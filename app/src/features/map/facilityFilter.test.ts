@@ -6,7 +6,7 @@ const make = (
   id: string,
   shade: Facility,
   seat: Facility,
-  light: Facility,
+  shelter: Facility,
 ): Stop => ({
   id,
   stopNo: id,
@@ -17,7 +17,7 @@ const make = (
   facilities: {
     shade: { status: shade, source: shade === "yes" ? "roadview" : "none" },
     seat: { status: seat, source: seat === "yes" ? "bench_registry" : "none" },
-    light: { status: light, source: light === "yes" ? "light_registry" : "none" },
+    shelter: { status: shelter, source: shelter === "yes" ? "roadview" : "none" },
     sign: { status: "unknown", source: "none" },
   },
 });
@@ -29,7 +29,7 @@ const stops: Stop[] = [
   make("d", "no", "no", "no"), // 전부 없음
 ];
 
-const none: FacilityFilterState = { shade: false, seat: false, light: false };
+const none: FacilityFilterState = { shade: false, seat: false, shelter: false };
 
 describe("filterStopsByFacility", () => {
   it("아무것도 안 켜면 전체 포함", () => {
@@ -47,8 +47,8 @@ describe("filterStopsByFacility", () => {
     expect(set).toEqual(new Set(["a"]));
   });
 
-  it("조명만 켜면 조명 있음만, unknown/no 제외", () => {
-    const set = filterStopsByFacility(stops, { ...none, light: true });
+  it("쉘터만 켜면 쉘터 있음만, unknown/no 제외", () => {
+    const set = filterStopsByFacility(stops, { ...none, shelter: true });
     expect(set).toEqual(new Set(["a"]));
   });
 });

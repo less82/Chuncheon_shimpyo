@@ -12,8 +12,8 @@ ROADVIEW_HEADER = [
     "정류장명",
     "그늘",
     "의자",
-    "조명",
     "도착안내기",
+    "쉘터",
     "촬영시점(YYYY.MM)",
     "조사자",
     "비고",
@@ -23,8 +23,8 @@ ROADVIEW_HEADER = [
 _COL_TO_KIND = {
     "그늘": "shade",
     "의자": "seat",
-    "조명": "light",
     "도착안내기": "sign",
+    "쉘터": "shelter",  # 대장이 없어 로드뷰 조사만이 근거다
 }
 
 _VALUE_TO_STATUS = {

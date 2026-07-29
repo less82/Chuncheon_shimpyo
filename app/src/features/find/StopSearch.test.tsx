@@ -24,7 +24,7 @@ const chuncheonStation: Stop = {
   facilities: {
     shade: { status: "yes", source: "shade_registry" },
     seat: { status: "no", source: "roadview", capturedAt: "2024.05" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
 };
@@ -81,7 +81,7 @@ describe("<StopSearch>", () => {
 
     expect(screen.getByRole("group", { name: /그늘 있음/ })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: /의자 없음/ })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: /조명 미확인/ })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /쉘터 미확인/ })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: /도착안내기 미확인/ })).toBeInTheDocument();
     expect(screen.getByText("250001")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /출발해 목적지 고르기/ })).toHaveAttribute("href", "/go?board=250001");
@@ -101,7 +101,7 @@ describe("<StopSearch>", () => {
     const screen = openChuncheon();
     await screen.findByText("실시간 도착정보를 불러오지 못했어요");
 
-    // 조명·도착안내기는 근거가 없어 미확인이다. "없음"은 의자 하나뿐이어야 한다.
+    // 쉘터·도착안내기는 근거가 없어 미확인이다. "없음"은 의자 하나뿐이어야 한다.
     const labels = screen.getAllByText(/^(있음|없음|미확인)$/).map((node) => node.textContent);
     expect(labels).toEqual(["있음", "없음", "미확인", "미확인"]);
   });

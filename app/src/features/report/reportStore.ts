@@ -26,18 +26,7 @@ export interface CitizenReport {
   /** 겪은 날짜(YYYY-MM-DD)와 시각(HH:mm). 모르면 두지 않는다 — 추정하지 않는다. */
   happenedDate?: string;
   happenedTime?: string;
-  source?: "citizen" | "maeng_coco";
-  modelLabel?: string;
-  modelLabelDisplay?: string;
-  modelConfidence?: number;
-  detectionCount?: number;
-  detections?: Array<{
-    confidence: number;
-    xyxy: [number, number, number, number];
-    label?: string;
-    label_display?: string;
-  }>;
-  sourceFileName?: string;
+  source?: "citizen";
 }
 
 /**

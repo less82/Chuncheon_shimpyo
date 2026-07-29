@@ -8,14 +8,13 @@
       - img-src ... data:           : 시민이 보낸 사진(dataURL) 미리보기.
       - connect-src 'self'          : 정류장·노선 정적 데이터.
       - connect-src openrouter.ai   : 관리자 전용 사진 설명(VLM) 호출. 시민 빌드에는 없다.
-      - connect-src 127.0.0.1:8000 / localhost:8000 : maeng_coco 로컬 추론 API 제보 목록.
       - style-src 'unsafe-inline'   : 인라인 스타일(정적 CSS 문자열, 스크립트 아님).
       - script-src 'self'           : 외부 스크립트 전면 차단.
       - object-src 'none' / base-uri 'self' / frame-ancestors 'none' : 플러그인·base·클릭재킹 차단.
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://openrouter.ai http://127.0.0.1:8000 http://localhost:8000; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+      content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://openrouter.ai; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow, noarchive" />

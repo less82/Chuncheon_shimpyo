@@ -1,15 +1,9 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
-import AppEntry from "./features/citizen/AppEntry";
-import AppCompare from "./features/citizen/AppCompare";
+import CitizenHome from "./features/citizen/CitizenHome";
 import Favorites from "./features/citizen/Favorites";
 import AppReport from "./features/citizen/AppReport";
 import TripView from "./features/trip/TripView";
-import PrintPoster from "./features/print/PrintPoster";
-import DesignPreview from "./features/design/DesignPreview";
-import QrCompare from "./features/qr/QrCompare";
-import QrEntry from "./features/qr/QrEntry";
-import MaengCoco from "./features/maeng-coco/MaengCoco";
 import FindHub from "./features/find/FindHub";
 import { useStops } from "./store/useStops";
 
@@ -26,21 +20,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AppEntry />} />
-        <Route path="/app" element={<AppEntry />} />
-        <Route path="/app-compare" element={<AppCompare />} />
-        <Route path="/qr_main" element={<QrEntry />} />
-        <Route path="/qr-compare" element={<QrCompare />} />
+        <Route path="/" element={<CitizenHome />} />
+        <Route path="/app" element={<CitizenHome />} />
         <Route path="/app/report" element={<AppReport />} />
-        <Route path="/maeng-coco" element={<MaengCoco />} />
         <Route path="/find" element={<FindHub />} />
         {/* 문의처 목록 화면은 없앴다. 문의는 알리기 한 흐름으로 모은다. */}
         <Route path="/contacts" element={<Navigate to="/app/report" replace />} />
         <Route path="/report" element={<Navigate to="/app/report" replace />} />
-        <Route path="/design-preview" element={<DesignPreview />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/go" element={<TripView />} />
-        <Route path="/print/:id" element={<PrintPoster />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>
     </BrowserRouter>

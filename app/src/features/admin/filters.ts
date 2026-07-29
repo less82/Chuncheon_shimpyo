@@ -17,7 +17,7 @@ export interface FilterCriteria {
   shadeUnknown?: boolean;
   /** 의자 미확인 정류장만. */
   seatUnknown?: boolean;
-  /** 쉘터(그늘+의자 모두 있음)가 아닌 곳만. */
+  /** 쉘터가 "있음"으로 확인되지 않은 곳만. */
   notShelter?: boolean;
   /** 지정 시 SEASON_PRESETS[season] 를 기준 조건으로 사용(편의). */
   season?: SeasonKey;
@@ -34,12 +34,9 @@ export function middayBoarding(stop: Stop): number | null {
   return sum;
 }
 
-/** 쉘터 = 그늘·의자 모두 "있음"으로 확인된 정류장. */
+/** 쉘터 = shelter 시설이 "있음"으로 확인된 정류장. 그늘·의자로 추론하지 않는다. */
 function isShelter(stop: Stop): boolean {
-  return (
-    stop.facilities.shade.status === "yes" &&
-    stop.facilities.seat.status === "yes"
-  );
+  return stop.facilities.shelter.status === "yes";
 }
 
 /**

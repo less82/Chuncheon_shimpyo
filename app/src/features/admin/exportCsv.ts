@@ -14,7 +14,7 @@ export interface CsvRow {
   totalBoarding: number; // 전체 승차합 — 양방향 합산
   shade: string; // 3상태 한글 라벨
   seat: string;
-  light: string;
+  shelter: string;
   sign: string;
   evidence: string; // 근거요약(조건 기반, 점수 아님)
 }
@@ -31,7 +31,7 @@ export const CSV_HEADER = [
   "전체승차(양방향 합산)",
   "그늘",
   "의자",
-  "조명",
+  "쉘터",
   "도착안내기",
   "근거요약",
 ] as const;
@@ -54,7 +54,7 @@ function rowToLine(r: CsvRow): string {
     r.totalBoarding,
     r.shade,
     r.seat,
-    r.light,
+    r.shelter,
     r.sign,
     r.evidence,
   ]

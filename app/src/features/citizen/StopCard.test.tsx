@@ -1,15 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, fireEvent } from "@testing-library/react";
+import { describe, it, expect, beforeEach } from "vitest";
+import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { Stop } from "../../types/stop";
 import StopCard from "./StopCard";
 import { useFavorites } from "../../store/useFavorites";
-import { buildQrEntryUrl } from "../share/shareLink";
-
-vi.mock("../share/qr", () => ({
-  toQrDataUrl: vi.fn(async () => "data:image/png;base64,MOCKQR"),
-}));
-import { toQrDataUrl } from "../share/qr";
 
 const sample: Stop = {
   id: "250001192",
@@ -21,7 +15,7 @@ const sample: Stop = {
   facilities: {
     shade: { status: "yes", source: "roadview", capturedAt: "2026.03" },
     seat: { status: "yes", source: "bench_registry" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
   headwayMin: 12,
@@ -45,11 +39,11 @@ describe("<StopCard>", () => {
     expect(getByText("대형약국")).toBeInTheDocument();
   });
 
-  it("네 시설 배지(그늘·의자·조명·도착안내기)를 모두 렌더한다", () => {
+  it("네 시설 배지(그늘·의자·쉘터·도착안내기)를 모두 렌더한다", () => {
     const { getByText } = renderCard(sample);
     expect(getByText("그늘")).toBeInTheDocument();
     expect(getByText("의자")).toBeInTheDocument();
-    expect(getByText("조명")).toBeInTheDocument();
+    expect(getByText("쉘터")).toBeInTheDocument();
     expect(getByText("도착안내기")).toBeInTheDocument();
   });
 
@@ -57,12 +51,6 @@ describe("<StopCard>", () => {
     const { getByText, queryByText } = renderCard(sample);
     expect(getByText("실시간 도착정보를 불러오지 못했어요")).toBeInTheDocument();
     expect(queryByText(/배차간격/)).not.toBeInTheDocument();
-  });
-
-  it("안내문 인쇄 링크가 /print/:id 를 가리킨다", () => {
-    const { getByRole } = renderCard(sample);
-    const link = getByRole("link", { name: /안내문 인쇄/ });
-    expect(link.getAttribute("href")).toContain("/print/250001192");
   });
 
   it("real=true면 '도보' 문구를 보여준다", () => {
@@ -81,15 +69,5 @@ describe("<StopCard>", () => {
       </MemoryRouter>,
     );
     expect(getByText(/직선거리 약 4분/)).toBeInTheDocument();
-  });
-
-  it("'이 정류장 QR' 버튼을 누르면 buildShareUrl([stop.id]) 기반 QR 이 표시된다", async () => {
-    const { getByRole, findByRole } = renderCard(sample);
-    const btn = getByRole("button", { name: /이 정류장 QR/ });
-    fireEvent.click(btn);
-
-    const img = await findByRole("img", { name: /QR/ });
-    expect(img.getAttribute("src")).toBe("data:image/png;base64,MOCKQR");
-    expect(toQrDataUrl).toHaveBeenCalledWith(buildQrEntryUrl(sample.id));
   });
 });

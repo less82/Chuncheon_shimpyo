@@ -22,7 +22,7 @@ function mkStop(
     facilities: {
       shade: makeUnknown(),
       seat: makeUnknown(),
-      light: makeUnknown(),
+      shelter: makeUnknown(),
       sign: makeUnknown(),
       ...overrides,
     },
@@ -109,9 +109,9 @@ describe("comfortSentence", () => {
     const shadeOnly = mkStop("B", { shade: yes() });
     expect(comfortSentence(shadeOnly)).toBe("그늘이 확인된 정류장이에요");
 
-    const lightOnly = mkStop("C", { light: yes() });
-    expect(comfortSentence(lightOnly, { night: true })).toBe(
-      "조명이 확인된 정류장이에요",
+    const shelterOnly = mkStop("C", { shelter: yes() });
+    expect(comfortSentence(shelterOnly)).toMatch(
+      /쉘터가 있어 비바람을 피할 수 있어요/,
     );
 
     const none = mkStop("D");

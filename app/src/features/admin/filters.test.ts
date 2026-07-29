@@ -22,9 +22,15 @@ function makeStop(opts: {
   hasDemand?: boolean;
   shade?: FacilityInfo["status"];
   seat?: FacilityInfo["status"];
+  shelter?: FacilityInfo["status"];
 }): Stop {
-  const { midday = 0, hasDemand = true, shade = "unknown", seat = "unknown" } =
-    opts;
+  const {
+    midday = 0,
+    hasDemand = true,
+    shade = "unknown",
+    seat = "unknown",
+    shelter = "unknown",
+  } = opts;
   const byHour = new Array(24).fill(0);
   // 한낮 시간대에만 값을 실어 middayBoarding 이 midday 가 되도록.
   for (const h of MIDDAY_HOURS) byHour[h] = midday / MIDDAY_HOURS.length;
@@ -39,7 +45,7 @@ function makeStop(opts: {
     facilities: {
       shade: F({ status: shade }),
       seat: F({ status: seat }),
-      light: F(),
+      shelter: F({ status: shelter }),
       sign: F(),
     },
     demand: hasDemand
@@ -102,11 +108,17 @@ describe("applyFilters — 조건 결합(AND, 점수 없음)", () => {
     expect(out).toEqual([a]);
   });
 
-  it("notShelter 는 그늘+의자 모두 있음(쉘터)인 곳을 제외", () => {
-    const shelter = makeStop({ midday: 50, shade: "yes", seat: "yes" }); // 쉘터 ✗
-    const partial = makeStop({ midday: 50, shade: "yes", seat: "unknown" }); // 쉘터 아님 ✓
-    const out = applyFilters([shelter, partial], { notShelter: true });
-    expect(out).toEqual([partial]);
+  it("notShelter 는 쉘터 '있음'으로 확인된 곳을 제외", () => {
+    const shelter = makeStop({ midday: 50, shelter: "yes" }); // 쉘터 ✗
+    const noShelter = makeStop({ midday: 50, shelter: "no" }); // 쉘터 아님 ✓
+    const out = applyFilters([shelter, noShelter], { notShelter: true });
+    expect(out).toEqual([noShelter]);
+  });
+
+  it("notShelter 는 그늘+의자로 쉘터를 추론하지 않는다(shelter 필드만 본다)", () => {
+    // 그늘·의자가 모두 있음이어도 쉘터가 미확인이면 후보에서 빼지 않는다.
+    const both = makeStop({ midday: 50, shade: "yes", seat: "yes", shelter: "unknown" });
+    expect(applyFilters([both], { notShelter: true })).toEqual([both]);
   });
 
   it("빈 criteria 는 전체를 반환(필터 없음)", () => {

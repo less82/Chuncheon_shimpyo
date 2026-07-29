@@ -12,13 +12,8 @@ import {
   REPORT_CHANGED_EVENT,
   REPORT_STORAGE_KEY,
   updateReportStatus,
-  upsertReport,
   type CitizenReport,
 } from "../report/reportStore";
-import {
-  loadMaengCocoReports,
-  updateMaengCocoReportStatus,
-} from "../maeng-coco/maengCocoApi";
 import { buildReportInsights } from "./reportInsights";
 import { REPORT_KINDS, categoryInfo, type ContactCategory } from "../../data/busContacts";
 // VLM 사진 설명은 관리자(B2G) 전용이다. 시민 화면에서는 이 모듈을 import 하지 않는다.
@@ -250,7 +245,7 @@ function ReportsTab({
     </div>
       {selected && <div className="report-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedId(null); }}><aside className="report-review" ref={modalRef} role="dialog" aria-modal="true" aria-label="제보 검토">
           <header><div><span className="dash-kicker">{selectedState?.label}</span><h3>{selected.stopName}</h3></div></header>
-          <div className="report-review-body"><section className="report-case"><span className="report-label">제보 내용</span><p className="report-quote">“{selected.issue}”</p>{selected.source === "maeng_coco" && <p className="report-ai-evidence"><b>AI 검사 자료</b><span>라벨 {selected.modelLabelDisplay ?? selected.modelLabel ?? "미확인"} · 신뢰도 {Math.round((selected.modelConfidence ?? 0) * 100)}% · {selected.detectionCount ?? 0}개 영역</span></p>}{selected.photoDataUrl && <><img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName}에서 보내온 사진`} /><div className="report-vlm"><div className="report-vlm__head"><span className="report-label">사진 설명(AI 추정)</span><button className="report-vlm__run" type="button" disabled={explaining} aria-busy={explaining} onClick={() => void requestExplanation(selected)}>{explaining ? "설명 만드는 중" : selectedExplanation ? "다시 만들기" : "사진 설명 만들기"}</button></div>{explaining ? <p className="report-vlm__status" role="status">사진 설명을 만들고 있습니다. 잠시 기다려 주세요.</p> : selectedExplanation ? selectedExplanation.ok ? <><p className="report-vlm__text">{selectedExplanation.text}</p><p className="report-vlm__notice">AI 추정입니다. 담당자 확인 결과가 우선합니다.</p></> : <p className="report-vlm__fail" role="status">{vlmFailText(selectedExplanation.reason)}</p> : <p className="report-vlm__hint">누르면 이 사진이 외부 AI 서비스(OpenRouter)로 전송돼 설명을 받습니다. 번호판·얼굴 등 개인정보가 찍혀 있으면 누르지 마세요.</p>}</div></>}</section><section className="report-facts"><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형</dt><dd>{kindFilterLabel(kindOfReport(selected) ?? "unclassified")}</dd></div><div><dt>내용 추정</dt><dd>{selectedInsight?.category ?? "기타"} <small>(문구에서 추정, 유사 제보 집계용)</small></dd></div><div><dt>신고 성격</dt><dd><span className="report-risk" data-risk={selectedInsight?.safety}>{selectedInsight?.safety ?? "일반 불편"}</span></dd></div><div><dt>유사 제보</dt><dd>{selectedInsight?.overlap ?? 1}건</dd></div><div><dt>접수 경과</dt><dd>{selectedInsight?.elapsedLabel}</dd></div><div><dt>처리 상태</dt><dd>{selectedState?.label}</dd></div></dl></section></div>
+          <div className="report-review-body"><section className="report-case"><span className="report-label">제보 내용</span><p className="report-quote">“{selected.issue}”</p>{selected.photoDataUrl && <><img className="report-photo" src={selected.photoDataUrl} alt={`${selected.stopName}에서 보내온 사진`} /><div className="report-vlm"><div className="report-vlm__head"><span className="report-label">사진 설명(AI 추정)</span><button className="report-vlm__run" type="button" disabled={explaining} aria-busy={explaining} onClick={() => void requestExplanation(selected)}>{explaining ? "설명 만드는 중" : selectedExplanation ? "다시 만들기" : "사진 설명 만들기"}</button></div>{explaining ? <p className="report-vlm__status" role="status">사진 설명을 만들고 있습니다. 잠시 기다려 주세요.</p> : selectedExplanation ? selectedExplanation.ok ? <><p className="report-vlm__text">{selectedExplanation.text}</p><p className="report-vlm__notice">AI 추정입니다. 담당자 확인 결과가 우선합니다.</p></> : <p className="report-vlm__fail" role="status">{vlmFailText(selectedExplanation.reason)}</p> : <p className="report-vlm__hint">누르면 이 사진이 외부 AI 서비스(OpenRouter)로 전송돼 설명을 받습니다. 번호판·얼굴 등 개인정보가 찍혀 있으면 누르지 마세요.</p>}</div></>}</section><section className="report-facts"><dl><div><dt>정류장</dt><dd>#{selected.stopNo} · {selected.stopId}</dd></div><div><dt>유형</dt><dd>{kindFilterLabel(kindOfReport(selected) ?? "unclassified")}</dd></div><div><dt>내용 추정</dt><dd>{selectedInsight?.category ?? "기타"} <small>(문구에서 추정, 유사 제보 집계용)</small></dd></div><div><dt>신고 성격</dt><dd><span className="report-risk" data-risk={selectedInsight?.safety}>{selectedInsight?.safety ?? "일반 불편"}</span></dd></div><div><dt>유사 제보</dt><dd>{selectedInsight?.overlap ?? 1}건</dd></div><div><dt>접수 경과</dt><dd>{selectedInsight?.elapsedLabel}</dd></div><div><dt>처리 상태</dt><dd>{selectedState?.label}</dd></div></dl></section></div>
           <footer className="report-review-footer">{requiredChecks ? <fieldset className="report-checks"><legend>접수 확인 항목</legend>{requiredChecks.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={(event) => setChecks((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value) as [boolean, boolean])}/><span>{label}</span></label>)}</fieldset> : <p className="report-complete">처리가 완료된 제보입니다.</p>}{advanceError && <p className="report-save-fail" role="alert">{advanceError}</p>}<div className="report-review-actions"><button className="report-cancel" type="button" onClick={() => setSelectedId(null)}>취소</button>{selectedState?.next ? <button className="report-confirm" type="button" disabled={!checks.every(Boolean)} onClick={advanceSelected}>{selectedState.action}</button> : <button className="report-confirm" type="button" onClick={() => setSelectedId(null)}>확인</button>}</div></footer>
       </aside></div>}
   </section>;
@@ -263,22 +258,7 @@ export default function Dashboard() {
   const [reports, setReports] = useState<CitizenReport[]>(() => loadReports());
 
   useEffect(() => {
-    const mergeReports = (
-      localReports: CitizenReport[],
-      remoteReports: CitizenReport[],
-    ) => {
-      const merged = new Map(localReports.map((report) => [report.id, report]));
-      remoteReports.forEach((report) => merged.set(report.id, report));
-      return [...merged.values()];
-    };
-    const refresh = () => {
-      const localReports = loadReports();
-      setReports(localReports);
-      if (import.meta.env.MODE === "test") return;
-      void loadMaengCocoReports()
-        .then((remoteReports) => setReports(mergeReports(localReports, remoteReports)))
-        .catch(() => undefined);
-    };
+    const refresh = () => setReports(loadReports());
     const onStorage = (event: StorageEvent) => {
       if (event.key === REPORT_STORAGE_KEY) refresh();
     };
@@ -297,28 +277,12 @@ export default function Dashboard() {
     report: CitizenReport,
     status: CitizenReport["status"],
   ): boolean => {
-    if (report.source !== "maeng_coco") {
-      // 저장 공간이 차면 ReportStorageError 가 올라온다. 화면을 날리지 말고 실패로 알린다.
-      try {
-        updateReportStatus(report.id, status);
-      } catch {
-        return false;
-      }
-      return true;
+    // 저장 공간이 차면 ReportStorageError 가 올라온다. 화면을 날리지 말고 실패로 알린다.
+    try {
+      updateReportStatus(report.id, status);
+    } catch {
+      return false;
     }
-    void updateMaengCocoReportStatus(report.id, status)
-      .then((updated) => {
-        try {
-          upsertReport(updated);
-        } catch {
-          setReports((current) => [
-            ...current.filter((item) => item.id !== updated.id),
-            updated,
-          ]);
-        }
-      })
-      .catch(() => undefined);
-    // 원격 제보는 응답을 기다려야 해서 여기서 성공을 단정할 수 없다. 기존 동작을 그대로 둔다.
     return true;
   };
 

@@ -24,7 +24,7 @@ _STOPS_JSON = os.path.abspath(os.path.join(_HERE, "..", "app", "public", "data",
 _DEFAULT_REPORT = os.path.abspath(os.path.join(_HERE, "..", "docs", "데이터_검증.md"))
 
 MIDDAY_HOURS = list(range(11, 17))  # 11~16시(6개 시간대). "한낮" 정의.
-FACILITY_KINDS = ("shade", "seat", "light", "sign")
+FACILITY_KINDS = ("shade", "seat", "sign", "shelter")
 SAMPLE_DATES = ["2025-06-25", "2025-06-26", "2025-06-27", "2025-06-28"]
 
 REGION_TOKEN_RE = __import__("re").compile(r"[가-힣]{1,10}(?:읍|면|동|리)")
@@ -367,7 +367,7 @@ def generate_report(out_path: str = _DEFAULT_REPORT) -> str:
                 ["버스정류장 노선정보", "2026-03-26"],
                 ["벤치 현황(의자 근거)", "2026-06-01"],
                 ["폭염대비 접이식 그늘막(그늘 근거)", "2026-06-10"],
-                ["가로등정보(조명 근거)", "2026-06-10"],
+                ["시설이미지 라벨링 병합본(쉘터 근거)", "2026-07-28"],
             ],
         )
     )

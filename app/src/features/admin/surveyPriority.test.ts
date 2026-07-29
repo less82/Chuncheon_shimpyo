@@ -11,7 +11,7 @@ function makeStop(
   id: string,
   opts?: {
     demandTotal?: number; // 한낮(11~16) 구간에 균등 분배해 넣음
-    facilities?: Partial<Record<"shade" | "seat" | "light" | "sign", FacilityInfo["status"]>>;
+    facilities?: Partial<Record<"shade" | "seat" | "shelter" | "sign", FacilityInfo["status"]>>;
     demand?: boolean; // false면 demand 필드 자체를 생략
   }
 ): Stop {
@@ -36,7 +36,7 @@ function makeStop(
     facilities: {
       shade: fac(f.shade ?? "unknown"),
       seat: fac(f.seat ?? "unknown"),
-      light: fac(f.light ?? "unknown"),
+      shelter: fac(f.shelter ?? "unknown"),
       sign: fac(f.sign ?? "unknown"),
     },
     demand: includeDemand
@@ -86,7 +86,7 @@ describe("buildSurveyPriority", () => {
     const allUnknown = makeStop("A", { demandTotal: 10 });
     const allConfirmed = makeStop("B", {
       demandTotal: 10,
-      facilities: { shade: "yes", seat: "no", light: "yes", sign: "no" },
+      facilities: { shade: "yes", seat: "no", shelter: "yes", sign: "no" },
     });
     const { ranked } = buildSurveyPriority([allUnknown, allConfirmed], { demand: 0, unknown: 1, poi: 0 });
     const rowA = ranked.find((r) => r.stop.id === "A")!;
@@ -100,11 +100,11 @@ describe("buildSurveyPriority", () => {
   it("(d) no와 unknown이 unknownRate에서 다르게 계산됨", () => {
     const stopNo = makeStop("A", {
       demandTotal: 10,
-      facilities: { shade: "no", seat: "unknown", light: "unknown", sign: "unknown" },
+      facilities: { shade: "no", seat: "unknown", shelter: "unknown", sign: "unknown" },
     });
     const stopUnknown = makeStop("B", {
       demandTotal: 10,
-      facilities: { shade: "unknown", seat: "unknown", light: "unknown", sign: "unknown" },
+      facilities: { shade: "unknown", seat: "unknown", shelter: "unknown", sign: "unknown" },
     });
     const { ranked } = buildSurveyPriority([stopNo, stopUnknown], { demand: 0, unknown: 1, poi: 0 });
     const rowA = ranked.find((r) => r.stop.id === "A")!;
@@ -136,7 +136,7 @@ describe("buildSurveyPriority", () => {
   });
 
   it("leadReason은 가중치×값이 가장 큰 항", () => {
-    const s1 = makeStop("A", { demandTotal: 100, facilities: { shade: "unknown", seat: "unknown", light: "unknown", sign: "unknown" } });
+    const s1 = makeStop("A", { demandTotal: 100, facilities: { shade: "unknown", seat: "unknown", shelter: "unknown", sign: "unknown" } });
     const { ranked } = buildSurveyPriority([s1], { demand: 0, unknown: 1, poi: 0 });
     expect(ranked[0].leadReason).toBe("unknown");
   });

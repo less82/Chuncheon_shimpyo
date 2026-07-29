@@ -67,9 +67,9 @@ export default function MapView({ onSelect, selectedId }: Props) {
   const [active, setActive] = useState<FacilityFilterState>({
     shade: false,
     seat: false,
-    light: false,
+    shelter: false,
   });
-  const anyFilter = active.shade || active.seat || active.light;
+  const anyFilter = active.shade || active.seat || active.shelter;
   const matchSet = useMemo(
     () => filterStopsByFacility(stops, active),
     [stops, active],

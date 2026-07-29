@@ -1,8 +1,10 @@
 """원본 춘천시 CSV 로더. 모두 cp949 인코딩.
 
 컬럼명을 영문/표준 키로 정규화한다(위경도 -> lat/lng 등).
-가로등(light) 원본은 배포에 포함되지 않을 수 있으므로 부재 시에도
-파이프라인이 죽지 않고 빈 DataFrame(lat/lng 컬럼)을 반환한다.
+원본이 배포에 포함되지 않을 수 있는 소스(BIT 등)는 부재 시에도
+파이프라인이 죽지 않고 빈 DataFrame을 반환한다(해당 시설 전부 unknown).
+
+가로등 CSV는 data/에 남아 있지만 조명이 기획에서 빠져 더는 읽지 않는다.
 """
 import glob
 import os
@@ -161,25 +163,4 @@ def load_bit() -> pd.DataFrame:
     col = "정류장 번호" if "정류장 번호" in df.columns else "정류장번호"
     out = pd.DataFrame({"정류장번호": df[col].astype(str).str.strip()})
     out = out[out["정류장번호"] != ""].reset_index(drop=True)
-    return out
-
-
-def load_lights() -> pd.DataFrame:
-    """가로등(조명 근거). 원본이 없을 수 있다.
-
-    반환 컬럼: lat, lng. 원본 부재 시 빈 DataFrame(정직성: 조명 전부 unknown).
-    """
-    path = _find("*가로등*.csv")
-    if path is None:
-        return pd.DataFrame({"lat": pd.Series(dtype=float), "lng": pd.Series(dtype=float)})
-    df = pd.read_csv(path, encoding="cp949", dtype=str)
-    lat_col = "위도" if "위도" in df.columns else df.columns[0]
-    lng_col = "경도" if "경도" in df.columns else df.columns[1]
-    out = pd.DataFrame(
-        {
-            "lat": pd.to_numeric(df[lat_col], errors="coerce"),
-            "lng": pd.to_numeric(df[lng_col], errors="coerce"),
-        }
-    )
-    out = out.dropna(subset=["lat", "lng"]).reset_index(drop=True)
     return out

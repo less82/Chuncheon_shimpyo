@@ -16,7 +16,7 @@ const stop = (
   partial?: {
     shade?: Partial<FacilityInfo>;
     seat?: Partial<FacilityInfo>;
-    light?: Partial<FacilityInfo>;
+    shelter?: Partial<FacilityInfo>;
     sign?: Partial<FacilityInfo>;
   },
   demandByHour?: number[],
@@ -30,7 +30,7 @@ const stop = (
   facilities: {
     shade: info(partial?.shade ?? {}),
     seat: info(partial?.seat ?? {}),
-    light: info(partial?.light ?? {}),
+    shelter: info(partial?.shelter ?? {}),
     sign: info(partial?.sign ?? {}),
   },
   demand: demandByHour

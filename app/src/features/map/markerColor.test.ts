@@ -12,7 +12,7 @@ const stopWithShade = (status: Facility): Stop => ({
   facilities: {
     shade: { status, source: status === "yes" ? "roadview" : "none" },
     seat: { status: "unknown", source: "none" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
 });

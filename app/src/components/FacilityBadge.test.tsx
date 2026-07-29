@@ -30,13 +30,13 @@ describe("<FacilityBadge>", () => {
 
   it("상태별 색상 데이터 속성 yes=green / no=red / unknown=gray", () => {
     const { container: yes } = render(
-      <FacilityBadge kind="light" info={info({ status: "yes" })} />,
+      <FacilityBadge kind="shelter" info={info({ status: "yes" })} />,
     );
     const { container: no } = render(
-      <FacilityBadge kind="light" info={info({ status: "no" })} />,
+      <FacilityBadge kind="shelter" info={info({ status: "no" })} />,
     );
     const { container: unk } = render(
-      <FacilityBadge kind="light" info={info({ status: "unknown" })} />,
+      <FacilityBadge kind="shelter" info={info({ status: "unknown" })} />,
     );
     expect(yes.querySelector('[data-color="green"]')).not.toBeNull();
     expect(no.querySelector('[data-color="red"]')).not.toBeNull();

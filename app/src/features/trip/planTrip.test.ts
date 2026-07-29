@@ -16,7 +16,7 @@ function mkStop(id: string, lat: number, lng: number): Stop {
     facilities: {
       shade: makeUnknown(),
       seat: makeUnknown(),
-      light: makeUnknown(),
+      shelter: makeUnknown(),
       sign: makeUnknown(),
     },
   };

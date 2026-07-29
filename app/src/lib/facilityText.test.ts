@@ -44,9 +44,6 @@ describe("sourceBadge", () => {
     expect(sourceBadge(info({ status: "yes", source: "shade_registry" }))).toContain(
       "대장 기준",
     );
-    expect(sourceBadge(info({ status: "yes", source: "light_registry" }))).toContain(
-      "대장 기준",
-    );
   });
 
   it("근거 없음(none)은 빈 문자열", () => {
@@ -59,7 +56,6 @@ describe("sourceBadge", () => {
       "roadview",
       "bench_registry",
       "shade_registry",
-      "light_registry",
       "none",
     ];
     for (const source of sources) {
@@ -73,7 +69,7 @@ describe("KIND_LABEL", () => {
   it("네 시설의 한글 라벨을 제공한다", () => {
     expect(KIND_LABEL.shade).toBe("그늘");
     expect(KIND_LABEL.seat).toBe("의자");
-    expect(KIND_LABEL.light).toBe("조명");
+    expect(KIND_LABEL.shelter).toBe("쉘터");
     expect(KIND_LABEL.sign).toBe("도착안내기");
   });
 });

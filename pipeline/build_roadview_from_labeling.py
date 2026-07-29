@@ -1,10 +1,11 @@
 """시설이미지 라벨링 병합본 → 로드뷰 조사 양식(roadview_survey_filled.csv).
 
-병합본은 `정류장 번호`(물리 표지판 번호) 기준인데 파이프라인 7단계
-(`build_stops.apply_roadview`)는 `관리번호` 기준이라 그대로 못 읽는다.
+병합본은 `정류장 번호`(물리 표지판 번호) 기준인데 파이프라인의 로드뷰 오버레이
+단계(`build_stops.apply_roadview`)는 `관리번호` 기준이라 그대로 못 읽는다.
 이 스크립트가 그 사이를 잇는다.
 
 입력: data/춘천시_버스정류장_시설이미지_라벨링_병합.csv  (그늘·의자·도착안내기·쉘터형)
+      ※ `쉘터형` 열이 조사양식의 `쉘터` 열로 그대로 나간다.
       data/춘천시_버스정류장_현황조사_해커톤_최종.csv      (정류장번호↔관리번호 브리지)
       app/public/data/stops.json                          (관리번호 실재 확인)
 출력: app/public/data/roadview_survey_filled.csv          (ROADVIEW_HEADER 고정)
@@ -12,8 +13,8 @@
 규칙:
 - 값은 `있음`/`없음`만 내보낸다. `미확인`·빈칸은 빈칸으로 두어 기존 상태를 유지시킨다
   (roadview.apply_roadview가 빈칸/미확인을 건드리지 않는다).
-- `조명`은 라벨링 조사 항목에 없다. 항상 빈칸 — 근거 없는 `없음`을 만들지 않는다.
-- `쉘터형`은 stop.ts에 대응 필드가 없어 비고로만 남긴다.
+- `쉘터형`은 조사양식의 `쉘터` 열로 내보낸다. 쉘터는 대장이 없어 이 로드뷰
+  조사가 유일한 근거다.
 - 관리번호를 못 찾은 행은 버리고 이유를 출력한다. 조용히 넘어가지 않는다.
 
 사용:
@@ -42,8 +43,8 @@ OUT = REPO / "app" / "public" / "data" / "roadview_survey_filled.csv"
 ENC = "utf-8-sig"
 SURVEYOR = "시설이미지 라벨링(병합본)"
 
-# 라벨링 컬럼 -> 조사양식 컬럼
-COL_MAP = {"그늘": "그늘", "의자": "의자", "도착안내기": "도착안내기"}
+# 라벨링 컬럼 -> 조사양식 컬럼 (조사양식 열 순서와 동일하게 유지)
+COL_MAP = {"그늘": "그늘", "의자": "의자", "도착안내기": "도착안내기", "쉘터형": "쉘터"}
 EMITTED = {"있음", "없음"}  # 그 외(미확인·빈칸)는 빈칸으로 내보낸다
 
 
@@ -71,7 +72,6 @@ def main() -> None:
     out_rows: list[list[str]] = []
     dropped: list[tuple[str, str]] = []
     emitted = {col: 0 for col in COL_MAP}
-    shelter_notes = 0
 
     for row in labeling:
         stop_no = row.get("정류장 번호", "")
@@ -92,13 +92,9 @@ def main() -> None:
             if value:
                 emitted[src_col] += 1
             values.append(value)
-        그늘, 의자, 도착안내기 = values
+        그늘, 의자, 도착안내기, 쉘터 = values
 
         notes = [n for n in (row.get("비고", ""),) if n]
-        shelter = row.get("쉘터형", "")
-        if shelter in EMITTED:
-            notes.append(f"쉘터형 {shelter}")
-            shelter_notes += 1
 
         out_rows.append(
             [
@@ -106,8 +102,8 @@ def main() -> None:
                 name_by_id[sid],
                 그늘,
                 의자,
-                "",  # 조명 — 라벨링 조사 항목 아님. 근거 없이 채우지 않는다
                 도착안내기,
+                쉘터,
                 "",  # 촬영시점 — 병합본에 없음
                 SURVEYOR,
                 " / ".join(notes),
@@ -117,8 +113,6 @@ def main() -> None:
     print(f"라벨링 {len(labeling)}행 → 조사양식 {len(out_rows)}행")
     for col, n in emitted.items():
         print(f"  {col:6s} 반영값(있음/없음) {n:3d}  (나머지는 빈칸=기존 유지)")
-    print(f"  조명     0  (조사 항목 아님 — 전부 빈칸)")
-    print(f"  쉘터형   비고 기록 {shelter_notes}건")
 
     if dropped:
         print(f"\n⚠️ 관리번호를 못 찾아 버린 행 {len(dropped)}건")
@@ -136,7 +130,7 @@ def main() -> None:
         writer.writerow(ROADVIEW_HEADER)
         writer.writerows(out_rows)
     print(f"\n생성: {OUT}")
-    print("다음: python build_stops.py  (7단계 로드뷰 오버레이가 이 파일을 읽는다)")
+    print("다음: python build_stops.py  (로드뷰 오버레이 단계가 이 파일을 읽는다)")
 
 
 if __name__ == "__main__":

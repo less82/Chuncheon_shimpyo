@@ -134,7 +134,7 @@ export interface ReportKind {
 }
 
 export const REPORT_KINDS: ReportKind[] = [
-  { category: "facility", label: "정류장 시설", hint: "의자, 지붕, 조명" },
+  { category: "facility", label: "정류장 시설", hint: "의자, 지붕, 그늘막" },
   { category: "bis", label: "안내기 고장", hint: "도착안내 화면" },
   { category: "ride", label: "버스 이용 불편", hint: "기사, 운전, 분실물" },
   { category: "route", label: "노선 요청", hint: "신설·변경 요청" },
@@ -155,9 +155,9 @@ export interface IssueOption {
 export const ISSUE_OPTIONS: IssueOption[] = [
   { label: "의자가 파손됐어요", category: "facility" },
   { label: "안내 화면이 꺼졌어요", category: "bis" },
-  { label: "조명이 꺼졌어요", category: "facility" },
   { label: "승강장 시설물이 파손됐어요", category: "facility" },
   { label: "지붕(가림막)이 없어요", category: "facility" },
+  { label: "그늘막이 파손됐어요", category: "facility" },
   { label: "도착안내가 표시되지 않아요", category: "bis" },
   { label: "안내 화면이 잘 안 보여요", category: "bis" },
   { label: "기사님이 불친절했어요", category: "ride" },
@@ -190,6 +190,6 @@ export function categoryForIssue(issue: string): ContactCategory | null {
   if (/기사|불친절|난폭|분실|두고내|사고/.test(text)) return "ride";
   if (/노선|신설|변경|단속/.test(text)) return "route";
   if (/안내기|안내단말|안내화면|도착안내|BIS/i.test(text)) return "bis";
-  if (/의자|조명|지붕|가림막|온열|승강장|시설/.test(text)) return "facility";
+  if (/의자|그늘|쉘터|지붕|가림막|온열|승강장|시설/.test(text)) return "facility";
   return null;
 }

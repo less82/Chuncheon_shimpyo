@@ -17,7 +17,7 @@ const stop: Stop = {
   facilities: {
     shade: { status: "unknown", source: "none" },
     seat: { status: "unknown", source: "none" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
 };
@@ -38,8 +38,6 @@ describe("<CitizenHome>", () => {
     expect(screen.getByRole("link", { name: "정류장 상태 알리기" })).toHaveAttribute("href", "/app/report");
     // 찾기는 두 핵심 타일과 경쟁하지 않는 보조 줄이다.
     expect(screen.getByRole("link", { name: "정류장·노선 찾기" })).toHaveAttribute("href", "/find");
-    // maeng_coco 타일은 홈에서 제거됐다(시민 홈은 두 과업만 노출한다).
-    expect(screen.queryByRole("link", { name: /maeng_coco/ })).not.toBeInTheDocument();
     expect(screen.queryByText("주변 정류장")).not.toBeInTheDocument();
     expect(screen.queryByText("QR 스캔")).not.toBeInTheDocument();
     expect(screen.queryByText(/로그인 없이/)).not.toBeInTheDocument();

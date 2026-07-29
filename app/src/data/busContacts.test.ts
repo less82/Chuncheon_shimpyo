@@ -100,6 +100,14 @@ describe("issueOptionsFor", () => {
     }
   });
 
+  it("정류장 시설 유형은 선택지 네 개를 채운다", () => {
+    expect(issueOptionsFor("facility")).toHaveLength(4);
+  });
+
+  it("기획에서 뺀 조명 선택지는 남아 있지 않다", () => {
+    expect(ISSUE_OPTIONS.some((option) => option.label.includes("조명"))).toBe(false);
+  });
+
   it("선택지 문구는 겹치지 않는다", () => {
     expect(new Set(ISSUE_OPTIONS.map((option) => option.label)).size).toBe(ISSUE_OPTIONS.length);
   });
@@ -108,7 +116,7 @@ describe("issueOptionsFor", () => {
 describe("categoryForIssue", () => {
   it("정류장 상태 선택지를 알맞은 접수처로 보낸다", () => {
     expect(categoryForIssue("의자가 파손됐어요")).toBe("facility");
-    expect(categoryForIssue("조명이 꺼졌어요")).toBe("facility");
+    expect(categoryForIssue("그늘막이 파손됐어요")).toBe("facility");
     expect(categoryForIssue("승강장 시설물이 파손됐어요")).toBe("facility");
     // 도착안내 단말기 고장은 시설이 아니라 BIS 담당이다
     expect(categoryForIssue("안내 화면이 꺼졌어요")).toBe("bis");

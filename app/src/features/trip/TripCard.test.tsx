@@ -17,7 +17,7 @@ function mkStop(id: string, name: string): Stop {
     facilities: {
       shade: makeUnknown(),
       seat: makeUnknown(),
-      light: makeUnknown(),
+      shelter: makeUnknown(),
       sign: makeUnknown(),
     },
     headwayMin: 10,

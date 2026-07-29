@@ -23,7 +23,7 @@ interface Props {
   installRow?: InstallRow;
 }
 
-const KINDS: FacilityKind[] = ["shade", "seat", "light", "sign"];
+const KINDS: FacilityKind[] = ["shade", "seat", "shelter", "sign"];
 
 export default function EvidenceCard({
   stop,

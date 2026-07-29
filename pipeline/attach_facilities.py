@@ -1,8 +1,9 @@
 """Task 1.4 — 시설 공간/주소 매칭.
 
 의자 = 벤치 대장 좌표 30m 공간매칭 (source bench_registry)
-조명 = 가로등 대장 좌표 50m 공간매칭 (source light_registry)
 그늘 = 그늘막 주소 지오코딩 -> 30m 공간매칭 (source shade_registry)
+도착안내기 = BIT 현황 정류장번호 정확매칭 (source sign_registry)
+쉘터 = 대장이 없다. 로드뷰 조사(Task 1.5)만이 근거이며 이 모듈은 손대지 않는다.
 
 절대 규칙(코드 계약): 이 모듈은 어떤 경로에서도 status='no'를 만들지 않는다.
 근접 소스가 있으면 'yes', 없으면 기존 상태(unknown)를 그대로 둔다.
@@ -54,16 +55,6 @@ def attach_seats(master, bench, radius=30):
         if la == la and ln == ln  # NaN 제외
     ]
     return _attach_points(master, pts, radius, "seat", "bench_registry")
-
-
-def attach_lights(master, lights, radius=50):
-    """가로등 50m 이내면 light=yes/light_registry. 원본 부재 시 전부 unknown."""
-    pts = [
-        (float(la), float(ln))
-        for la, ln in zip(lights["lat"], lights["lng"])
-        if la == la and ln == ln
-    ]
-    return _attach_points(master, pts, radius, "light", "light_registry")
 
 
 def attach_sign(master, bit):

@@ -4,7 +4,6 @@ import pandas as pd
 from loaders import (
     load_bench,
     load_boarding,
-    load_lights,
     load_locations,
     load_routes,
     load_shade,
@@ -55,10 +54,11 @@ def test_shade_columns():
     assert set(["설치장소명", "주소"]).issubset(df.columns)
 
 
-def test_lights_never_crashes():
-    # 가로등 원본이 없을 수 있다. 그래도 죽지 않고 lat/lng 컬럼 DataFrame 반환.
-    df = load_lights()
-    assert set(["lat", "lng"]).issubset(df.columns)
+def test_no_light_loader_remains():
+    """조명은 기획에서 빠졌다. 가로등 로더가 되살아나면 실패한다."""
+    import loaders
+
+    assert not hasattr(loaders, "load_lights")
 
 
 def test_fix_route_number_excel_date_pollution():

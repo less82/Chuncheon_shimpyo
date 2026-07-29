@@ -23,8 +23,8 @@ def _stop(sid):
         "facilities": {
             "shade": {"status": "unknown", "source": "none"},
             "seat": {"status": "yes", "source": "bench_registry"},
-            "light": {"status": "unknown", "source": "none"},
             "sign": {"status": "unknown", "source": "none"},
+            "shelter": {"status": "unknown", "source": "none"},
         },
     }
 
@@ -38,8 +38,8 @@ def test_roadview_yes_sets_source_and_capturedat():
                 "정류장명": "stop",
                 "그늘": "있음",
                 "의자": "미확인",
-                "조명": "미확인",
                 "도착안내기": "미확인",
+                "쉘터": "미확인",
                 "촬영시점(YYYY.MM)": "2026.03",
                 "조사자": "홍길동",
                 "비고": "",
@@ -62,8 +62,8 @@ def test_roadview_unknown_keeps_existing():
                 "정류장명": "stop",
                 "그늘": "미확인",
                 "의자": "미확인",
-                "조명": "미확인",
                 "도착안내기": "미확인",
+                "쉘터": "미확인",
                 "촬영시점(YYYY.MM)": "2026.03",
                 "조사자": "x",
                 "비고": "",
@@ -85,8 +85,8 @@ def test_roadview_none_sets_no_only_here():
                 "정류장명": "stop",
                 "그늘": "없음",
                 "의자": "없음",
-                "조명": "미확인",
                 "도착안내기": "미확인",
+                "쉘터": "미확인",
                 "촬영시점(YYYY.MM)": "2026.03",
                 "조사자": "x",
                 "비고": "",
@@ -125,13 +125,14 @@ def test_stops_json_built_and_valid_schema():
         "roadview",
         "bench_registry",
         "shade_registry",
-        "light_registry",
         "sign_registry",
         "none",
     }
     for s in data["stops"]:
         assert set(["id", "stopNo", "name", "lat", "lng", "routes", "facilities"]).issubset(s)
-        for kind in ("shade", "seat", "light", "sign"):
+        # 시설은 정확히 4종이다. 조명(light)은 기획에서 빠졌다.
+        assert set(s["facilities"]) == {"shade", "seat", "sign", "shelter"}
+        for kind in ("shade", "seat", "sign", "shelter"):
             fi = s["facilities"][kind]
             assert fi["status"] in valid_status
             assert fi["source"] in valid_source
@@ -145,7 +146,31 @@ def test_no_fabricated_no_without_roadview():
     with open(_STOPS_JSON, encoding="utf-8") as f:
         data = json.load(f)
     for s in data["stops"]:
-        for kind in ("shade", "seat", "light", "sign"):
+        for kind in ("shade", "seat", "sign", "shelter"):
             fi = s["facilities"][kind]
             if fi["status"] == "no":
                 assert fi["source"] == "roadview"
+
+
+def test_shelter_evidence_is_roadview_only():
+    """쉘터는 대장이 없다. 근거는 로드뷰뿐이고 그 밖은 반드시 unknown/none."""
+    with open(_STOPS_JSON, encoding="utf-8") as f:
+        data = json.load(f)
+    confirmed = 0
+    for s in data["stops"]:
+        fi = s["facilities"]["shelter"]
+        if fi["status"] == "unknown":
+            continue
+        assert fi["source"] == "roadview", s["id"]
+        confirmed += 1
+    # 라벨링 조사분이 실제로 반영돼 있어야 한다(비어 있으면 오버레이가 끊긴 것).
+    assert confirmed > 0
+
+
+def test_tago_node_id_survives_rebuild():
+    """tagoNodeId가 대부분 살아 있어야 한다. 끊기면 실시간 도착정보가 전멸한다."""
+    with open(_STOPS_JSON, encoding="utf-8") as f:
+        data = json.load(f)
+    stops = data["stops"]
+    with_node = [s for s in stops if s.get("tagoNodeId")]
+    assert len(with_node) > len(stops) * 0.9

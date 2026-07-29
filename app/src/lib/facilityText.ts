@@ -3,13 +3,13 @@
 
 import type { Facility, FacilityInfo, Stop } from "../types/stop";
 
-export type FacilityKind = "shade" | "seat" | "light" | "sign";
+export type FacilityKind = "shade" | "seat" | "shelter" | "sign";
 
 /** 시설 종류별 한글 라벨 (아이콘과 항상 병기). */
 export const KIND_LABEL: Record<FacilityKind, string> = {
   shade: "그늘",
   seat: "의자",
-  light: "조명",
+  shelter: "쉘터",
   sign: "도착안내기",
 };
 
@@ -41,7 +41,6 @@ export function statusColor(status: Facility): "green" | "red" | "gray" {
 const REGISTRY_LABEL: Record<string, string> = {
   bench_registry: "벤치",
   shade_registry: "그늘막",
-  light_registry: "가로등",
 };
 
 /**
@@ -62,13 +61,13 @@ export function sourceBadge(info: FacilityInfo): string {
   return "";
 }
 
-/** 한 줄 시설 요약 — 예: "그늘 있음, 의자 있음, 조명 미확인, 도착안내기 미확인". */
+/** 한 줄 시설 요약 — 예: "그늘 있음, 의자 있음, 쉘터 미확인, 도착안내기 미확인". */
 export function facilitySummary(stop: Stop): string {
   const f = stop.facilities;
   return (
     `${KIND_LABEL.shade} ${facilityLabel(f.shade)}, ` +
     `${KIND_LABEL.seat} ${facilityLabel(f.seat)}, ` +
-    `${KIND_LABEL.light} ${facilityLabel(f.light)}, ` +
+    `${KIND_LABEL.shelter} ${facilityLabel(f.shelter)}, ` +
     `${KIND_LABEL.sign} ${facilityLabel(f.sign)}`
   );
 }

@@ -14,7 +14,7 @@ function makeStop(headwayMin?: number, tagoNodeId?: string): Stop {
     facilities: {
       shade: makeUnknown(),
       seat: makeUnknown(),
-      light: makeUnknown(),
+      shelter: makeUnknown(),
       sign: makeUnknown(),
     },
     headwayMin,

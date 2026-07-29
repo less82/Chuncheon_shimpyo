@@ -2,7 +2,7 @@
 // 접근성: 색만으로 구분하지 않는다. [시설 아이콘 + 한글] + [상태 아이콘 + 한글] + 출처.
 
 import type { FacilityInfo } from "../types/stop";
-import { Armchair, Check, CircleHelp, LampDesk, Monitor, Umbrella, X } from "lucide-react";
+import { Armchair, Check, CircleHelp, Monitor, Umbrella, Warehouse, X } from "lucide-react";
 import {
   facilityLabel,
   sourceBadge,
@@ -20,7 +20,7 @@ interface Props {
 }
 
 function KindIcon({ kind }: { kind: FacilityKind }) {
-  const Icon = { shade: Umbrella, seat: Armchair, light: LampDesk, sign: Monitor }[kind];
+  const Icon = { shade: Umbrella, seat: Armchair, shelter: Warehouse, sign: Monitor }[kind];
   return <Icon width={26} height={26} strokeWidth={2} aria-hidden="true" />;
 }
 

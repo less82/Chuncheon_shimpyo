@@ -9,7 +9,7 @@ function stop(
     lat: number;
     lng: number;
     routes: string[];
-    fac?: Partial<Record<"shade" | "seat" | "light" | "sign", Facility>>;
+    fac?: Partial<Record<"shade" | "seat" | "shelter" | "sign", Facility>>;
   },
 ): Stop {
   const f = over.fac ?? {};
@@ -29,7 +29,7 @@ function stop(
     facilities: {
       shade: info(f.shade),
       seat: info(f.seat),
-      light: info(f.light),
+      shelter: info(f.shelter),
       sign: info(f.sign),
     },
     headwayMin: over.headwayMin,

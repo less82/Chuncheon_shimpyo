@@ -16,7 +16,7 @@ const mk = (id: string, name: string): Stop => ({
   facilities: {
     shade: { status: "yes", source: "shade_registry" },
     seat: { status: "yes", source: "bench_registry" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
   headwayMin: 10,

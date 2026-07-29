@@ -18,8 +18,8 @@ def _make_stop(id_, name, lat, lng, midday_hours=None, facilities=None, no_deman
     facilities = facilities or {
         "shade": _facility(),
         "seat": _facility(),
-        "light": _facility(),
         "sign": _facility(),
+        "shelter": _facility(),
     }
     stop = {
         "id": id_,
@@ -55,8 +55,8 @@ def _fixture_stops():
             facilities={
                 "shade": _facility(),
                 "seat": _facility(),
-                "light": _facility("yes", "light_registry"),
                 "sign": _facility(),
+                "shelter": _facility("no", "roadview"),
             },
         )
     )
@@ -69,10 +69,10 @@ def _fixture_stops():
             127.71,
             midday_hours={12: 5},
             facilities={
-                "shade": _facility("yes", "shade_geocode"),
+                "shade": _facility("yes", "shade_registry"),
                 "seat": _facility("yes", "bench_registry"),
-                "light": _facility("yes", "light_registry"),
                 "sign": _facility("no", "roadview"),
+                "shelter": _facility("yes", "roadview"),
             },
         )
     )
@@ -171,8 +171,8 @@ def test_ai_json_to_survey_rows_maps_yes_no_unclear():
             "정류장명": "고우선정류장",
             "seat": "yes",
             "shade": "no",
-            "light": "unclear",
             "sign": "unclear",
+            "shelter": "unclear",
             "capturedAt": "2026.07",
         }
     ]
@@ -181,8 +181,8 @@ def test_ai_json_to_survey_rows_maps_yes_no_unclear():
     row = rows[0]
     assert row["의자"] == "있음"
     assert row["그늘"] == "없음"
-    assert row["조명"] == "미확인"
     assert row["도착안내기"] == "미확인"
+    assert row["쉘터"] == "미확인"
     assert row["관리번호"] == "250001"
     assert row["촬영시점(YYYY.MM)"] == "2026.07"
 
@@ -192,24 +192,24 @@ def test_ai_json_to_survey_rows_uses_roadview_header_columns():
     from roadview_ai_draft import ai_json_to_survey_rows
 
     ai_results = [
-        {"관리번호": "250002", "정류장명": "저우선정류장", "seat": "no", "shade": "no", "light": "no", "sign": "no"}
+        {"관리번호": "250002", "정류장명": "저우선정류장", "seat": "no", "shade": "no", "sign": "no", "shelter": "no"}
     ]
     rows = ai_json_to_survey_rows(ai_results)
     assert set(rows[0].keys()) == set(ROADVIEW_HEADER)
 
 
-# --- (c) 조명 강제 ---
+# --- (c) 값 미지정/불명은 항상 미확인 ---
 
 
-def test_light_no_forced_to_unknown_even_when_ai_says_no():
+def test_missing_or_unknown_value_becomes_unclear_label():
+    """판독값이 없거나 알 수 없으면 '미확인' — 근거 없는 '없음'을 만들지 않는다."""
     from roadview_ai_draft import ai_json_to_survey_rows
 
-    ai_results = [
-        {"관리번호": "250009", "정류장명": "테스트", "seat": "no", "shade": "no", "light": "no", "sign": "no"}
-    ]
+    ai_results = [{"관리번호": "250009", "정류장명": "테스트", "seat": "no"}]
     rows = ai_json_to_survey_rows(ai_results)
-    assert rows[0]["조명"] == "미확인"
-    assert rows[0]["조명"] != "없음"
+    assert rows[0]["의자"] == "없음"
+    for col in ("그늘", "도착안내기", "쉘터"):
+        assert rows[0][col] == "미확인"
 
 
 # --- (d) 프롬프트 3단 기준 ---
@@ -232,7 +232,7 @@ def test_draft_writer_never_targets_final_survey_csv_path(tmp_path):
     from roadview_ai_draft import write_draft_csv
 
     ai_results = [
-        {"관리번호": "250001", "정류장명": "고우선정류장", "seat": "yes", "shade": "no", "light": "no", "sign": "unclear"}
+        {"관리번호": "250001", "정류장명": "고우선정류장", "seat": "yes", "shade": "no", "sign": "unclear", "shelter": "no"}
     ]
     out = tmp_path / "_draft_2026-07-16.csv"
     returned_path = write_draft_csv(ai_results, str(out))

@@ -14,7 +14,7 @@ export const MAX_ALT_DISTANCE_M = 300;
 /** 배차간격 캐시가 없을 때 폴백(분). arrivals.headwayFallback 과 동일. */
 const DEFAULT_HEADWAY_MIN = 15;
 
-const FACILITY_KINDS: FacilityKind[] = ["shade", "seat", "light", "sign"];
+const FACILITY_KINDS: FacilityKind[] = ["shade", "seat", "shelter", "sign"];
 
 /** 후보까지 도보 소요(분). 거리(m) / 80m·분. */
 export function walkMinutes(current: Stop, alt: Stop): number {

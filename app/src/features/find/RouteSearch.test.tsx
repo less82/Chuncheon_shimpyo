@@ -45,7 +45,7 @@ const base: Omit<Stop, "id" | "stopNo" | "name"> = {
   facilities: {
     shade: { status: "unknown", source: "none" },
     seat: { status: "unknown", source: "none" },
-    light: { status: "unknown", source: "none" },
+    shelter: { status: "unknown", source: "none" },
     sign: { status: "unknown", source: "none" },
   },
 };

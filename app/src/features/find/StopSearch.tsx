@@ -135,7 +135,7 @@ export function StopSearch() {
                   <div className="stopsearch__facilities">
                     <FacilityBadge kind="shade" info={stop.facilities.shade} />
                     <FacilityBadge kind="seat" info={stop.facilities.seat} />
-                    <FacilityBadge kind="light" info={stop.facilities.light} />
+                    <FacilityBadge kind="shelter" info={stop.facilities.shelter} />
                     <FacilityBadge kind="sign" info={stop.facilities.sign} />
                   </div>
 

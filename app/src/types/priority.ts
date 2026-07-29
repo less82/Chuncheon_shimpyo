@@ -49,8 +49,8 @@ export interface NoDemandCandidate {
 } // 수요 미확인 그룹(순위 없음)
 
 // 2단계 설치 검토 트랙. 물리 설치 대상 3종(도착안내기 sign은 설치 트랙 아님).
-// ⚠️ facilityText.ts의 FacilityKind(4종: shade/seat/light/sign)와 이름이 겹치지 않게 InstallFacilityKind로 둔다.
-export type InstallFacilityKind = "seat" | "shade" | "light";
+// ⚠️ facilityText.ts의 FacilityKind(4종: shade/seat/shelter/sign)와 이름이 겹치지 않게 InstallFacilityKind로 둔다.
+export type InstallFacilityKind = "seat" | "shade" | "shelter";
 
 export interface InstallRow {
   stop: Stop;

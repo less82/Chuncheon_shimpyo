@@ -26,11 +26,11 @@ COLUMNS = ["관리번호", "정류장명", "lat", "lng", "한낮승차", "미확
 _KIND_TO_KOR = {
     "shade": "그늘",
     "seat": "의자",
-    "light": "조명",
     "sign": "도착안내기",
+    "shelter": "쉘터",
 }
-# facilities dict 순서(그늘,의자,조명,도착안내기)로 고정해 표기 순서를 안정화한다.
-_KIND_ORDER = ("shade", "seat", "light", "sign")
+# facilities dict 순서(그늘,의자,도착안내기,쉘터)로 고정해 표기 순서를 안정화한다.
+_KIND_ORDER = ("shade", "seat", "sign", "shelter")
 
 
 def _roadview_url(lat: float, lng: float) -> str:

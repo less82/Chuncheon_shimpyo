@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import AdminConcepts from "./features/admin/AdminConcepts";
 import Dashboard from "./features/admin/Dashboard";
 import { useStops } from "./store/useStops";
 
@@ -19,7 +18,6 @@ export default function AdminApp() {
     <BrowserRouter basename="/admin">
       <Routes>
         <Route index element={<Dashboard />} />
-        <Route path="concepts" element={<AdminConcepts />} />
         {/* 예전 dev 주소(/admin) 북마크가 빈 화면이 되지 않게 루트로 보낸다. */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

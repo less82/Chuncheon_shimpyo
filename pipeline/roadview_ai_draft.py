@@ -9,9 +9,8 @@ roadview.apply_roadview로 반영하는 흐름을 전제로 한다.
 
 ⚠️ 이 모듈이 만드는 CSV는 어디까지나 "초안"이다. 사람 검수 전에는
 data/의 최종 조사 CSV 위치에 저장해서는 안 된다(write_draft_csv가 가드).
-⚠️ 조명(light)은 AI가 "no"를 줘도 무조건 "미확인"으로 강제한다(주간
-로드뷰로는 야간 조명 작동 여부를 판별할 수 없다). 사람이 확정본에서
-명시적으로 "없음"으로 바꿀 때만 no가 된다.
+⚠️ 확신이 없으면 "unclear"다. 변환기는 unclear/미지정을 모두 "미확인"으로
+내보내 기존 상태를 유지시킨다 — 근거 없는 "없음"을 만들지 않는다.
 """
 from __future__ import annotations
 
@@ -34,14 +33,12 @@ READING_PROMPT = """당신은 버스정류장 로드뷰 사진/영상을 보고 
 판독 대상 시설:
 - seat(의자): 정류장 대기용 벤치/의자.
 - shade(그늘): 지붕, 차양, 그늘막 등 햇빛을 가리는 구조물.
-- light(조명): 가로등 등 야간 조명 시설. (주간 로드뷰로는 야간 점등 여부를
-  확인할 수 없으므로, 조명이 "없다"고 판정하더라도 최종 반영 시 이 앱은
-  이를 자동으로 미확인 처리합니다. 그래도 판독 자체는 최선을 다해 답하세요.)
 - sign(도착안내기): 버스 도착 정보 안내 전광판/단말.
+- shelter(쉘터): 벽/기둥과 지붕을 갖춘 대기용 부스형 승차대.
 
 정류장별로 다음 JSON 형식으로만 답하세요(설명 문장 없이):
 {"관리번호": "...", "정류장명": "...", "seat": "yes|no|unclear", "shade": "yes|no|unclear",
- "light": "yes|no|unclear", "sign": "yes|no|unclear", "capturedAt": "YYYY.MM"}
+ "sign": "yes|no|unclear", "shelter": "yes|no|unclear", "capturedAt": "YYYY.MM"}
 """
 
 # AI 판독값 -> 조사 CSV 표기
@@ -54,26 +51,21 @@ _VALUE_TO_LABEL = {
 _AI_KEY_TO_COL = {
     "seat": "의자",
     "shade": "그늘",
-    "light": "조명",
     "sign": "도착안내기",
+    "shelter": "쉘터",
 }
 
 
-def _label(kind: str, value) -> str:
-    v = str(value).strip().lower()
-    label = _VALUE_TO_LABEL.get(v, "미확인")
-    if kind == "light" and label == "없음":
-        # 조명은 AI가 no로 판정해도 절대 "없음"을 만들지 않는다(주간 로드뷰 한계).
-        # 사람이 확정본에서 명시적으로만 "없음"으로 바꿀 수 있다.
-        return "미확인"
-    return label
+def _label(value) -> str:
+    """판독값 -> 조사 CSV 표기. 모르는 값은 전부 '미확인'(기존 상태 유지)."""
+    return _VALUE_TO_LABEL.get(str(value).strip().lower(), "미확인")
 
 
 def ai_json_to_survey_rows(ai_results: list[dict]) -> list[dict]:
     """AI JSON 판독 결과를 ROADVIEW_HEADER 형식의 초안 행 리스트로 변환한다.
 
-    ai_results 각 원소: {관리번호, 정류장명, seat, shade, light, sign, capturedAt?}
-    (seat/shade/light/sign 값은 "yes"|"no"|"unclear")
+    ai_results 각 원소: {관리번호, 정류장명, seat, shade, sign, shelter, capturedAt?}
+    (seat/shade/sign/shelter 값은 "yes"|"no"|"unclear")
 
     반환은 ROADVIEW_HEADER와 동일한 키를 가진 dict 리스트(초안).
     사람 검수 전에는 어디에도 자동 반영되지 않는다.
@@ -84,7 +76,7 @@ def ai_json_to_survey_rows(ai_results: list[dict]) -> list[dict]:
         row["관리번호"] = str(item.get("관리번호", "")).strip()
         row["정류장명"] = str(item.get("정류장명", "")).strip()
         for ai_key, col in _AI_KEY_TO_COL.items():
-            row[col] = _label(ai_key, item.get(ai_key, "unclear"))
+            row[col] = _label(item.get(ai_key, "unclear"))
         row["촬영시점(YYYY.MM)"] = str(item.get("capturedAt", "")).strip()
         row["조사자"] = "AI초안(검수전)"
         row["비고"] = "AI 초안 - 사람 검수 필요"
@@ -126,13 +118,12 @@ def print_batch_instructions() -> None:
 1) survey_targets.py 실행 -> data/survey_targets.csv 생성(조사 후보 + 로드뷰URL).
 2) 사람이 각 행의 로드뷰URL을 열어 화면을 캡처한다(data/roadview_captures/ 등).
 3) 캡처 이미지를 AI(비전 모델)에 READING_PROMPT와 함께 입력해 정류장별
-   {seat, shade, light, sign, capturedAt} JSON 판독 결과를 받는다.
+   {seat, shade, sign, shelter, capturedAt} JSON 판독 결과를 받는다.
 4) ai_json_to_survey_rows(ai_results)로 초안 행을 만들고,
    write_draft_csv(ai_results, "data/roadview_captures/_draft_YYYY-MM-DD.csv")로
    저장한다(초안 파일명은 반드시 _draft 포함 또는 roadview_captures/ 경로).
-5) 사람이 초안 CSV를 열어 셀 단위로 검수/수정한다. 특히 조명(light)은
-   변환기가 항상 "미확인"으로 강제하므로, 실제로 "없음"이 맞다고 판단되면
-   사람이 직접 "없음"으로 고친다.
+5) 사람이 초안 CSV를 열어 셀 단위로 검수/수정한다. 확신이 없는 칸은
+   "미확인"으로 두어야 기존 상태가 유지된다.
 6) 검수 완료본을 ROADVIEW_HEADER 형식의 확정 CSV(예: data/roadview_survey.csv)로
    저장한다.
 7) roadview.apply_roadview(master, survey_df)로 stops 마스터에 반영한 뒤
