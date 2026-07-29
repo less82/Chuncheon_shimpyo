@@ -9,7 +9,21 @@ describe("<ContactGuide>", () => {
     for (const category of CONTACT_CATEGORIES) {
       expect(screen.getByRole("heading", { name: category.title })).toBeInTheDocument();
     }
-    expect(screen.getByRole("heading", { name: "버스 노선정보" })).toBeInTheDocument();
+  });
+
+  it("외부 지도·포털 링크를 내보내지 않는다", () => {
+    const screen = render(<ContactGuide />);
+    expect(screen.queryByRole("heading", { name: "버스 노선정보" })).not.toBeInTheDocument();
+    for (const link of screen.getAllByRole("link")) {
+      expect(link.getAttribute("href")).toMatch(/^tel:/);
+    }
+  });
+
+  it("categories 를 주면 그 분류 카드만 보여준다", () => {
+    const screen = render(<ContactGuide categories={["bis"]} />);
+    expect(screen.getByRole("heading", { name: /버스정보시스템/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "이용 불편 민원" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /전화 걸기$/ })).toHaveLength(1);
   });
 
   it("노선을 주면 그 정류장에 오지 않는 운수회사는 감춘다", () => {
@@ -37,9 +51,8 @@ describe("<ContactGuide>", () => {
     }
   });
 
-  it("compact 는 예시 문구와 노선정보 링크를 접는다", () => {
+  it("compact 는 예시 문구를 접는다", () => {
     const screen = render(<ContactGuide compact />);
-    expect(screen.queryByRole("heading", { name: "버스 노선정보" })).not.toBeInTheDocument();
     expect(screen.queryByText(CONTACT_CATEGORIES[0].examples)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: CONTACT_CATEGORIES[0].title })).toBeInTheDocument();
   });

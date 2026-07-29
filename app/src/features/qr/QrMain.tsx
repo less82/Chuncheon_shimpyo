@@ -4,7 +4,13 @@ import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import type { RoutesFile } from "../../types/route";
 import type { TripOption } from "../../types/trip";
-import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import {
+  ARRIVAL_EMPTY_TEXT,
+  ARRIVAL_UNAVAILABLE_TEXT,
+  arrivalsForRoutes,
+  getArrival,
+  type Arrival,
+} from "../../lib/arrivals";
 import { loadRoutes } from "../../lib/loadRoutes";
 import { haversine } from "../../lib/geo";
 import { planTrip } from "../trip/planTrip";
@@ -42,9 +48,8 @@ interface TripResult {
 
 interface RouteSummary {
   routeNo: string;
-  waitMin: number;
-  rideMin: number;
-  totalMin: number;
+  /** 실시간으로 확인된 대기 시간(분). 실시간이 아니면 null — 배차간격으로 지어내지 않는다. */
+  waitMin: number | null;
   live: boolean;
   directionName: string;
 }
@@ -58,18 +63,8 @@ function normalized(value: string): string {
   return value.replace(/[“”"'.,]/g, "").replace(/대학교|대학(?=병원)/g, "대").replace(/\s+/g, "").toLowerCase();
 }
 
-function routeRideMinutes(option: TripOption, routes: RoutesFile): number {
-  return option.legs.reduce((sum, leg) => {
-    const route = routes.routes.find((item) =>
-      leg.routeNos.includes(item.routeNo) &&
-      item.stops.indexOf(leg.boardStopId) >= 0 &&
-      item.stops.indexOf(leg.alightStopId) > item.stops.indexOf(leg.boardStopId),
-    );
-    if (!route) return sum;
-    const count = route.stops.indexOf(leg.alightStopId) - route.stops.indexOf(leg.boardStopId);
-    return sum + Math.max(2, count * 2);
-  }, 0);
-}
+// 총 소요시간(탑승시간 포함)은 검증된 경로 API 가 값을 줄 때만 표시한다.
+// 정류장 개수로 분을 추정하던 계산은 근거가 없어 제거했다(docs/현재/01_제품_화면.md).
 
 function resizeReportPhoto(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -119,6 +114,8 @@ export function findTrips(
 export default function QrMain() {
   const stops = useStops((state) => state.stops);
   const loaded = useStops((state) => state.loaded);
+  const stopsFailed = useStops((state) => state.failed);
+  const reloadStops = useStops((state) => state.load);
   const [mode, setMode] = useState<QrMode>("home");
   const [startId, setStartId] = useState<string | null>(null);
   const [startCandidateIds, setStartCandidateIds] = useState<string[]>([]);
@@ -143,6 +140,9 @@ export default function QrMain() {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceStopRequestedRef = useRef(false);
   const resultsRef = useRef<HTMLElement | null>(null);
+  // 음성 세션 정리용 — 언마운트 후 자동 재시작·타이머가 남지 않게 한다.
+  const voiceTimersRef = useRef<number[]>([]);
+  const unmountedRef = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -157,7 +157,8 @@ export default function QrMain() {
   useEffect(() => {
     if (!start) return;
     let alive = true;
-    setArrival(headwayFallback(start));
+    // 폴백(배차간격) 문구를 상태에 담지 않는다. 실시간이 오기 전엔 비워 둔다.
+    setArrival(null);
     getArrival(start).then((value) => alive && setArrival(value));
     return () => {
       alive = false;
@@ -173,23 +174,24 @@ export default function QrMain() {
     if (!start || !routes || results.length === 0) return [];
     const { destination, option } = results[0];
     const firstLeg = option.legs[0];
-    const rideMin = routeRideMinutes(option, routes);
     return firstLeg.routeNos.map((routeNo) => {
-      const liveArrival = arrival?.byRoute?.find((item) => item.routeNo === routeNo);
-      const waitMin = liveArrival?.min ?? start.headwayMin ?? 15;
+      // 실시간 응답에 있는 노선만 대기 시간을 안다. 없으면 배차간격으로 대체하지 않고 null.
+      // 노선명 비교는 arrivals.ts 의 정규화(괄호 표기 제거)를 그대로 쓴다.
+      const liveArrival = arrival?.live ? arrivalsForRoutes(arrival, [routeNo])[0] : undefined;
+      const waitMin = liveArrival?.min ?? null;
       const route = routes.routes.find((candidate) => candidate.routeNo === routeNo);
       const boardIndex = route?.stops.indexOf(start.id) ?? -1;
       const nextStop = boardIndex >= 0 ? stops.find((stop) => stop.id === route?.stops[boardIndex + 1]) : null;
       return {
         routeNo,
         waitMin,
-        rideMin,
-        totalMin: option.walkMin + waitMin + rideMin,
         live: Boolean(liveArrival),
         directionName: nextStop?.name ?? destination.name,
       };
-    }).filter((item) => item.waitMin >= option.walkMin + 1)
-      .sort((a, b) => a.totalMin - b.totalMin)
+    // 대기 시간을 아는 노선만 '못 타는 버스'를 걸러낸다. 모르면 후보로 남긴다.
+    }).filter((item) => item.waitMin === null || item.waitMin >= option.walkMin + 1)
+      // 근거 있는 값(실시간 대기 시간)으로만 정렬한다. 모르는 노선은 뒤로 보낸다.
+      .sort((a, b) => (a.waitMin ?? Number.POSITIVE_INFINITY) - (b.waitMin ?? Number.POSITIVE_INFINITY))
       .slice(0, 3);
   }, [arrival, results, routes, start, stops]);
 
@@ -334,6 +336,19 @@ export default function QrMain() {
     return () => window.cancelAnimationFrame(frame);
   }, [submitted, start, routes]);
 
+  // 화면을 떠나면 음성 세션과 타이머를 모두 정리한다(마이크가 계속 켜져 있지 않도록).
+  useEffect(() => {
+    unmountedRef.current = false;
+    return () => {
+      unmountedRef.current = true;
+      voiceStopRequestedRef.current = true;
+      voiceTimersRef.current.forEach((id) => window.clearTimeout(id));
+      voiceTimersRef.current = [];
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
+
   const startVoice = () => {
     const target: VoiceTarget = "destination";
     if (listeningTarget) {
@@ -360,22 +375,29 @@ export default function QrMain() {
     let failed = false;
     const startedAt = Date.now();
     let finishTimer: number | undefined;
-    const maxTimer = window.setTimeout(() => {
+    const track = (id: number) => {
+      voiceTimersRef.current.push(id);
+      return id;
+    };
+    const maxTimer = track(window.setTimeout(() => {
       voiceStopRequestedRef.current = true;
       recognition.stop();
-    }, 45_000);
+    }, 45_000));
     recognition.onspeechstart = () => {
+      if (unmountedRef.current) return;
       setSpeechActive(true);
       if (finishTimer) window.clearTimeout(finishTimer);
     };
     recognition.onspeechend = () => {
+      if (unmountedRef.current) return;
       setSpeechActive(false);
-      finishTimer = window.setTimeout(() => {
+      finishTimer = track(window.setTimeout(() => {
         voiceStopRequestedRef.current = true;
         recognition.stop();
-      }, 1800);
+      }, 1800));
     };
     recognition.onresult = (event) => {
+      if (unmountedRef.current) return;
       heardText = Array.from(event.results)
         .map((result) => result[0]?.transcript?.trim() ?? "")
         .filter(Boolean)
@@ -387,12 +409,22 @@ export default function QrMain() {
       failed = true;
       window.clearTimeout(maxTimer);
       if (finishTimer) window.clearTimeout(finishTimer);
+      if (unmountedRef.current) return;
       setSpeechActive(false);
       setListeningTarget(null);
     };
     recognition.onend = () => {
+      // 언마운트 뒤에는 자동 재시작하지 않는다(마이크가 계속 켜지는 것을 막는다).
+      if (unmountedRef.current) {
+        window.clearTimeout(maxTimer);
+        if (finishTimer) window.clearTimeout(finishTimer);
+        return;
+      }
       if (!failed && !voiceStopRequestedRef.current && !heardText && Date.now() - startedAt < 10_000) {
-        window.setTimeout(() => recognition.start(), 100);
+        track(window.setTimeout(() => {
+          if (unmountedRef.current) return;
+          recognition.start();
+        }, 100));
         return;
       }
       window.clearTimeout(maxTimer);
@@ -407,7 +439,15 @@ export default function QrMain() {
   };
 
   if (!loaded) {
-    return <main className="qrmain"><p className="qrmain__state">정류장 정보를 불러오는 중…</p></main>;
+    // 실패를 스피너로 감추지 않는다. 실패는 말하고 다시 시도할 길을 준다.
+    return <main className="qrmain">
+      {stopsFailed
+        ? <section className="qrmain__ask">
+            <p className="qrmain__state">정류장 정보를 불러오지 못했어요</p>
+            <button type="button" className="qrmain__retry" onClick={() => void reloadStops()}>다시 시도하기</button>
+          </section>
+        : <p className="qrmain__state">정류장 정보를 불러오는 중…</p>}
+    </main>;
   }
 
   if (mode === "home") {
@@ -501,10 +541,18 @@ export default function QrMain() {
               <div className="qrmain__result-set">
                   {routeChoices.map((item, routeIndex) => (
                     <article className="qrmain__route" data-best={routeIndex === 0} key={item.routeNo}>
-                      <p className="qrmain__recommend">{routeIndex === 0 ? `${results[0].destination.name}(${item.directionName} 방면) 정류장에 가장 빨리 도착` : "다음 도착 후보"}</p>
+                      <p className="qrmain__recommend">{routeIndex !== 0 ? "다음 도착 후보" : `${results[0].destination.name}(${item.directionName} 방면) 정류장${item.live ? "에 가장 빨리 도착" : "으로 가는 버스"}`}</p>
                       <div className="qrmain__route-head">
                         <div><strong>{item.routeNo}번</strong></div>
-                        <p><b>{item.waitMin}분 후</b><span>{item.live ? "실시간 도착정보" : "배차표 기준 예상"}</span><em>목적지까지 약 {item.totalMin}분</em></p>
+                        {/* 확인 중 / 조회 실패 / 오는 버스 없음 을 각각 다른 문구로 나눈다.
+                            목적지까지의 총 소요시간은 근거가 없어 표시하지 않는다. */}
+                        {item.live && item.waitMin !== null
+                          ? <p><b>{item.waitMin}분 후</b><span>실시간 도착정보</span></p>
+                          : arrival === null
+                            ? <p><b>도착정보를 확인하고 있어요</b></p>
+                            : !arrival.live
+                              ? <p><b>{ARRIVAL_UNAVAILABLE_TEXT}</b></p>
+                              : <p><b>{ARRIVAL_EMPTY_TEXT}</b></p>}
                       </div>
                     </article>
                   ))}

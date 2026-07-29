@@ -1,10 +1,6 @@
 import { Phone } from "lucide-react";
-import {
-  CONTACT_CATEGORIES,
-  ROUTE_INFO_LINKS,
-  rideContactsForRoutes,
-} from "../../data/busContacts";
-import type { BusContact, ContactCategoryInfo } from "../../data/busContacts";
+import { CONTACT_CATEGORIES, rideContactsForRoutes } from "../../data/busContacts";
+import type { BusContact, ContactCategory, ContactCategoryInfo } from "../../data/busContacts";
 import "./ContactGuide.css";
 
 /** 전화 앱으로 넘길 때 쓰는 형식(하이픈 제거). */
@@ -38,8 +34,10 @@ export interface ContactGuideProps {
   routes?: string[];
   /** 근거 문구("○○에 오는 버스 기준입니다")에 쓸 정류장 이름. */
   stopName?: string;
-  /** 참고용으로 좁게 보여줄 때. 예시 문구와 버스 노선정보 링크를 접는다. */
+  /** 참고용으로 좁게 보여줄 때. 예시 문구를 접는다. */
   compact?: boolean;
+  /** 보여줄 분류만 고른다. 주지 않으면 안내문 네 가지를 모두 보여준다. */
+  categories?: ContactCategory[];
 }
 
 /**
@@ -48,13 +46,16 @@ export interface ContactGuideProps {
  * 이 앱은 공식 접수 연계가 없으므로 "접수처 안내"까지만 한다.
  * 어디에도 민원을 접수했다고 표시하지 않는다.
  */
-export default function ContactGuide({ routes, stopName, compact = false }: ContactGuideProps) {
+export default function ContactGuide({ routes, stopName, compact = false, categories }: ContactGuideProps) {
   const contactsOf = (category: ContactCategoryInfo): BusContact[] =>
     category.key === "ride" ? rideContactsForRoutes(routes ?? []) : category.contacts;
+  const shown = categories
+    ? CONTACT_CATEGORIES.filter((category) => categories.includes(category.key))
+    : CONTACT_CATEGORIES;
 
   return (
     <>
-      {CONTACT_CATEGORIES.map((category) => (
+      {shown.map((category) => (
         <article className="contactguide__contact" key={category.key}>
           <h2>{category.title}</h2>
           {!compact && <p className="contactguide__contact-ex">{category.examples}</p>}
@@ -62,21 +63,8 @@ export default function ContactGuide({ routes, stopName, compact = false }: Cont
             <p className="contactguide__contact-ex"><b>{stopName}</b>에 오는 버스 기준입니다.</p>
           )}
           {contactsOf(category).map((item) => <ContactTel contact={item} key={item.phone} />)}
-          {category.required.length > 0 && (
-            <p className="contactguide__contact-need">함께 알려주세요 · {category.required.join(", ")}</p>
-          )}
         </article>
       ))}
-      {!compact && (
-        <article className="contactguide__contact">
-          <h2>버스 노선정보</h2>
-          <div className="contactguide__links">
-            {ROUTE_INFO_LINKS.map((link) => (
-              <a href={link.url} key={link.url} target="_blank" rel="noreferrer noopener">{link.label}</a>
-            ))}
-          </div>
-        </article>
-      )}
     </>
   );
 }

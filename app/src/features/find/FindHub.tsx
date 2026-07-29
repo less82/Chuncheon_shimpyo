@@ -1,21 +1,22 @@
-// 찾기 허브 — 정류장·노선·문의처를 한 화면의 세 탭으로 묶는다.
-// 탭은 URL 로 지정한다: /find?tab=stops|routes|contacts (기본 stops).
+// 찾기 허브 — 정류장·노선을 한 화면의 두 탭으로 묶는다.
+// 탭은 URL 로 지정한다: /find?tab=stops|routes (기본 stops).
 // 조회 기능을 새로 만들지 않고, 이미 만들어 둔 조각들을 그대로 붙인다.
+//
+// 문의처 탭은 없앴다. 문의는 알리기(/app/report) 한 흐름으로 모은다 —
+// 시민이 전화번호 목록에서 담당 부서를 스스로 고르게 하지 않는다.
 
 import { ChevronLeft } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import ContactGuide from "../contacts/ContactGuide";
 import { StopSearch } from "./StopSearch";
 import { RouteSearch } from "./RouteSearch";
 import "./FindHub.css";
 
 /** 탭 식별자. URL 의 ?tab= 값과 같다. */
-export type FindTab = "stops" | "routes" | "contacts";
+export type FindTab = "stops" | "routes";
 
 const TABS: { key: FindTab; label: string }[] = [
   { key: "stops", label: "정류장" },
   { key: "routes", label: "노선" },
-  { key: "contacts", label: "문의처" },
 ];
 
 /** 모르는 값이 오면 기본 탭(정류장)으로 둔다. */
@@ -55,7 +56,7 @@ export default function FindHub() {
       </div>
 
       <div
-        className={active === "contacts" ? "findhub__panel findhub__panel--scroll" : "findhub__panel"}
+        className="findhub__panel"
         id={`findhub-panel-${active}`}
         role="tabpanel"
         aria-labelledby={`findhub-tab-${active}`}
@@ -63,12 +64,6 @@ export default function FindHub() {
       >
         {active === "stops" && <StopSearch />}
         {active === "routes" && <RouteSearch />}
-        {active === "contacts" && (
-          <>
-            <p className="findhub__lead">문의 내용에 따라 접수처가 다릅니다. 아래 번호로 직접 문의하세요.</p>
-            <ContactGuide />
-          </>
-        )}
       </div>
     </main>
   );

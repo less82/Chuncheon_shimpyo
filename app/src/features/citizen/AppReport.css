@@ -34,8 +34,24 @@
 .appreport__stop-chip { display: inline-flex; align-self: flex-start; margin-bottom: 18px; padding: 7px 11px; align-items: center; gap: 5px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 14px; font-weight: 900; }
 .appreport__stop-chip svg { width: 17px; }
 .appreport__issues { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 22px; }
-.appreport__issues button { min-height: 76px; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: white; color: var(--ink); font-size: 16px; font-weight: 900; }
+.appreport__issues button { display: flex; min-height: 76px; padding: 8px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 2px solid var(--border); border-radius: 16px; background: white; color: var(--ink); font-size: 16px; font-weight: 900; word-break: keep-all; }
+.appreport__issues button small { color: var(--ink-muted); font-size: 12px; font-weight: 700; }
 .appreport__issues button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
+.appreport__issues button[aria-pressed="true"] small { color: var(--on-brand); }
+/* 버스 정보·겪은 때 입력 — 검색창(.appreport__search)과 같은 테두리·높이를 쓴다. */
+.appreport__field { display: flex; margin-top: 14px; flex-direction: column; gap: 6px; }
+.appreport__field > span { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
+.appreport__field input { min-height: 56px; padding: 0 13px; border: 2px solid var(--border-strong); border-radius: 15px; background: white; color: var(--ink); font-size: 17px; font-weight: 700; }
+.appreport__chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 9px; }
+.appreport__chips > span { grid-column: 1 / -1; color: var(--ink-muted); font-size: 13px; font-weight: 800; }
+.appreport__chips button { min-height: 48px; overflow: hidden; padding: 0 6px; border: 1px solid var(--border); border-radius: 11px; background: white; color: var(--ink); font-size: 13px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.appreport__chips button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: var(--on-brand); }
+/* 보내기 전 내용 확인 — 값은 시민이 넣은 것만 쓰고 비면 "미입력"으로 둔다. */
+.appreport__summary { margin-top: 18px; border: 1px solid var(--border); border-radius: 16px; background: white; }
+.appreport__summary > div { display: grid; grid-template-columns: 68px 1fr; padding: 11px 13px; gap: 10px; border-top: 1px solid var(--border); }
+.appreport__summary > div:first-child { border-top: 0; }
+.appreport__summary dt { color: var(--ink-muted); font-size: 14px; font-weight: 800; }
+.appreport__summary dd { font-size: 15px; font-weight: 800; line-height: 1.4; word-break: keep-all; }
 .appreport__bottom-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin-top: auto; }
 .appreport__primary,
 .appreport__secondary,
@@ -50,10 +66,9 @@
    핵심 흐름(정류장 확인 → 상태 선택) 밖의 참고 화면이라 이 두 화면만 세로 스크롤을 허용한다. */
 .appreport__panel--scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .appreport__panel--done { align-items: center; text-align: center; }
-.appreport__more { margin-top: 12px; padding: 10px; min-height: 48px; border: 0; background: transparent; color: var(--brand); font-size: 15px; font-weight: 900; text-decoration: underline; }
 /* 접수처 카드 규칙은 ContactGuide.css(.contactguide__*) 한 벌만 쓴다.
    여기에는 완료 화면에서만 필요한 폭·간격 보정만 남긴다. */
-.appreport__contact--done { width: 100%; margin-top: 20px; }
+.appreport__contact--done { width: 100%; margin-top: 4px; }
 @media (max-height: 680px) { .appreport__panel { padding-top: 18px; } .appreport h1 { font-size: 26px; } .appreport__issues button { min-height: 62px; } .appreport__stop { margin-top: 14px; min-height: 90px; padding: 12px; } }
 @media (max-height: 600px) {
   .appreport__bar { height: 56px; padding-block: 5px; }
@@ -70,5 +85,12 @@
   .appreport__matches button small { font-size: 11px; }
   .appreport__primary,
   .appreport__secondary { min-height: 50px; font-size: 15px; }
+  .appreport__issues { margin-top: 8px; gap: 6px; }
+  .appreport__field { margin-top: 8px; gap: 3px; }
+  .appreport__field > span { font-size: 13px; }
+  .appreport__field input { min-height: 50px; font-size: 16px; }
+  .appreport__chips { margin-top: 6px; }
+  .appreport__summary { margin-top: 8px; }
+  .appreport__summary > div { padding: 8px 11px; }
 }
 @media (min-width: 601px) { .appreport { border: 8px solid #222a36; border-radius: 38px; box-shadow: var(--shadow-float); } }

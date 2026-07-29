@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { Stop } from "../../types/stop";
 import type { TripOption } from "../../types/trip";
 import type { LatLng } from "../../lib/geo";
-import { arrivalsForRoutes, getArrival, type Arrival } from "../../lib/arrivals";
+import {
+  ARRIVAL_EMPTY_TEXT,
+  ARRIVAL_UNAVAILABLE_TEXT,
+  arrivalsForRoutes,
+  getArrival,
+  type Arrival,
+} from "../../lib/arrivals";
 import { useFavorites } from "../../store/useFavorites";
 import { Link } from "react-router-dom";
 import "./TripView.css";
@@ -36,12 +42,19 @@ export default function TripCard({ option, stops, destStop, destinationLabel, ar
 
   const resolvedArrival = arrival ?? fetchedArrival;
   const matchingArrivals = resolvedArrival ? arrivalsForRoutes(resolvedArrival, routeNos) : [];
+  // 조회 실패(live=false)와 '이 노선에 오는 버스가 0대'를 구분한다.
   const arrivalState = !resolvedArrival
     ? "loading"
-    : resolvedArrival.live && matchingArrivals.length > 0 ? "live" : "unavailable";
+    : !resolvedArrival.live
+      ? "unavailable"
+      : matchingArrivals.length === 0
+        ? "empty"
+        : "live";
+  // 남은 정거장 수는 실시간 응답에서만 온다. live 가 아니면 아예 보여주지 않는다.
   const shownBuses = matchingArrivals.slice(0, 2).map((item) => ({
     routeNo: item.routeNo,
     text: item.min <= 0 ? "곧 도착" : `${item.min}분 후`,
+    seqText: item.seq > 0 ? `${item.seq}정거장 전` : "",
   }));
   const primaryRouteNo = shownBuses[0]?.routeNo ?? routeNos[0];
   const journeyId = primaryRouteNo ? `${boardStop.id}:${primaryRouteNo}:${destStop.id}` : "";
@@ -56,15 +69,18 @@ export default function TripCard({ option, stops, destStop, destinationLabel, ar
       </header>
 
       {arrivalState === "loading" ? <p className="tripcard__status" role="status">도착정보를 확인하고 있어요</p>
-        : arrivalState === "unavailable" ? <div className="tripcard__status tripcard__status--unavailable" role="status">
-          <strong>실시간 도착정보를 불러오지 못했어요</strong>
+        : arrivalState === "unavailable" || arrivalState === "empty" ? <div className="tripcard__status tripcard__status--unavailable" role="status">
+          <strong>{arrivalState === "empty" ? ARRIVAL_EMPTY_TEXT : ARRIVAL_UNAVAILABLE_TEXT}</strong>
           <span>{routeNos.slice(0, 3).map((routeNo) => `${routeNo}번`).join(" · ")}</span>
         </div>
         : <ul className="tripcard__arrivals">
           {shownBuses.map((bus) => (
             <li key={bus.routeNo}>
               <strong>{bus.routeNo}번</strong>
-              <b>{bus.text}</b>
+              <span className="tripcard__when">
+                <b>{bus.text}</b>
+                {bus.seqText && <small>{bus.seqText}</small>}
+              </span>
             </li>
           ))}
         </ul>}

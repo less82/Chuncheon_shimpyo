@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { arrivalsForRoutes, getArrival, headwayFallback } from "./arrivals";
+import { arrivalsForRoutes, getArrival, headwayFallback, parseTagoArrival } from "./arrivals";
 import type { Stop } from "../types/stop";
 import { makeUnknown } from "../types/stop";
 
@@ -33,6 +33,7 @@ describe("headwayFallback", () => {
     expect(headwayFallback(makeStop(12))).toEqual({
       text: "배차간격 약 12분",
       live: false,
+      status: "failed",
     });
   });
   it("headwayMin 없으면 15분 기본", () => {
@@ -45,6 +46,7 @@ describe("arrivalsForRoutes", () => {
     const result = arrivalsForRoutes({
       text: "약 4분 후 도착",
       live: true,
+      status: "live" as const,
       byRoute: [
         { routeNo: "15", min: 4, seq: 2 },
         { routeNo: "300", min: 7, seq: 4 },
@@ -62,7 +64,7 @@ describe("getArrival", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const r = await getArrival(makeStop(12, "NODE1"));
-    expect(r).toEqual({ text: "배차간격 약 12분", live: false });
+    expect(r).toEqual({ text: "배차간격 약 12분", live: false, status: "failed" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -72,7 +74,7 @@ describe("getArrival", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const r = await getArrival(makeStop(12));
-    expect(r).toEqual({ text: "배차간격 약 12분", live: false });
+    expect(r).toEqual({ text: "배차간격 약 12분", live: false, status: "failed" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -86,7 +88,7 @@ describe("getArrival", () => {
     );
 
     const r = await getArrival(makeStop(20, "NODE1"));
-    expect(r).toEqual({ text: "배차간격 약 20분", live: false });
+    expect(r).toEqual({ text: "배차간격 약 20분", live: false, status: "failed" });
   });
 
   it("타임아웃(abort) 시 폴백", async () => {
@@ -107,7 +109,7 @@ describe("getArrival", () => {
     await vi.advanceTimersByTimeAsync(3000);
     const r = await p;
     vi.useRealTimers();
-    expect(r).toEqual({ text: "배차간격 약 20분", live: false });
+    expect(r).toEqual({ text: "배차간격 약 20분", live: false, status: "failed" });
   });
 
   it("키가 있어도 non-ok 응답이면 폴백", async () => {
@@ -179,5 +181,62 @@ describe("getArrival", () => {
     );
     const r = await getArrival(makeStop(12, "NODE1"), "7");
     expect(r.text).toBe("약 10분 후 도착");
+    expect(r.status).toBe("live");
+  });
+
+  it("정상 응답인데 도착 예정 버스가 0대면 실패가 아니라 empty", async () => {
+    vi.stubEnv("VITE_TAGO_KEY", "test-key");
+    const xml =
+      "<response><header><resultCode>03</resultCode></header><body><items></items><totalCount>0</totalCount></body></response>";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, status: 200, text: async () => xml }) as Response),
+    );
+    const r = await getArrival(makeStop(12, "NODE1"));
+    expect(r.status).toBe("empty");
+    expect(r.live).toBe(true);
+    expect(r.text).toBe("지금 오는 버스가 없어요");
+  });
+
+  it("resultCode 가 오류면 failed 로 본다(0대로 오인하지 않는다)", async () => {
+    vi.stubEnv("VITE_TAGO_KEY", "test-key");
+    const xml = "<response><header><resultCode>22</resultCode></header></response>";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, status: 200, text: async () => xml }) as Response),
+    );
+    const r = await getArrival(makeStop(12, "NODE1"));
+    expect(r.status).toBe("failed");
+    expect(r.live).toBe(false);
+  });
+
+  it("TAGO 응답이 아닌 본문이면 empty 가 아니라 failed", async () => {
+    vi.stubEnv("VITE_TAGO_KEY", "test-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, status: 200, text: async () => "<html>error page</html>" }) as Response),
+    );
+    const r = await getArrival(makeStop(12, "NODE1"));
+    expect(r.status).toBe("failed");
+  });
+});
+
+describe("parseTagoArrival 노선 매칭", () => {
+  const xml =
+    "<response><body><items>" +
+    "<item><routeno>7</routeno><arrtime>600</arrtime><arrprevstationcnt>5</arrprevstationcnt></item>" +
+    "<item><routeno>3</routeno><arrtime>120</arrtime><arrprevstationcnt>1</arrprevstationcnt></item>" +
+    "</items></body></response>";
+
+  it("요청한 노선이 응답에 없으면 다른 노선으로 대체하지 않고 empty", () => {
+    const r = parseTagoArrival(xml, "9");
+    expect(r?.status).toBe("empty");
+    expect(r?.text).toBe("지금 오는 버스가 없어요");
+  });
+
+  it("괄호가 붙은 내부 노선명도 정규화해서 매칭한다", () => {
+    const r = parseTagoArrival(xml, "7(갈때편도)");
+    expect(r?.status).toBe("live");
+    expect(r?.text).toBe("약 10분 후 도착");
   });
 });

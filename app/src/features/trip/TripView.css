@@ -249,6 +249,9 @@
 .tripcard__arrivals li { display: flex; min-height: clamp(58px, 11dvh, 68px); align-items: center; justify-content: space-between; gap: var(--sp-3); border-top: 1px solid var(--border); }
 .tripcard__arrivals li strong { color: var(--brand-strong); font-size: clamp(22px, calc(6px + 5vw), 28px); white-space: nowrap; }
 .tripcard__arrivals li b { color: var(--ink); font-size: clamp(24px, calc(7px + 5.5vw), 31px); text-align: right; white-space: nowrap; }
+/* 도착예정시간이 가장 크고 먼저다. 남은 정거장 수는 그 아래 보조 정보다. */
+.tripcard__when { display: grid; justify-items: end; gap: 2px; }
+.tripcard__when small { color: var(--ink-muted); font-size: clamp(12px, calc(2px + 3.2vw), 15px); font-weight: 800; white-space: nowrap; }
 .tripcard__status { display: grid; min-height: clamp(92px, 18dvh, 116px); margin: 14px 0 0; place-items: center; border-block: 1px solid var(--border); color: var(--ink-body); font-size: clamp(15px, calc(3px + 3.8vw), 18px); font-weight: 800; text-align: center; }
 .tripcard__status--unavailable { align-content: center; gap: 7px; }
 .tripcard__status--unavailable span { color: var(--ink-muted); font-size: 14px; }

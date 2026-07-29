@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Stop } from "../../types/stop";
+import { ACCENT_HEX, createVoyagerLayer, dotStyle } from "../map/leafletBase";
 
 export default function QrStopMap({ stop }: { stop: Stop }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -14,18 +15,8 @@ export default function QrStopMap({ stop }: { stop: Stop }) {
       zoomControl: false,
       attributionControl: false,
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      maxZoom: 20,
-      subdomains: "abcd",
-      detectRetina: true,
-    }).addTo(map);
-    L.circleMarker([stop.lat, stop.lng], {
-      radius: 10,
-      color: "#fff",
-      weight: 3,
-      fillColor: "#00a3e0",
-      fillOpacity: 1,
-    }).addTo(map);
+    createVoyagerLayer(false).addTo(map);
+    L.circleMarker([stop.lat, stop.lng], dotStyle(ACCENT_HEX, 10)).addTo(map);
     return () => {
       map.remove();
     };

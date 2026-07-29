@@ -49,26 +49,29 @@ describe("<FindHub>", () => {
     await waitFor(() => expect(screen.getByLabelText("노선 번호 또는 이름으로 검색")).toBeInTheDocument());
   });
 
-  it("?tab=contacts 로 들어가면 문의처가 보인다", () => {
+  it("문의처 탭은 없앴다 — 문의는 알리기 한 흐름으로 모은다", () => {
     const screen = renderHub("?tab=contacts");
-    expect(screen.getByRole("tab", { name: "문의처", selected: true })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /전화 걸기$/ }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("tab", { name: "문의처" })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("link", { name: /전화 걸기$/ })).toHaveLength(0);
+    // 모르는 탭 값은 기본 탭(정류장)으로 떨어진다
+    expect(screen.getByRole("tab", { name: "정류장", selected: true })).toBeInTheDocument();
   });
 
   it("탭 버튼마다 role=tab 과 aria-selected 가 붙는다", () => {
     const screen = renderHub();
     const tabs = screen.getAllByRole("tab");
-    expect(tabs).toHaveLength(3);
+    expect(tabs).toHaveLength(2);
     for (const tab of tabs) expect(tab).toHaveAttribute("aria-selected");
     expect(tabs.filter((tab) => tab.getAttribute("aria-selected") === "true")).toHaveLength(1);
     expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "findhub-tab-stops");
   });
 
-  it("탭을 누르면 선택 상태와 본문이 함께 바뀐다", () => {
+  it("탭을 누르면 선택 상태와 본문이 함께 바뀐다", async () => {
     const screen = renderHub();
-    fireEvent.click(screen.getByRole("tab", { name: "문의처" }));
-    expect(screen.getByRole("tab", { name: "문의처", selected: true })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "노선" }));
+    expect(screen.getByRole("tab", { name: "노선", selected: true })).toBeInTheDocument();
     expect(screen.queryByLabelText("정류장 이름 또는 정류장번호 검색")).not.toBeInTheDocument();
-    expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "findhub-tab-contacts");
+    expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "findhub-tab-routes");
+    await waitFor(() => expect(screen.getByLabelText("노선 번호 또는 이름으로 검색")).toBeInTheDocument());
   });
 });

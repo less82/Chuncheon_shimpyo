@@ -20,6 +20,16 @@
 .routesearch-item__chevron { width: 20px; color: var(--ink-muted); transition: transform .15s ease; }
 .routesearch-item--open .routesearch-item__chevron { transform: rotate(180deg); }
 .routesearch-item__body { padding: 2px 12px 12px; border-top: 1px solid var(--border); }
+/* 실시간 차량 — 지도만으로 정보를 주지 않고 아래 텍스트 목록을 함께 둔다. */
+.routesearch-live { display: grid; margin-top: 10px; gap: 8px; }
+.routesearch-live__title { margin: 0; color: var(--ink-muted); font-size: 13px; font-weight: 800; line-height: 1.5; word-break: keep-all; }
+.routesearch-live__map { width: 100%; height: 200px; overflow: hidden; border: 1px solid var(--border); border-radius: 13px; }
+.routesearch-live__list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.routesearch-live__list li { display: grid; grid-template-columns: 18px 1fr; min-height: 34px; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; font-weight: 800; }
+.routesearch-live__list svg { width: 16px; color: var(--brand); }
+.routesearch-live__list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.routesearch-item__stop--bus a { background: var(--brand-soft); }
+.routesearch-item__stop--bus svg { color: var(--brand); }
 .routesearch-item__stops { display: grid; gap: 4px; margin: 0; padding: 8px 0 0; list-style: none; }
 .routesearch-item__stops a { display: grid; grid-template-columns: 26px 18px 1fr; min-width: 0; min-height: 48px; padding: 6px 8px; align-items: center; gap: 8px; border-radius: 11px; color: var(--ink); text-decoration: none; }
 .routesearch-item__stops a:hover { background: var(--brand-soft); }
@@ -31,4 +41,6 @@
   .routesearch__search input { height: 46px; font-size: 16px; }
   .routesearch__count { margin: 6px 2px 4px; }
   .routesearch-item__head { min-height: 56px; padding: 7px 10px; }
+  /* 지도는 장식(aria-hidden)이고 본체는 아래 텍스트 목록이다. 짧은 화면에서 목록이 밀리지 않게 지도를 줄인다. */
+  .routesearch-live__map { height: 132px; }
 }

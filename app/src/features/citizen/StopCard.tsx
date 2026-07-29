@@ -8,7 +8,7 @@ import type { Stop } from "../../types/stop";
 import FacilityBadge from "../../components/FacilityBadge";
 import FavoriteStar from "../../components/FavoriteStar";
 import AltStopHint from "./AltStopHint";
-import { getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
+import { ARRIVAL_UNAVAILABLE_TEXT, getArrival, headwayFallback, type Arrival } from "../../lib/arrivals";
 import { getWalkRoute, straightWalk, type Point } from "../../lib/walking";
 import { buildQrEntryUrl, buildShareUrl } from "../share/shareLink";
 import { toQrDataUrl } from "../share/qr";
@@ -135,7 +135,8 @@ export default function StopCard({ stop, walkMin, walkReal }: Props) {
 
       <div className="stopcard__arrival" data-live={arrival.live}>
         <BusFront aria-hidden="true" />
-        <span>{arrival.live ? arrival.text : "실시간 도착 정보 없음"}</span>
+        {/* 실시간이 아니면 폴백 문구(배차간격)를 절대 내보내지 않고 고정 안내만 쓴다. */}
+        <span>{arrival.live ? arrival.text : ARRIVAL_UNAVAILABLE_TEXT}</span>
         {arrival.live && <span className="stopcard__livedot">실시간</span>}
       </div>
 

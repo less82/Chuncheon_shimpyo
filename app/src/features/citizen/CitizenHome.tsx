@@ -4,31 +4,33 @@ import { Link, useSearchParams } from "react-router-dom";
 import ImportOnLoad from "../share/ImportOnLoad";
 import { useStops } from "../../store/useStops";
 import { useFavorites } from "../../store/useFavorites";
-import { getArrival, type Arrival } from "../../lib/arrivals";
+import { ARRIVAL_UNAVAILABLE_TEXT, getArrival, type Arrival } from "../../lib/arrivals";
 import type { Stop } from "../../types/stop";
 import type { FavoriteJourney } from "../../store/useFavorites";
 import "./CitizenHome.css";
 
 /** 실시간 조회가 실패했을 때 쓰는 고정 문구(docs/현재/01_제품_화면.md). */
-export const ARRIVAL_UNAVAILABLE = "실시간 도착정보를 불러오지 못했어요";
+export const ARRIVAL_UNAVAILABLE = ARRIVAL_UNAVAILABLE_TEXT;
 
 export function FavoriteStopCard({ journey, stops }: { journey: FavoriteJourney; stops: Stop[] }) {
   const board = stops.find((stop) => stop.id === journey.boardStopId) ?? null;
   const destination = stops.find((stop) => stop.id === journey.destinationStopId) ?? null;
   const destinationName = journey.destinationName ?? destination?.name ?? "목적지";
   const routeNo = journey.routeNo;
-  const [arrival, setArrival] = useState<Arrival>(() => ({ text: "도착정보 확인 중", live: false }));
+  const [arrival, setArrival] = useState<Arrival>(() => ({ text: "도착정보 확인 중", live: false, status: "failed" }));
 
   useEffect(() => {
     if (!board) {
-      setArrival({ text: "도착정보 미확인", live: false });
+      setArrival({ text: "도착정보 미확인", live: false, status: "failed" });
       return;
     }
     let alive = true;
-    setArrival({ text: "도착정보 확인 중", live: false });
-    // 실시간(live)이 아니면 조회 실패·키 미설정이라 배차간격 폴백이 돌아온다.
-    // 배차간격을 도착예정처럼 쓰지 않고, "버스가 없다"고 단정하지도 않는다.
-    getArrival(board, routeNo).then((value) => alive && setArrival(value.live ? value : { text: ARRIVAL_UNAVAILABLE, live: false }));
+    setArrival({ text: "도착정보 확인 중", live: false, status: "failed" });
+    // status 로 3분기한다. live=이 노선 도착시간, empty=오는 버스 0대,
+    // failed=조회 실패(배차간격 폴백이 돌아오므로 그 문구는 화면에 내보내지 않는다).
+    getArrival(board, routeNo).then((value) => alive && setArrival(
+      value.status === "failed" ? { text: ARRIVAL_UNAVAILABLE, live: false, status: "failed" } : value,
+    ));
     return () => { alive = false; };
   }, [board, routeNo]);
 

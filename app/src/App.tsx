@@ -34,7 +34,8 @@ export default function App() {
         <Route path="/app/report" element={<AppReport />} />
         <Route path="/maeng-coco" element={<MaengCoco />} />
         <Route path="/find" element={<FindHub />} />
-        <Route path="/contacts" element={<Navigate to="/find?tab=contacts" replace />} />
+        {/* 문의처 목록 화면은 없앴다. 문의는 알리기 한 흐름으로 모은다. */}
+        <Route path="/contacts" element={<Navigate to="/app/report" replace />} />
         <Route path="/report" element={<Navigate to="/app/report" replace />} />
         <Route path="/design-preview" element={<DesignPreview />} />
         <Route path="/favorites" element={<Favorites />} />

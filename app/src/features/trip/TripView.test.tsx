@@ -42,7 +42,7 @@ const opposite: Stop = { ...stop, id: "A2", stopNo: "1482", name: "강원대후�
 beforeEach(() => {
   useStops.setState({ stops: [stop, opposite, destination], loaded: true });
   useFavorites.setState({ ids: [], journeys: [] });
-  vi.mocked(getArrival).mockResolvedValue({ text: "실시간 도착정보 없음", live: false });
+  vi.mocked(getArrival).mockResolvedValue({ text: "실시간 도착정보 없음", live: false, status: "failed" });
 });
 
 describe("<TripView>", () => {
@@ -122,8 +122,8 @@ describe("<TripView>", () => {
 
   it("목적지로 가는 후보 중 실제 도착 예정시간이 가장 빠른 버스를 먼저 보여준다", async () => {
     vi.mocked(getArrival).mockImplementation(async (boardStop) => boardStop.id === "A2"
-      ? { text: "약 3분 후 도착", live: true, byRoute: [{ routeNo: "9", min: 3, seq: 1 }] }
-      : { text: "약 9분 후 도착", live: true, byRoute: [{ routeNo: "7", min: 9, seq: 4 }] });
+      ? { text: "약 3분 후 도착", live: true, status: "live" as const, byRoute: [{ routeNo: "9", min: 3, seq: 1 }] }
+      : { text: "약 9분 후 도착", live: true, status: "live" as const, byRoute: [{ routeNo: "7", min: 9, seq: 4 }] });
 
     const screen = render(<MemoryRouter initialEntries={["/go?fromLat=37.88&fromLng=127.73&dest=B"]}><Routes><Route path="/go" element={<TripView />} /></Routes></MemoryRouter>);
 

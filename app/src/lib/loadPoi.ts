@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "./fetchWithTimeout";
+
 const PRIMARY = "/data/poi.json";
 
 /**
@@ -10,7 +12,7 @@ const PRIMARY = "/data/poi.json";
  */
 export async function loadPoi(): Promise<Map<string, number>> {
   try {
-    const res = await fetch(PRIMARY);
+    const res = await fetchWithTimeout(PRIMARY);
     if (!res.ok) return new Map();
     const data = (await res.json()) as Record<string, number>;
     return new Map(Object.entries(data));

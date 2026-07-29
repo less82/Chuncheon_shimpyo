@@ -64,14 +64,6 @@ export const CONTACT_CATEGORIES: ContactCategoryInfo[] = [
   },
 ];
 
-/** 안내문 [버스 노선정보] 항목. */
-export const ROUTE_INFO_LINKS = [
-  { label: "카카오맵", url: "https://map.kakao.com" },
-  { label: "네이버맵", url: "https://map.naver.com" },
-  { label: "춘천시 교통포털 (노선안내 전자책·PDF)", url: "https://www.chuncheon.go.kr/traffic/" },
-  { label: "춘천 라이브 버스", url: "https://ccbus.chuncheon.go.kr" },
-];
-
 /**
  * 마을버스 노선명 접두 → 운수회사 전화번호.
  *
@@ -128,6 +120,32 @@ export function categoryInfo(key: ContactCategory): ContactCategoryInfo {
   return found;
 }
 
+/**
+ * 알리기 첫 화면의 유형 4종.
+ * 시민이 고르는 말과 안내문 분류(ContactCategory)를 1:1로 묶는다.
+ * 이 대응이 곧 담당 부서 배정이므로 임의로 늘리거나 합치지 않는다.
+ */
+export interface ReportKind {
+  category: ContactCategory;
+  /** 화면에 그대로 쓰는 시민의 말 */
+  label: string;
+  /** 유형 선택을 도와줄 한 줄 예시 */
+  hint: string;
+}
+
+export const REPORT_KINDS: ReportKind[] = [
+  { category: "facility", label: "정류장 시설", hint: "의자, 지붕, 조명" },
+  { category: "bis", label: "안내기 고장", hint: "도착안내 화면" },
+  { category: "ride", label: "버스 이용 불편", hint: "기사, 운전, 분실물" },
+  { category: "route", label: "노선 요청", hint: "신설·변경 요청" },
+];
+
+export function reportKind(category: ContactCategory): ReportKind {
+  const found = REPORT_KINDS.find((item) => item.category === category);
+  if (!found) throw new Error(`알 수 없는 알리기 유형: ${category}`);
+  return found;
+}
+
 /** 정류장 상태 알리기의 선택지 — 안내문 분류에 각각 대응시킨다. */
 export interface IssueOption {
   label: string;
@@ -139,7 +157,25 @@ export const ISSUE_OPTIONS: IssueOption[] = [
   { label: "안내 화면이 꺼졌어요", category: "bis" },
   { label: "조명이 꺼졌어요", category: "facility" },
   { label: "승강장 시설물이 파손됐어요", category: "facility" },
+  { label: "지붕(가림막)이 없어요", category: "facility" },
+  { label: "도착안내가 표시되지 않아요", category: "bis" },
+  { label: "안내 화면이 잘 안 보여요", category: "bis" },
+  { label: "기사님이 불친절했어요", category: "ride" },
+  { label: "난폭운전이 있었어요", category: "ride" },
+  { label: "물건을 두고 내렸어요", category: "ride" },
+  { label: "사고가 있었어요", category: "ride" },
+  { label: "노선 신설을 요청해요", category: "route" },
+  { label: "노선 변경을 요청해요", category: "route" },
+  { label: "불법행위 지도단속을 요청해요", category: "route" },
 ];
+
+/**
+ * 유형별 선택지. 한 화면에 스크롤 없이 담기도록 4개까지만 보여준다.
+ * (선택지를 더 늘려야 하면 화면 규칙부터 다시 본다.)
+ */
+export function issueOptionsFor(category: ContactCategory): IssueOption[] {
+  return ISSUE_OPTIONS.filter((option) => option.category === category).slice(0, 4);
+}
 
 /**
  * 제보 문구 → 접수 분류.

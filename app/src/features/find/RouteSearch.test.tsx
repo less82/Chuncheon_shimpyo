@@ -1,9 +1,31 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
+import { fetchRouteVehicles } from "../../lib/vehicles";
 import { RouteSearch } from "./RouteSearch";
+
+// 지도는 jsdom 에서 실제로 그릴 수 없다. 초기화·정리 호출만 검증 가능하게 대체한다.
+vi.mock("leaflet", () => {
+  const map = {
+    remove: vi.fn(),
+    fitBounds: vi.fn(),
+  };
+  return {
+    default: {
+      map: vi.fn(() => map),
+      tileLayer: vi.fn(() => ({ addTo: vi.fn() })),
+      circleMarker: vi.fn(() => ({ addTo: vi.fn(), remove: vi.fn(), bindTooltip: vi.fn() })),
+      latLngBounds: vi.fn(() => ({ isValid: () => true })),
+    },
+  };
+});
+
+vi.mock("../../lib/vehicles", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/vehicles")>();
+  return { ...actual, fetchRouteVehicles: vi.fn(async () => ({ vehicles: [], live: false })) };
+});
 
 vi.mock("../../lib/loadRoutes", () => ({
   loadRoutes: vi.fn(async () => ({
@@ -34,8 +56,16 @@ const stops: Stop[] = [
   { ...base, id: "C", stopNo: "1003", name: "남춘천역" },
 ];
 
+const vehiclesMock = vi.mocked(fetchRouteVehicles);
+
 beforeEach(() => {
   useStops.setState({ stops, loaded: true });
+  vehiclesMock.mockReset();
+  vehiclesMock.mockResolvedValue({ vehicles: [], live: false });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("<RouteSearch>", () => {
@@ -80,5 +110,87 @@ describe("<RouteSearch>", () => {
     fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 펼치기" }));
 
     expect(screen.getAllByText("이름 미확인")).toHaveLength(2);
+  });
+});
+
+describe("<RouteSearch> 실시간 차량", () => {
+  it("접혀 있으면 실시간을 조회하지 않고, 펼치면 그 노선만 조회한다", async () => {
+    const screen = render(<MemoryRouter><RouteSearch /></MemoryRouter>);
+
+    await waitFor(() => expect(screen.getByText("노선 3개")).toBeInTheDocument());
+    expect(vehiclesMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 펼치기" }));
+
+    await waitFor(() => expect(vehiclesMock).toHaveBeenCalledWith("r1"));
+    expect(vehiclesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("접으면 더 이상 갱신하지 않는다(타이머 정리)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const screen = render(<MemoryRouter><RouteSearch /></MemoryRouter>);
+
+    await waitFor(() => expect(screen.getByText("노선 3개")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 펼치기" }));
+    await waitFor(() => expect(vehiclesMock).toHaveBeenCalledTimes(1));
+
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(vehiclesMock).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 접기" }));
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(vehiclesMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("조회 실패면 배차간격이 아니라 실패 문구를 쓴다", async () => {
+    const screen = render(<MemoryRouter><RouteSearch /></MemoryRouter>);
+
+    await waitFor(() => expect(screen.getByText("노선 3개")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 펼치기" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("실시간 도착정보를 불러오지 못했어요")).toBeInTheDocument(),
+    );
+  });
+
+  it("실시간은 되는데 차량이 0대면 실패와 다른 문구를 쓴다", async () => {
+    vehiclesMock.mockResolvedValue({ vehicles: [], live: true });
+    const screen = render(<MemoryRouter><RouteSearch /></MemoryRouter>);
+
+    await waitFor(() => expect(screen.getByText("노선 3개")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 펼치기" }));
+
+    await waitFor(() => expect(screen.getByText("지금 운행 중인 버스가 없어요")).toBeInTheDocument());
+    expect(screen.queryByText("실시간 도착정보를 불러오지 못했어요")).not.toBeInTheDocument();
+  });
+
+  it("차량이 있으면 지도와 함께 텍스트 목록도 준다", async () => {
+    vehiclesMock.mockResolvedValue({
+      live: true,
+      vehicles: [
+        {
+          vehicleNo: "강원70자1009",
+          lat: 37.8748,
+          lng: 127.7269,
+          nodeId: "CCB250000123",
+          nodeNm: "강원대후문",
+          nodeOrd: 2,
+          routeNo: "1",
+        },
+      ],
+    });
+    const screen = render(<MemoryRouter><RouteSearch /></MemoryRouter>);
+
+    await waitFor(() => expect(screen.getByText("노선 3개")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "1 노선 경유 정류장 펼치기" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("강원70자1009 · 강원대후문 (2/3번째)")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("지금 운행 중인 버스 1대")).toBeInTheDocument();
+    // 버스가 있는 정류장은 경유 목록에서도 색이 아니라 문구로 알린다.
+    expect(
+      screen.getByRole("link", { name: "2번째 정류장 강원대후문 지금 버스 있음에서 출발해 목적지 고르기" }),
+    ).toBeInTheDocument();
   });
 });

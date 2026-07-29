@@ -11,6 +11,7 @@ import { useStops } from "../../store/useStops";
 import type { Stop } from "../../types/stop";
 import { CITY_CENTER } from "../../types/stop";
 import { markerColor, MARKER_HEX, DIM_OPACITY } from "./markerColor";
+import { ACCENT_HEX, createVoyagerLayer, dotStyle } from "./leafletBase";
 import FacilityFilter from "./FacilityFilterBar";
 import { filterStopsByFacility, type FacilityFilterState } from "./facilityFilter";
 import { WalkLayer } from "./WalkLayer";
@@ -36,20 +37,15 @@ const baseStyle = (
   color: "green" | "gray",
   dimmed = false,
 ): L.CircleMarkerOptions => ({
-  radius: dimmed ? 7 : 9,
-  color: "#ffffff",
-  weight: 2,
-  fillColor: MARKER_HEX[color],
+  ...dotStyle(MARKER_HEX[color], dimmed ? 7 : 9),
   fillOpacity: dimmed ? DIM_OPACITY : 1,
   opacity: dimmed ? DIM_OPACITY : 1,
 });
 
 const selectedStyle = (color: "green" | "gray"): L.CircleMarkerOptions => ({
-  radius: 15,
-  color: "#00a3e0",
+  ...dotStyle(MARKER_HEX[color], 15),
+  color: ACCENT_HEX,
   weight: 4,
-  fillColor: MARKER_HEX[color],
-  fillOpacity: 1,
   opacity: 1,
 });
 
@@ -90,16 +86,8 @@ export default function MapView({ onSelect, selectedId }: Props) {
     mapRef.current = map;
     walkLayerRef.current = new WalkLayer(map);
 
-    // CARTO Voyager — 키 불필요, 도로·라벨 대비가 높아 고령자 가독성이 좋다.
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 20,
-        subdomains: "abcd",
-        detectRetina: true,
-        attribution: "© OpenStreetMap 기여자 · © CARTO",
-      },
-    ).addTo(map);
+    // 출처 표기 컨트롤을 켠 지도이므로 attribution 을 함께 넘긴다.
+    createVoyagerLayer(true).addTo(map);
 
     const goTo = (lat: number, lng: number, isUser: boolean) => {
       // 도보 경로 출발점(현위치, 거부 시 춘천시청 폴백).

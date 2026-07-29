@@ -1,4 +1,5 @@
 import type { LatLng } from "../../lib/geo";
+import { fetchWithTimeout } from "../../lib/fetchWithTimeout";
 
 export interface PlaceResult extends LatLng {
   name: string;
@@ -17,7 +18,8 @@ export async function searchPlaces(query: string): Promise<PlaceResult[]> {
     bounded: "1",
     "accept-language": "ko",
   });
-  const response = await fetch(`${API_ORIGIN}/search?${params}`, {
+  // 2.5초 안에 응답이 없으면 중단한다. 호출측은 예외를 받아 "장소를 찾지 못했어요"로 폴백한다.
+  const response = await fetchWithTimeout(`${API_ORIGIN}/search?${params}`, {
     headers: { Accept: "application/json" },
   });
   if (!response.ok) throw new Error("geocoding unavailable");

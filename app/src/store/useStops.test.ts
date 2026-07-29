@@ -35,6 +35,7 @@ beforeEach(() => {
     stops: [],
     cityCenter: { lat: 37.8813, lng: 127.73 },
     loaded: false,
+    failed: false,
   });
 });
 
@@ -63,6 +64,27 @@ describe("useStops", () => {
     expect(s.loaded).toBe(true);
     expect(s.stops).toHaveLength(3);
     expect(s.cityCenter).toEqual({ lat: 37.9, lng: 127.8 });
+  });
+
+  it("stops.json 과 sample 이 모두 실패하면 failed=true 이고 throw 하지 않는다", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("network down"); }));
+    await expect(useStops.getState().load()).resolves.toBeUndefined();
+    const s = useStops.getState();
+    expect(s.loaded).toBe(false);
+    expect(s.failed).toBe(true);
+  });
+
+  it("실패 뒤 다시 load 하면 failed 가 풀린다(재시도 가능)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("network down"); }));
+    await useStops.getState().load();
+    expect(useStops.getState().failed).toBe(true);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, status: 200, json: async () => file }) as Response),
+    );
+    await useStops.getState().load();
+    expect(useStops.getState().failed).toBe(false);
+    expect(useStops.getState().loaded).toBe(true);
   });
 
   it("nearest 는 최단거리 정류장을 반환", () => {

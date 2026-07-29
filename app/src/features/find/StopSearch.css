@@ -22,7 +22,17 @@
 .stopsearch__facts dt { color: var(--ink-muted); font-size: 12px; font-weight: 800; }
 .stopsearch__facts dd { min-width: 0; overflow-wrap: anywhere; font-size: 14px; font-weight: 800; word-break: keep-all; }
 .stopsearch__subtitle { margin-top: 14px; margin-bottom: 7px; font-size: 14px; }
-.stopsearch__facilities { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+/* 지금 오는 버스 — 상세의 맨 위 구획이라 위 여백을 두지 않는다. */
+.stopsearch__subtitle--first { margin-top: 0; }
+.stopsearch__now { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.stopsearch__now .stopsearch__hint { padding: 6px 2px; }
+.stopsearch__arrivals { display: grid; gap: 5px; list-style: none; margin: 0; padding: 0; }
+.stopsearch__arrivals li { display: flex; min-width: 0; align-items: baseline; gap: 8px; }
+.stopsearch__arrivals li strong { flex: 0 0 auto; color: var(--brand); font-size: 15px; font-weight: 900; }
+.stopsearch__arrivals li span { min-width: 0; color: var(--ink); font-size: 14px; font-weight: 800; word-break: keep-all; }
+/* 320px 폭에서는 한 칸이 배지 최소폭보다 좁아 오른쪽 배지가 잘린다(상태 글자까지 잘려 3상태 표시가 깨진다). 좁으면 1열로 떨어뜨린다. */
+.stopsearch__facilities { display: grid; grid-template-columns: 1fr; gap: 7px; }
+@media (min-width: 360px) { .stopsearch__facilities { grid-template-columns: 1fr 1fr; } }
 .stopsearch__routes { display: flex; flex-wrap: wrap; gap: 5px; list-style: none; margin: 0; padding: 0; }
 .stopsearch__routes li { padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 900; }
 .stopsearch__actions { display: grid; gap: 7px; margin-top: 14px; }

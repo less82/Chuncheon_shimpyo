@@ -1,10 +1,11 @@
 import type { StopsFile } from "../types/stop";
+import { fetchWithTimeout } from "./fetchWithTimeout";
 
 const PRIMARY = "/data/stops.json";
 const FALLBACK = "/data/stops.sample.json";
 
 async function fetchStopsFile(url: string): Promise<StopsFile> {
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
   return (await res.json()) as StopsFile;
 }

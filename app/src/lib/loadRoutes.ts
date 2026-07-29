@@ -1,4 +1,5 @@
 import type { RoutesFile } from "../types/route";
+import { fetchWithTimeout } from "./fetchWithTimeout";
 
 const PRIMARY = "/data/routes.json";
 
@@ -7,7 +8,7 @@ const PRIMARY = "/data/routes.json";
  * 실패하면 예외를 전파(호출측이 빈 결과 폴백을 책임진다).
  */
 export async function loadRoutes(): Promise<RoutesFile> {
-  const res = await fetch(PRIMARY);
+  const res = await fetchWithTimeout(PRIMARY);
   if (!res.ok) throw new Error(`fetch ${PRIMARY} -> ${res.status}`);
   return (await res.json()) as RoutesFile;
 }

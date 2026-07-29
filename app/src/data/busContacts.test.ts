@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   CONTACT_CATEGORIES,
   ISSUE_OPTIONS,
-  ROUTE_INFO_LINKS,
+  REPORT_KINDS,
   categoryForIssue,
   categoryInfo,
+  issueOptionsFor,
+  reportKind,
   rideContactsForRoutes,
   villageZoneOf,
 } from "./busContacts";
@@ -57,10 +59,49 @@ describe("춘천시 버스 문의 안내문 데이터", () => {
     }
   });
 
-  it("버스 노선정보 링크 네 곳을 담는다", () => {
-    expect(ROUTE_INFO_LINKS.map((l) => l.label)).toContain("춘천 라이브 버스");
-    expect(ROUTE_INFO_LINKS).toHaveLength(4);
-    for (const link of ROUTE_INFO_LINKS) expect(link.url).toMatch(/^https:\/\//);
+  it("앱 밖으로 내보내는 외부 지도·포털 링크를 두지 않는다", async () => {
+    // 노선 조회는 앱 안에서 직접 제공한다. 링크 목록을 되살리면 흐름이 다시 갈라진다.
+    const module = await import("./busContacts");
+    expect("ROUTE_INFO_LINKS" in module).toBe(false);
+  });
+});
+
+describe("REPORT_KINDS", () => {
+  it("알리기 유형 4종이 안내문 분류와 1:1로 대응한다", () => {
+    expect(REPORT_KINDS.map((kind) => kind.category)).toEqual(["facility", "bis", "ride", "route"]);
+    expect(REPORT_KINDS.map((kind) => kind.label)).toEqual([
+      "정류장 시설",
+      "안내기 고장",
+      "버스 이용 불편",
+      "노선 요청",
+    ]);
+  });
+
+  it("유형마다 담당 접수처가 반드시 있다", () => {
+    for (const kind of REPORT_KINDS) {
+      expect(categoryInfo(kind.category).contacts.length).toBeGreaterThan(0);
+      expect(reportKind(kind.category).label).toBe(kind.label);
+    }
+  });
+
+  it("모르는 유형은 조용히 넘기지 않는다", () => {
+    // @ts-expect-error 알 수 없는 분류를 넣으면 터져야 한다
+    expect(() => reportKind("unknown")).toThrow();
+  });
+});
+
+describe("issueOptionsFor", () => {
+  it("유형마다 선택지를 주고, 한 화면에 담기도록 4개를 넘지 않는다", () => {
+    for (const kind of REPORT_KINDS) {
+      const options = issueOptionsFor(kind.category);
+      expect(options.length).toBeGreaterThan(0);
+      expect(options.length).toBeLessThanOrEqual(4);
+      for (const option of options) expect(option.category).toBe(kind.category);
+    }
+  });
+
+  it("선택지 문구는 겹치지 않는다", () => {
+    expect(new Set(ISSUE_OPTIONS.map((option) => option.label)).size).toBe(ISSUE_OPTIONS.length);
   });
 });
 
