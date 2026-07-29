@@ -5,6 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // 키 파일(.env.citizen / .env.admin)은 app/ 에 모아 둔다.
+  // root 를 바꾸는 설정에서 envDir 이 따라가면 키를 못 읽으니 여기서 못박는다.
+  envDir: __dirname,
   plugins: [
     react(),
     VitePWA({

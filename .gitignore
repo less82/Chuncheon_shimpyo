@@ -25,6 +25,10 @@ pipeline/vision/dataset/
 .env.local
 app/.env
 app/.env.local
+# 모드별 키 파일(vite --mode). 예시 파일만 커밋한다.
+app/.env.citizen
+app/.env.admin
+app/.env.*.local
 
 # os / editor
 .DS_Store
